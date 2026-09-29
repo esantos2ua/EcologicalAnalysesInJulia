@@ -37,4 +37,8 @@ book:
       chapters:
         - 07-linear-models.qmd
         - 08-glm.qmd
+    - part: "Programming for ecology"
+      chapters:
+        - 09-functions.qmd
+        - 10-resampling.qmd
     - 99-references.qmd

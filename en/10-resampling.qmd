@@ -1,0 +1,655 @@
+# Resampling and simulation {#sec-resampling}
+
+Every test in @sec-linear-models and @sec-glm leans on a theoretical distribution: the
+*t*, the normal, the $\chi^2$. This chapter builds those distributions from the data
+instead, by shuffling and resampling, and then turns the idea around: simulating data
+from a known process to ask how often a study of a given size would find an effect.
+
+Julia is a natural fit. Resampling means running the same calculation thousands of
+times, and in Julia the plain loop that expresses the idea is also fast
+(@sec-control), so there is no need to contort the code to avoid it.
+
+::: {.callout-note}
+## Where this chapter comes from
+
+Like @sec-own-functions, this chapter is **inspired by** **ecoR** [@oliveira_ecor],
+the R course wiki of the Instituto de Biociências, Universidade de São Paulo, produced
+and maintained by Alexandre Adalardo de Oliveira. The sequence — permutation, then
+bootstrap, then simulation from known distributions, with a null model for species
+co-occurrence — follows its resampling module. The text, examples and exercises here
+are written from scratch for Julia; the authors of ecoR have not reviewed this book.
+
+If you read Portuguese and want to go further, the original material is freely
+available (CC BY-SA 4.0):
+
+- [8. Reamostragem e Simulação](https://ecor.ib.usp.br/doku.php?id=03_apostila:08-simulacao)
+  — the course notes;
+- [8. Reamostragem e Simulação](https://ecor.ib.usp.br/doku.php?id=02_tutoriais:tutorial9:start)
+  — the step-by-step tutorial;
+- [exercises on resampling](https://ecor.ib.usp.br/doku.php?id=01_curso_atual:exerpermuta),
+  automatically graded in [notaR](http://notar.ib.usp.br), in R;
+- [Simulando Dados](https://ecor.ib.usp.br/doku.php?id=01b_simular:start), a short
+  course on simulating data for linear, mixed and generalized linear models.
+:::
+
+```{julia}
+#| label: setup-10
+using TidierData
+using DataFrames, CSV
+using Statistics, StatsBase, Random, Distributions
+using GLM, HypothesisTests
+using CairoMakie
+
+CairoMakie.activate!(type = "png")
+Random.seed!(2026)
+
+ponds = @chain CSV.read(joinpath("..", "data", "ponds.csv"), DataFrame) begin
+    @drop_missing(canopy)
+    @mutate(log_area = log(area_m2))
+end
+
+nrow(ponds)
+```
+
+```{julia}
+#| label: checker-10
+#| include: false
+include(joinpath("..", "exercises", "check.jl"))
+```
+
+::: {.callout-note .exercise}
+## Exercises in this chapter
+
+Most answers here come from random draws, so yours will not match the solution to the
+last digit, and `check` accepts anything within the expected random variation. Use at
+least as many permutations or simulations as the exercise asks for: with too few, the
+answer is too noisy to pass. Start each session with:
+
+```julia
+include("exercises/check.jl")
+using TidierData, DataFrames, CSV, Statistics, StatsBase, Random, Distributions
+using GLM, HypothesisTests
+ponds = @chain CSV.read(joinpath("data", "ponds.csv"), DataFrame) begin
+    @drop_missing(canopy)
+    @mutate(log_area = log(area_m2))
+end
+```
+:::
+
+## Randomness you can reproduce {#sec-rng}
+
+Three functions do almost all the work in this chapter. `shuffle` reorders a vector;
+`sample`, from `StatsBase.jl`, draws from it with or without replacement:
+
+```{julia}
+#| label: shuffle-sample
+x = [1, 2, 3, 4, 5]
+
+(shuffled         = shuffle(x),
+ without_replace  = sample(x, 3; replace = false),
+ with_replace     = sample(x, 5))              # replace = true is the default
+```
+
+Random numbers in Julia come from a **random number generator** (RNG). Setting its
+seed, as the setup block does with `Random.seed!(2026)`, makes a script produce the
+same draws each time it runs. For code you want to control more tightly, create a
+generator of your own and pass it as the first argument:
+
+```{julia}
+#| label: rng-object
+rng = Xoshiro(42)
+sample(rng, x, 3)
+```
+
+::: {.callout-warning}
+## Same seed, different Julia, different numbers
+
+The Julia manual states that a minor release (1.11 to 1.12, say) *may change* the
+sequence of random numbers generated from a given seed. A seed makes your analysis
+reproducible on your setup, not across all versions. For exact reproducibility, save
+the random data, or pin the Julia version and the `Manifest.toml`. This is also why the
+exercises here accept a range of answers.
+:::
+
+## Permutation tests {#sec-permutation}
+
+In @sec-tests a Welch *t* test asked whether body size differs between permanent and
+temporary ponds. A permutation test asks the same question with no distributional
+assumption, in five steps:
+
+1. Choose a statistic that measures the effect: here, the difference in mean body
+   size between permanent and temporary ponds.
+2. Compute it for the real data.
+3. State the null hypothesis as a shuffle: if hydroperiod has no effect, the labels
+   "permanent" and "temporary" are interchangeable.
+4. Shuffle the labels many times, recomputing the statistic each time. This builds
+   the distribution of the statistic *under the null hypothesis*.
+5. The p-value is the proportion of shuffles with a statistic at least as extreme as
+   the observed one.
+
+```{julia}
+#| label: permutation
+is_perm = ponds.hydro .== "permanent"
+mean_diff(y, g) = mean(y[g]) - mean(y[.!g])
+
+observed = mean_diff(ponds.body_size, is_perm)
+
+B = 9_999
+null_diffs = zeros(B)
+labels = copy(is_perm)
+for b in 1:B
+    shuffle!(labels)                        # step 3–4: shuffle, recompute
+    null_diffs[b] = mean_diff(ponds.body_size, labels)
+end
+
+extreme = count(abs.(null_diffs) .>= abs(observed))
+p_perm = (extreme + 1) / (B + 1)
+
+(observed = observed, p_perm = p_perm)
+```
+
+Two details. `abs` makes the test two-sided: a difference of −0.9 counts as extreme as
+one of +0.9. And the `+ 1` in numerator and denominator counts the observed data as
+one of the possible arrangements, which keeps the p-value from ever being exactly
+zero [@phipson2010permutation].
+
+```{julia}
+#| label: fig-permutation
+#| fig-cap: "Null distribution of the difference in mean body size, from 9 999 shuffles of the hydroperiod labels. The dashed lines mark the observed difference and its mirror image."
+fig = Figure(size = (700, 380))
+ax = Axis(fig[1, 1], xlabel = "Difference in mean body size (mm), permanent − temporary",
+          ylabel = "Shuffles")
+hist!(ax, null_diffs, bins = 50, color = (:grey60, 0.8))
+vlines!(ax, [observed, -observed], color = :darkorange, linestyle = :dash, linewidth = 2)
+fig
+```
+
+The p-value, about 0.10, is close to the 0.103 of the Welch test: with 173 ponds and
+roughly symmetric data, the theory and the shuffling agree. That will not always be
+true with small samples or skewed data, which is where permutation earns its keep.
+`HypothesisTests.jl` packages the same idea:
+
+```{julia}
+#| label: permutation-package
+perm_ponds = ponds.body_size[is_perm]
+temp_ponds = ponds.body_size[.!is_perm]
+pvalue(ApproximatePermutationTest(perm_ponds, temp_ponds, mean, 9_999))
+```
+
+::: {.callout-note .exercise}
+## Your turn 10.1 — Canopy and the focal species
+
+Is canopy cover different in ponds where the focal species occurs? Run a two-sided
+permutation test on the difference in mean `canopy` between ponds with `focal == 1`
+and `focal == 0`, with 9 999 shuffles, and pass the p-value to `check("10.1", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Reuse `mean_diff` and the loop above, with `ponds.canopy` as the response and
+`ponds.focal .== 1` as the groups.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-10-1
+has_focal = ponds.focal .== 1
+obs_canopy = mean_diff(ponds.canopy, has_focal)
+
+groups = copy(has_focal)
+null_canopy = [mean_diff(ponds.canopy, shuffle!(groups)) for _ in 1:9_999]
+p_canopy = (count(abs.(null_canopy) .>= abs(obs_canopy)) + 1) / (9_999 + 1)
+```
+
+```{julia}
+#| label: answer-10-1-check
+check("10.1", p_canopy)
+```
+
+About 0.04: ponds with the focal species have about 7 points more canopy. The
+simulation built exactly that in: occurrence rises with canopy (`scripts/make_data.jl`).
+The comprehension does the same as the loop, in one line.
+:::
+:::
+
+```{julia}
+#| label: verify-10-1
+#| include: false
+Checks.verify("10.1", p_canopy)
+```
+
+## Permuting a regression {#sec-permutation-regression}
+
+The same logic tests a slope. If body size does not depend on canopy, any pairing of
+body sizes with canopy values is as likely as the observed one, so shuffling the
+response breaks the relationship while keeping both distributions intact:
+
+```{julia}
+#| label: permutation-slope
+slope(x, y) = cov(x, y) / var(x)
+
+obs_slope = slope(ponds.canopy, ponds.body_size)
+
+y = copy(ponds.body_size)
+null_slopes = [slope(ponds.canopy, shuffle!(y)) for _ in 1:9_999]
+extreme = count(abs.(null_slopes) .>= abs(obs_slope))
+
+(slope = obs_slope, extreme = extreme, p = (extreme + 1) / (9_999 + 1))
+```
+
+`cov(x, y) / var(x)` is the least-squares slope, the same number `lm` estimates in
+@sec-simple-lm. Almost no shuffle produces a slope as steep as the observed one — the
+count is in `extreme` — so the p-value is at or near the smallest that 9 999 shuffles
+can show, 1/10 000. To say more you would need more shuffles, but "about 1 in 10 000
+or less" is usually all a result needs.
+
+::: {.callout-note .exercise}
+## Your turn 10.2 — Body size and pond area
+
+Test by permutation whether body size is related to pond area: use the slope of
+`body_size` on `log_area`, two-sided, with 9 999 shuffles. Pass the p-value to
+`check("10.2", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+The block above with `ponds.log_area` in place of `ponds.canopy`. Shuffle a copy of
+`body_size`, not the column itself, so the data stay intact.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-10-2
+obs_area = slope(ponds.log_area, ponds.body_size)
+y = copy(ponds.body_size)
+null_area = [slope(ponds.log_area, shuffle!(y)) for _ in 1:9_999]
+p_area = (count(abs.(null_area) .>= abs(obs_area)) + 1) / (9_999 + 1)
+```
+
+```{julia}
+#| label: answer-10-2-check
+check("10.2", p_area)
+```
+
+About 0.26. The simulation has no effect of area on body size, and the test finds
+none — correctly, this time. One test in twenty would find one anyway.
+:::
+:::
+
+```{julia}
+#| label: verify-10-2
+#| include: false
+Checks.verify("10.2", p_area)
+```
+
+## The bootstrap {#sec-bootstrap}
+
+A permutation test asks what the data would look like if there were no effect. The
+**bootstrap** [@efron1979bootstrap] asks a different question: how much would an
+estimate change if we had collected another sample? We cannot collect it, but we can
+imitate it by drawing a new sample of the same size *from the data themselves, with
+replacement*. Some ponds appear twice, others not at all, and the spread of the
+estimate across many such samples measures its uncertainty.
+
+```{julia}
+#| label: bootstrap-median
+n = nrow(ponds)
+boot_medians = [median(sample(ponds.body_size, n)) for _ in 1:9_999]
+
+(median = median(ponds.body_size),
+ ci_95  = quantile(boot_medians, [0.025, 0.975]))
+```
+
+The 2.5% and 97.5% quantiles of the bootstrap medians give a 95% **percentile
+interval** — for a statistic, the median, that has no simple formula for its standard
+error.
+
+The bootstrap also checks a model's own uncertainty. Resample whole ponds (rows), refit
+the Poisson model `g1` of @sec-poisson each time, and compare the spread of the canopy
+coefficient with the standard error the model reports:
+
+```{julia}
+#| label: bootstrap-glm
+g1 = glm(@formula(richness ~ log_area + canopy + temp_c), ponds, Poisson(), LogLink())
+
+boot_canopy = map(1:2_000) do _
+    rows = sample(1:n, n)
+    coef(glm(@formula(richness ~ log_area + canopy + temp_c),
+             ponds[rows, :], Poisson(), LogLink()))[3]
+end
+
+(bootstrap_se = std(boot_canopy),
+ model_se     = stderror(g1)[3],
+ ratio        = std(boot_canopy) / stderror(g1)[3])
+```
+
+The bootstrap standard error is about 1.4 times larger than the one the Poisson model
+reports — close to $\sqrt{1.95}$, the square root of the dispersion statistic of `g1`
+in @sec-overdispersion. The model's standard errors assume the variance equals the
+mean; the bootstrap assumes nothing about it, and sees the extra variation the model
+leaves out.
+
+::: {.callout-tip}
+## `do` blocks
+
+`map(1:2_000) do _ ... end` is `map(_ -> ..., 1:2_000)` written as a block, for
+anonymous functions longer than one line. `_` names an argument you do not use.
+:::
+
+::: {.callout-note .exercise}
+## Your turn 10.3 — A bootstrap function
+
+Write `boot_means(x, B)`, which returns a vector with the means of `B` bootstrap
+samples of `x`. Check it with `check("10.3", boot_means)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+One comprehension: `[mean(sample(x, length(x))) for _ in 1:B]`. Each bootstrap sample
+has the same size as `x` and is drawn with replacement.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-10-3
+boot_means(x, B) = [mean(sample(x, length(x))) for _ in 1:B]
+
+check("10.3", boot_means)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-10-3
+#| include: false
+Checks.verify("10.3", boot_means)
+```
+
+::: {.callout-note .exercise}
+## Your turn 10.4 — How rich are Amazonian ponds?
+
+Using `boot_means` with 9 999 samples, compute a 95% percentile interval for the mean
+richness of the Amazon ponds. Pass it as `[lower, upper]` to `check("10.4", ...)`.
+Compare it with the usual *t* interval.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`ponds.richness[ponds.region .== "Amazon"]` selects the Amazon ponds. `quantile(v,
+[0.025, 0.975])` returns both ends at once.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-10-4
+amazon = ponds.richness[ponds.region .== "Amazon"]
+ci_boot = quantile(boot_means(amazon, 9_999), [0.025, 0.975])
+```
+
+```{julia}
+#| label: answer-10-4-check
+check("10.4", ci_boot)
+confint(OneSampleTTest(amazon))
+```
+
+The two intervals nearly coincide, from about 9.4–9.5 to 13. The bootstrap one starts
+a little higher: richness is a skewed count, and the bootstrap follows the skew where
+the *t* interval is symmetric by construction.
+:::
+:::
+
+```{julia}
+#| label: verify-10-4
+#| include: false
+Checks.verify("10.4", ci_boot)
+```
+
+## How many ponds do I need? {#sec-power}
+
+Resampling reuses the data you have. Simulation creates data you do not have yet, from
+a process you specify — and because you chose the process, you know the right answer.
+That is the logic of this whole book (@sec-pond-data), and it answers a question every
+field project faces before it starts: **how many sampling units are enough?**
+
+Suppose permanent ponds hold about 25% more species than temporary ones, as in the
+simulation behind `ponds.csv` ($e^{0.22} \approx 1.25$). This function generates a
+survey of `n` ponds from that process:
+
+```{julia}
+#| label: simulate-ponds
+function simulate_ponds(n; p_temporary = 0.5, rng = Random.default_rng())
+    log_area = rand(rng, Normal(5.0, 0.9), n)
+    hydro    = ifelse.(rand(rng, n) .< p_temporary, "temporary", "permanent")
+    mu       = @. exp(0.9 + 0.28 * log_area + 0.22 * (hydro == "permanent"))
+    richness = rand.(rng, Poisson.(mu))
+    return DataFrame(; log_area, hydro, richness)
+end
+
+first(simulate_ponds(5), 5)
+```
+
+For a survey of `n` ponds, fit the model and record whether it detects the effect of
+hydroperiod at the 5% level. The proportion of simulated surveys that do is the
+**power** of that design:
+
+```{julia}
+#| label: power
+function detects_hydro(n; kwargs...)
+    d = simulate_ponds(n; kwargs...)
+    m = glm(@formula(richness ~ log_area + hydro), d, Poisson(), LogLink())
+    return coeftable(m).cols[4][3] < 0.05       # p-value of the hydro coefficient
+end
+
+sizes = [20, 40, 60, 80, 100, 140, 180]
+power = [mean(detects_hydro(n) for _ in 1:500) for n in sizes]
+
+DataFrame(n = sizes, power = power)
+```
+
+```{julia}
+#| label: fig-power
+#| fig-cap: "Power to detect a 25% difference in richness between permanent and temporary ponds, from 500 simulated surveys per sample size. The dashed line marks the conventional target of 80%."
+fig = Figure(size = (700, 380))
+ax = Axis(fig[1, 1], xlabel = "Number of ponds", ylabel = "Power")
+lines!(ax, sizes, power, color = :steelblue, linewidth = 2.5)
+scatter!(ax, sizes, power, color = :steelblue)
+hlines!(ax, 0.8, color = :grey40, linestyle = :dash)
+ylims!(ax, 0, 1)
+fig
+```
+
+About 60 ponds reach the usual 80% power; with 20, two surveys in three would miss an
+effect that is really there. And a non-significant result from a small survey says
+little: most of them are non-significant whether or not the effect exists.
+
+::: {.callout-note .exercise}
+## Your turn 10.5 — When the design is unbalanced
+
+In the field you rarely get equal numbers of each kind of pond. Estimate the power
+with 60 ponds when only 20% are temporary (`p_temporary = 0.2`), from at least 1 000
+simulated surveys, and pass it to `check("10.5", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`detects_hydro` passes its keywords on to `simulate_ponds` (@sec-fn-arguments), so
+`detects_hydro(60; p_temporary = 0.2)` already does what you need.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-10-5
+power_unbalanced = mean(detects_hydro(60; p_temporary = 0.2) for _ in 1:2_000)
+```
+
+```{julia}
+#| label: answer-10-5-check
+check("10.5", power_unbalanced)
+```
+
+About 0.60, down from 0.80 with a balanced design: the same 60 ponds tell you less,
+because the comparison rests on only about 12 temporary ones.
+:::
+:::
+
+```{julia}
+#| label: verify-10-5
+#| include: false
+Checks.verify("10.5", power_unbalanced)
+```
+
+## A null model for species co-occurrence {#sec-null-model}
+
+Permutation is also the basis of **null models** in community ecology. The question
+here is whether species co-occur less than expected by chance, which could indicate
+competition or different habitat requirements. The data are a presence–absence matrix,
+one row per species and one column per site.
+
+`ponds.csv` has no species lists, so this section uses a small matrix simulated for the
+purpose: six species in twelve ponds.
+
+```{julia}
+#| label: cooccurrence-matrix
+M = [1 1 1 0 1 1 0 0 0 0 0 1;
+     1 0 1 1 1 1 0 1 0 0 0 0;
+     0 1 1 1 1 1 0 0 0 1 0 0;
+     1 0 0 0 0 0 1 1 1 0 1 1;
+     0 0 1 0 0 0 1 1 0 1 1 1;
+     0 1 0 0 0 0 1 0 1 1 1 1]
+
+(species_occurrences = vec(sum(M, dims = 2)),
+ pond_richness       = vec(sum(M, dims = 1)))
+```
+
+A common statistic is the **C-score** [@stone1990checkerboard]. For each pair of
+species, count the "checkerboard units": with $r_i$ and $r_j$ the number of sites each
+occupies and $S$ the number of sites they share, the pair contributes
+$(r_i - S)(r_j - S)$. The C-score is the mean over all pairs. The less species share
+sites, the higher it is.
+
+::: {.callout-note .exercise}
+## Your turn 10.6 — The C-score
+
+Write `cscore(M)` for a matrix with species in rows and sites in columns, and check
+it with `check("10.6", cscore)`. The rest of this section uses it.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`r = vec(sum(M, dims = 2))` gives the occurrences of each species. Loop over pairs
+with `for i in 1:s-1, j in i+1:s`, where `s = size(M, 1)`; the shared sites are
+`sum(M[i, :] .& M[j, :])`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-10-6
+function cscore(M)
+    r = vec(sum(M, dims = 2))
+    s = size(M, 1)
+    total, pairs = 0.0, 0
+    for i in 1:s-1, j in i+1:s
+        shared = sum(M[i, :] .& M[j, :])
+        total += (r[i] - shared) * (r[j] - shared)
+        pairs += 1
+    end
+    return total / pairs
+end
+
+cscore(M)
+```
+
+```{julia}
+#| label: answer-10-6-check
+check("10.6", cscore)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-10-6
+#| include: false
+Checks.verify("10.6", cscore)
+```
+
+Is a C-score of about 13.9 high? It depends on what random
+assemblages *of these species in these ponds* would give. Common species share more
+sites than rare ones by chance alone, and rich ponds hold more species than poor ones,
+so a fair null model keeps both the number of occurrences of each species and the
+richness of each pond fixed, and randomizes only which species go where
+[@gotelli2000null].
+
+The **swap** algorithm does exactly that. It picks two species and two ponds at
+random; if they form a checkerboard — `[1 0; 0 1]` or `[0 1; 1 0]` — it flips it.
+Rows and column totals never change:
+
+```{julia}
+#| label: swap
+function swap!(M; attempts = 1_000)
+    nsp, nsites = size(M)
+    for _ in 1:attempts
+        i, j = sample(1:nsp, 2; replace = false)
+        k, l = sample(1:nsites, 2; replace = false)
+        if M[i, k] == M[j, l] && M[i, l] == M[j, k] && M[i, k] != M[i, l]
+            M[i, k], M[i, l] = M[i, l], M[i, k]
+            M[j, k], M[j, l] = M[j, l], M[j, k]
+        end
+    end
+    return M
+end
+
+null_c = [cscore(swap!(copy(M))) for _ in 1:999]
+
+obs_c = cscore(M)
+(observed = obs_c,
+ null_mean = mean(null_c),
+ p = (count(null_c .>= obs_c) + 1) / (999 + 1),
+ ses = (obs_c - mean(null_c)) / std(null_c))
+```
+
+```{julia}
+#| label: fig-null-model
+#| fig-cap: "C-scores of 999 null assemblages with the same species frequencies and pond richness as the observed one. The dashed line marks the observed C-score."
+fig = Figure(size = (700, 380))
+ax = Axis(fig[1, 1], xlabel = "C-score", ylabel = "Null assemblages")
+hist!(ax, null_c, bins = 25, color = (:grey60, 0.8))
+vlines!(ax, obs_c, color = :darkorange, linestyle = :dash, linewidth = 2)
+fig
+```
+
+The observed C-score sits in the upper tail: about 1% of null assemblages are as
+segregated. The test is one-sided, because the question was about *less*
+co-occurrence than expected. The **standardized effect size** (`ses`), the distance
+from the null mean in null standard deviations, is the usual way to compare such
+results between matrices of different sizes.
+
+::: {.callout-tip}
+## Doing this for real
+
+This is a teaching version. For a real analysis, R's `vegan` package (`nullmodel`,
+`oecosimu`) implements many null algorithms with the care they need — including how
+many swaps are enough for the null matrices to be independent, which this version
+glosses over. @sec-rcall shows how to call it from Julia.
+:::
+
+## Challenges {.unnumbered}
+
+1. Repeat the permutation test of @sec-permutation with `median` instead of `mean` as
+   the statistic. Which would you report for body size, and why?
+2. Rerun the power analysis for a 10% effect ($e^{\beta} = 1.10$). How many ponds
+   would you need? What would you tell a colleague planning a survey of 40 ponds?
+3. Build a matrix in which only *one* pair of species is perfectly segregated and the
+   others are scattered at random. Does the fixed–fixed null model detect it? What does
+   that say about the C-score as a measure of a single pair's interaction?

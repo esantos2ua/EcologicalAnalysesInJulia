@@ -17,10 +17,19 @@ it, and do not endorse it.
 The original is free online under CC BY-NC 4.0 and available in print. If this book is
 useful to you, theirs will probably be more so.
 
+## Relationship to *ecoR*
+
+Chapters 9 (functions) and 10 (resampling and simulation) are **inspired by** the
+programming and resampling modules of *ecoR*, the R course wiki of the Instituto de
+Biociências, Universidade de São Paulo, produced and maintained by Alexandre Adalardo
+de Oliveira (based in part on material by João Luis Ferreira Batista and Paulo Inácio
+K. L. Prado). The text, examples and exercises are written from scratch; ecoR's authors
+have not reviewed them. ecoR is free at <https://ecor.ib.usp.br/> under CC BY-SA 4.0.
+
 ## Scope
 
-This edition covers **chapters 1–8**: language basics, data wrangling, visualization,
-linear models and GLMs. The community-ecology chapters of the original (multivariate
+This edition covers **chapters 1–10**: language basics, data wrangling, visualization,
+linear models and GLMs, then writing functions and resampling. The community-ecology chapters of the original (multivariate
 analysis, rarefaction, richness estimators, taxonomic/phylogenetic/functional
 diversity, geospatial data) are **out of scope for now** — Julia has no mature
 equivalents of `vegan`, `iNEXT`, `picante` or `FD`, and writing those chapters means
@@ -36,6 +45,8 @@ writing the packages first.
 | 6 | Visualization | `TidierPlots.jl`, `AlgebraOfGraphics.jl`, `CairoMakie.jl` |
 | 7 | Linear models | `GLM.jl`, `HypothesisTests.jl`, `MixedModels.jl` |
 | 8 | GLMs | `GLM.jl`, `MixedModels.jl` |
+| 9 | Writing your own functions | Base, `Test` |
+| 10 | Resampling and simulation | `Random`, `StatsBase.jl`, `GLM.jl`, `HypothesisTests.jl` |
 
 ## Building
 

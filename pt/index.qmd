@@ -17,7 +17,9 @@ a capítulo, para que os dois possam ser lidos lado a lado.
 ## O que este livro cobre — e o que ainda não cobre
 
 Esta primeira edição vai **do básico da linguagem até modelos lineares generalizados**
-(capítulos 1–8). Os capítulos de ecologia de comunidades do livro original — análises
+(capítulos 1–8), seguidos de dois capítulos de programação para ecologia: escrever as
+próprias funções e reamostragem e simulação (capítulos 9–10). Os capítulos de ecologia
+de comunidades do livro original — análises
 multidimensionais, rarefação, estimadores de riqueza, diversidade taxonômica,
 filogenética e funcional, e dados geoespaciais — **não estão incluídos**.
 
@@ -27,7 +29,7 @@ capítulos honestamente exige escrever os pacotes primeiro, e esse é um projeto
 Veja o @sec-limites para uma avaliação detalhada.
 :::
 
-O recorte 1–8 não é pequeno. Ele cobre tudo o que a maior parte de uma análise
+Esse recorte não é pequeno. Ele cobre tudo o que a maior parte de uma análise
 ecológica realmente consome: importar e limpar dados, visualizá-los, ajustar modelos
 lineares e generalizados, e lidar com estrutura hierárquica via modelos mistos. Em
 todos esses pontos, o ecossistema Julia é sólido: os pacotes existem, são mantidos, e
@@ -41,7 +43,7 @@ Todo o código é executável e roda no ambiente Julia definido em `Project.toml
 Para reproduzir o livro na sua máquina:
 
 ```bash
-git clone <url-do-repositório>
+git clone https://github.com/esantos2ua/EcologicalAnalysesInJulia.git
 cd EcologicalAnalysesInJulia
 julia --project=. scripts/setup.jl
 quarto render pt
@@ -74,6 +76,21 @@ qualquer erro aqui é meu.
 <https://analises-ecologicas.com/> sob licença CC BY-NC 4.0, e em edição impressa pela
 Nupeea e Canal 6 (2022, 640 p., ISBN 978-85-7917-564-0). Se este livro lhe for útil, o
 original provavelmente lhe será mais ainda.
+
+## Relação com o *ecoR* {.unnumbered}
+
+Os capítulos 9 e 10 não vêm de *Análises Ecológicas no R*. Eles são **inspirados** nos
+módulos de programação e de reamostragem do **ecoR** [@oliveira_ecor], o wiki do curso
+de R do Instituto de Biociências da Universidade de São Paulo, produzido e mantido por
+Alexandre Adalardo de Oliveira, e baseado em parte no material de João Luis Ferreira
+Batista e Paulo Inácio K. L. Prado. Como no caso do livro original, o texto, os
+exemplos e os exercícios daqui são escritos do zero; os autores do ecoR não revisaram
+este livro. Cada um dos dois capítulos começa com links para o material correspondente
+do ecoR.
+
+O ecoR está disponível gratuitamente em <https://ecor.ib.usp.br/> sob licença
+CC BY-SA 4.0, com exercícios corrigidos automaticamente no
+[notaR](http://notar.ib.usp.br).
 
 ## Versão bilíngue {.unnumbered}
 

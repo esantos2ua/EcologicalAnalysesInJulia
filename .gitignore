@@ -3,6 +3,9 @@
 pt/_book/
 en/_book/
 pt/.quarto/
+# stray single-file render outputs; the books render into */_book/
+/en/*.html
+/pt/*.html
 en/.quarto/
 /.quarto/
 # pt/_freeze/ and en/_freeze/ are committed: CI reuses the execution cache

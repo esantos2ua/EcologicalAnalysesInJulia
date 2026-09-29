@@ -44,8 +44,8 @@ function attempt(f, args...)
         end
         name = nameof(typeof(e))
         return (ok = false, value = (
-            "Your function threw a $name on $call.",
-            "Sua função lançou um $name em $call."))
+            "Your function threw `$name` on $call.",
+            "Sua função lançou `$name` em $call."))
     end
 end
 
@@ -134,6 +134,8 @@ include("ch05.jl")
 include("ch06.jl")
 include("ch07.jl")
 include("ch08.jl")
+include("ch09.jl")
+include("ch10.jl")
 
 function problem(id::AbstractString, answer)
     haskey(EXERCISES, id) || throw(ArgumentError(msg(

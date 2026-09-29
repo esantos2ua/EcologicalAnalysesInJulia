@@ -17,7 +17,8 @@ two can be read side by side.
 ## What this book covers — and what it doesn't yet
 
 This first edition runs **from language basics through generalized linear models**
-(chapters 1–8). The community-ecology chapters of the original book — multivariate
+(chapters 1–8), followed by two chapters on programming for ecology: writing your own
+functions and resampling and simulation (chapters 9–10). The community-ecology chapters of the original book — multivariate
 analysis, rarefaction, richness estimators, taxonomic, phylogenetic and functional
 diversity, and geospatial data — **are not included**.
 
@@ -27,7 +28,7 @@ writing the packages first, and that is a separate project. See @sec-limits for 
 detailed assessment.
 :::
 
-Chapters 1–8 are not a small slice. They cover what most of an ecological analysis
+This is not a small slice. They cover what most of an ecological analysis
 actually consumes: importing and cleaning data, visualizing it, fitting linear and
 generalized linear models, and handling hierarchical structure through mixed models.
 At every one of those points the Julia ecosystem is solid: the packages exist, they
@@ -41,7 +42,7 @@ All code is executable and runs in the Julia environment defined by `Project.tom
 To reproduce the book locally:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/esantos2ua/EcologicalAnalysesInJulia.git
 cd EcologicalAnalysesInJulia
 julia --project=. scripts/setup.jl
 quarto render en
@@ -74,6 +75,19 @@ endorse it; any errors here are mine.
 under a CC BY-NC 4.0 licence, and in print from Nupeea and Canal 6 (2022, 640 pp.,
 ISBN 978-85-7917-564-0). If this book is useful to you, the original will probably be
 more so.
+
+## Relationship to *ecoR* {.unnumbered}
+
+Chapters 9 and 10 do not come from *Análises Ecológicas no R*. They are **inspired by**
+the programming and resampling modules of **ecoR** [@oliveira_ecor], the R course wiki
+of the Instituto de Biociências, Universidade de São Paulo, produced and maintained by
+Alexandre Adalardo de Oliveira, and based in part on material by João Luis Ferreira
+Batista and Paulo Inácio K. L. Prado. As with the original book, the text, examples and
+exercises here are written from scratch; the authors of ecoR have not reviewed this
+book. Each of the two chapters opens with links to the corresponding ecoR material.
+
+ecoR is freely available at <https://ecor.ib.usp.br/> under a CC BY-SA 4.0 licence,
+with exercises graded automatically in [notaR](http://notar.ib.usp.br).
 
 ## Bilingual edition {.unnumbered}
 

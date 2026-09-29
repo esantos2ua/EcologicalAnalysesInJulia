@@ -1,0 +1,579 @@
+# Writing your own functions {#sec-own-functions}
+
+Sooner or later every analysis needs a calculation that no package provides — an
+index from a paper, a data check specific to your field protocol, a summary your lab
+always reports. This chapter is about turning that calculation into a function that
+is easy to call, hard to misuse, documented and tested.
+
+@sec-functions introduced the syntax. Here the focus is on what makes a function
+good: sensible arguments, clear errors, a docstring, and tests that tell you when you
+break it.
+
+::: {.callout-note}
+## Where this chapter comes from
+
+This chapter and @sec-resampling are **inspired by** the programming and resampling
+modules of **ecoR** [@oliveira_ecor], the R course wiki of the Instituto de
+Biociências, Universidade de São Paulo, produced and maintained by Alexandre Adalardo
+de Oliveira. The idea of building ecological indices as functions, step by step, comes
+from there. The text, examples and exercises here are written from scratch for Julia;
+the authors of ecoR have not reviewed this book.
+
+If you read Portuguese and want to go further, the original material is freely
+available (CC BY-SA 4.0):
+
+- [9. Noções de Programação](https://ecor.ib.usp.br/doku.php?id=03_apostila:programar_ale)
+  — the course notes on programming;
+- [9. Criando Funções Básicas](https://ecor.ib.usp.br/doku.php?id=02_tutoriais:tutorial8:start)
+  — the step-by-step tutorial;
+- [exercises on functions](https://ecor.ib.usp.br/doku.php?id=01_curso_atual:exercicios9),
+  automatically graded in [notaR](http://notar.ib.usp.br), in R.
+:::
+
+```{julia}
+#| label: setup-09
+using TidierData
+using DataFrames, CSV
+using Statistics
+using Test
+
+ponds = CSV.read(joinpath("..", "data", "ponds.csv"), DataFrame)
+nrow(ponds)
+```
+
+```{julia}
+#| label: checker-09
+#| include: false
+include(joinpath("..", "exercises", "check.jl"))
+```
+
+::: {.callout-note .exercise}
+## Exercises in this chapter
+
+As in @sec-julia-basics, most answers here are functions you write, which `check`
+calls on its own test inputs. Start each session with:
+
+```julia
+include("exercises/check.jl")
+using TidierData, DataFrames, CSV, Statistics, Test
+ponds = CSV.read(joinpath("data", "ponds.csv"), DataFrame)
+```
+:::
+
+## From a calculation to a function {#sec-fn-calculation}
+
+Suppose you want to know how variable richness is across ponds, relative to its mean.
+The coefficient of variation answers that, and it is one line:
+
+```{julia}
+#| label: cv-inline
+std(ponds.richness) / mean(ponds.richness) * 100
+```
+
+The moment you want it for a second variable, or per region, the line becomes a
+function. Give it a name that says what it computes, and the argument a name that says
+what it expects:
+
+```{julia}
+#| label: cv-function
+cv(x) = std(x) / mean(x) * 100
+
+cv(ponds.richness), cv(ponds.body_size)
+```
+
+Richness varies far more, relative to its mean, than body size does.
+
+A function can return several things at once. The idiomatic way is a **named tuple**,
+whose fields you read by name:
+
+```{julia}
+#| label: named-tuple
+count_summary(x) = (n = length(x), mean = mean(x), var = var(x))
+
+s = count_summary(ponds.richness)
+s.mean, s.var
+```
+
+::: {.callout-note .exercise}
+## Your turn 9.1 — Variance-to-mean ratio
+
+For counts, the variance-to-mean ratio says how individuals — or species — are spread
+across sampling units. If the counts follow a Poisson distribution, variance equals the
+mean and the ratio is about 1; above 1 the counts are more clumped, below 1 more even.
+Write `vmr(x)` and check it with `check("9.1", vmr)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Same shape as `cv`: one line, `var` over `mean`. `var` is the sample variance, which
+divides by $n - 1$.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-9-1
+vmr(x) = var(x) / mean(x)
+
+vmr(ponds.richness)
+```
+
+```{julia}
+#| label: answer-9-1-check
+check("9.1", vmr)
+```
+
+Richness across all 180 ponds has a ratio of about 3.3: far more variable than a
+Poisson with a single mean. That does not yet mean the counting process is odd — the
+ponds differ in area, canopy and region. @sec-fn-groups returns to this.
+:::
+:::
+
+```{julia}
+#| label: verify-9-1
+#| include: false
+Checks.verify("9.1", vmr)
+```
+
+## Arguments: defaults and keywords {#sec-fn-arguments}
+
+A function often has a sensible default that the user may want to change. `cv` returns
+a percentage; someone might prefer a proportion. There are two ways to offer that.
+
+A **positional argument with a default** comes after the others and is set by
+position:
+
+```{julia}
+#| label: positional-default
+cv_pos(x, percent = true) = std(x) / mean(x) * (percent ? 100 : 1)
+
+cv_pos(ponds.richness), cv_pos(ponds.richness, false)
+```
+
+A **keyword argument** goes after a semicolon and is always set by name:
+
+```{julia}
+#| label: keyword
+cv_kw(x; percent = true) = std(x) / mean(x) * (percent ? 100 : 1)
+
+cv_kw(ponds.richness; percent = false)
+```
+
+For options like this, keywords are the better choice: `cv_kw(x; percent = false)`
+says what it does, while `cv_pos(x, false)` makes the reader look up what `false`
+means.
+
+A function can also collect keywords it does not know and pass them on with
+`kwargs...`. Here `rounded_cv` handles `digits` itself and hands everything else to
+`cv_kw`:
+
+```{julia}
+#| label: kwargs-forward
+rounded_cv(x; digits = 1, kwargs...) = round(cv_kw(x; kwargs...); digits)
+
+rounded_cv(ponds.richness), rounded_cv(ponds.richness; percent = false, digits = 3)
+```
+
+::: {.r-equivalent}
+**In R**
+
+R has one kind of argument, which can be given by position or by name. Julia separates
+them: arguments before the `;` are positional, those after are keywords and must be
+named. `kwargs...` plays the role of R's `...` when forwarding options to another
+function.
+:::
+
+::: {.callout-note .exercise}
+## Your turn 9.2 — Standardizing, with options
+
+Write `standardize(x; center = true, scale = true)`. By default it returns
+$(x - \bar x) / s$; `center = false` skips subtracting the mean and `scale = false`
+skips dividing by the standard deviation. Check it with `check("9.2", standardize)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Build the result in two steps, each depending on its option:
+`centered = center ? x .- mean(x) : x`, then divide `centered` by `std(x)` only if
+`scale` is true.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-9-2
+function standardize(x; center = true, scale = true)
+    centered = center ? x .- mean(x) : x
+    return scale ? centered ./ std(x) : centered
+end
+
+check("9.2", standardize)
+```
+
+`std(x)` is computed on the original `x`, so it is the same whether or not you center.
+:::
+:::
+
+```{julia}
+#| label: verify-9-2
+#| include: false
+Checks.verify("9.2", standardize)
+```
+
+## Refusing bad input {#sec-fn-errors}
+
+A function that quietly returns nonsense is worse than one that stops. `cv` has two
+blind spots:
+
+```{julia}
+#| label: cv-nonsense
+cv([0, 0, 0]), cv([-5, 5])
+```
+
+`NaN` for an empty pond survey, and an infinite coefficient for data with a negative
+value, which counts cannot have. Checks at the top of the function catch both, and
+`throw(ArgumentError(...))` tells the caller that the problem is the input, not the
+function:
+
+```{julia}
+#| label: cv-checked
+function cv_checked(x)
+    any(<(0), x) && throw(ArgumentError("values must be non-negative"))
+    mean(x) > 0 || throw(ArgumentError("the mean is zero; the CV is undefined"))
+    return std(x) / mean(x) * 100
+end
+
+try
+    cv_checked([-5, 5])
+catch e
+    e
+end
+```
+
+The `condition && action` form reads as "if condition, then action"; `condition ||
+action` as "unless condition, action". Both are idiomatic for checks like these.
+
+::: {.callout-tip}
+## `@assert` is for your own mistakes
+
+`@assert condition` stops when something that should never happen does. Use it to
+check your own reasoning inside a function; use `ArgumentError` for input that a user
+could plausibly get wrong.
+:::
+
+::: {.callout-note .exercise}
+## Your turn 9.3 — A safer `vmr`
+
+Rewrite `vmr` so that it throws an `ArgumentError` when it gets fewer than two values,
+any negative value, or a mean of zero, and still returns the ratio otherwise. Check it
+with `check("9.3", vmr)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Three checks, one line each, before the calculation. `length(x) < 2`,
+`any(<(0), x)` and `mean(x) == 0` are the conditions.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-9-3
+function vmr(x)
+    length(x) < 2 && throw(ArgumentError("need at least two values"))
+    any(<(0), x) && throw(ArgumentError("counts cannot be negative"))
+    mean(x) == 0 && throw(ArgumentError("the mean is zero; the ratio is undefined"))
+    return var(x) / mean(x)
+end
+
+check("9.3", vmr)
+```
+
+This replaces the one-line `vmr` from 9.1: a method with the same argument types
+overwrites the old one.
+:::
+:::
+
+```{julia}
+#| label: verify-9-3
+#| include: false
+Checks.verify("9.3", vmr)
+```
+
+## Documenting a function {#sec-fn-docs}
+
+A string placed immediately before a function becomes its **docstring**, which is
+what `?cv_documented` shows in the REPL and what VS Code shows when you hover over the
+name. The convention is the signature indented by four spaces, then one or two
+sentences on what the function does and returns:
+
+```{julia}
+#| label: docstring
+"""
+    cv_documented(x; percent = true)
+
+Coefficient of variation of `x`: the standard deviation divided by the mean,
+times 100 unless `percent = false`. Throws an `ArgumentError` if the mean is zero.
+"""
+function cv_documented(x; percent = true)
+    mean(x) > 0 || throw(ArgumentError("the mean is zero; the CV is undefined"))
+    return std(x) / mean(x) * (percent ? 100 : 1)
+end
+```
+
+::: {.r-equivalent}
+**In R**
+
+Docstrings play the role of `roxygen2` comments, with one difference: they are part
+of the language, available as soon as the function is defined, with no build step.
+:::
+
+::: {.callout-note .exercise}
+## Your turn 9.4 — Document `vmr`
+
+Add a docstring to your `vmr` from 9.3: the signature, what the ratio means, and which
+inputs it refuses. Run the definition again and try `?vmr` in the REPL. Then check it
+with `check("9.4", vmr)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+The docstring goes directly above `function vmr(x)`, with nothing in between —
+not even a blank line.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-9-4
+"""
+    vmr(x)
+
+Variance-to-mean ratio of the counts `x`. About 1 for Poisson counts, above 1 when
+counts are clumped, below 1 when they are more even. Throws an `ArgumentError` for
+fewer than two values, negative values, or a zero mean.
+"""
+function vmr(x)
+    length(x) < 2 && throw(ArgumentError("need at least two values"))
+    any(<(0), x) && throw(ArgumentError("counts cannot be negative"))
+    mean(x) == 0 && throw(ArgumentError("the mean is zero; the ratio is undefined"))
+    return var(x) / mean(x)
+end
+
+check("9.4", vmr)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-9-4
+#| include: false
+Checks.verify("9.4", vmr)
+```
+
+## Your function, per group {#sec-fn-groups}
+
+A function you write works inside a Tidier pipeline — with one catch. Tidier knows
+that `mean`, `std` or `sum` summarize a whole column, but it does not know that about
+your `cv`. By default it applies unknown functions to **each value separately**, which
+here would compute a coefficient of variation for every single pond:
+
+```{julia}
+#| label: cv-per-region-wrong
+wrong = @chain ponds begin
+    @group_by(region)
+    @summarize(cv_richness = cv(richness))
+end
+
+nrow(wrong), first(wrong.cv_richness, 3)
+```
+
+180 rows of `NaN` instead of three numbers, and no error. Putting `~` in front of the
+function tells Tidier to pass it the whole column:
+
+```{julia}
+#| label: cv-per-region
+@chain ponds begin
+    @group_by(region)
+    @summarize(cv_richness = ~cv(richness), cv_body = ~cv(body_size))
+end
+```
+
+The same with `DataFrames.jl` directly (@sec-native-dataframes), where the question
+does not arise:
+
+```{julia}
+#| label: cv-per-region-native
+combine(groupby(ponds, :region), :richness => cv => :cv_richness)
+```
+
+::: {.callout-warning}
+## Check the number of rows
+
+After `@summarize`, you should have one row per group. If you have one row per
+observation, Tidier has applied your function to each value: add the `~`.
+:::
+
+::: {.callout-note .exercise}
+## Your turn 9.5 — Is richness clumped within regions?
+
+Compute the variance-to-mean ratio of `richness` for each region, in a column called
+`vmr`, using your function. Check it with `check("9.5", by_region)`. Are the ratios
+closer to 1 than the value for all ponds together?
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+The `~cv` block of this section, with `~vmr` in place of `~cv`. Without the `~`, your
+`vmr` from 9.3 receives one pond at a time and rightly refuses it: "need at least two
+values".
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-9-5
+by_region = @chain ponds begin
+    @group_by(region)
+    @summarize(vmr = ~vmr(richness))
+end
+
+check("9.5", by_region)
+```
+
+The ratios, from about 1.8 to 3.2, are all lower than for the pooled ponds (3.3):
+part of the variation came from differences between regions. They are still above 1,
+because ponds within a region differ in area and canopy. In @sec-overdispersion a
+Poisson model that accounts for these predictors had no overdispersion left. A ratio
+above 1 in raw counts is a reason to look for predictors, not proof that the counts
+are not Poisson.
+:::
+:::
+
+```{julia}
+#| label: verify-9-5
+#| include: false
+Checks.verify("9.5", by_region)
+```
+
+## Functions that take functions {#sec-fn-higher-order}
+
+In Julia, functions are values: they can be stored in a vector, passed to another
+function, or written without a name. That makes it easy to apply several summaries at
+once:
+
+```{julia}
+#| label: several-summaries
+[f(ponds.richness) for f in (mean, median, cv, vmr)]
+```
+
+An **anonymous function** is written `x -> expression`. `map` applies one to every
+element of a collection — here, to three columns of the data:
+
+```{julia}
+#| label: anonymous
+map(col -> round(cv(col); digits = 1), eachcol(ponds[:, [:area_m2, :temp_c, :body_size]]))
+```
+
+Area varies enormously between ponds, temperature very little: the coefficient of
+variation puts variables with different units on the same scale.
+
+::: {.callout-note .exercise}
+## Your turn 9.6 — Morisita's index
+
+Morisita's index of dispersion compares how often two individuals picked at random
+fall in the same sampling unit with what a random spread would give:
+
+$$
+I_d = n \, \frac{\sum_i x_i (x_i - 1)}{N (N - 1)}
+$$
+
+where $x_i$ is the count in unit $i$, $n$ the number of units and $N = \sum_i x_i$.
+It is about 1 for a random spread and above 1 for a clumped one. Write
+`morisita(x)`, check it with `check("9.6", morisita)`, and apply it to these counts of
+tadpole clusters in ten quadrats along a pond margin:
+
+```{julia}
+#| label: data-9-6
+quadrats = [0, 3, 0, 0, 7, 1, 0, 0, 5, 0]
+```
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`x .* (x .- 1)` gives $x_i(x_i - 1)$ for every unit at once; `sum` adds them up.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-9-6
+function morisita(x)
+    N = sum(x)
+    return length(x) * sum(x .* (x .- 1)) / (N * (N - 1))
+end
+
+morisita(quadrats)
+```
+
+```{julia}
+#| label: answer-9-6-check
+check("9.6", morisita)
+```
+
+About 2.8: the clusters are strongly clumped, in three of the ten quadrats. A version
+for real use would refuse `N < 2`, as in 9.3.
+:::
+:::
+
+```{julia}
+#| label: verify-9-6
+#| include: false
+Checks.verify("9.6", morisita)
+```
+
+## Testing your functions {#sec-fn-tests}
+
+`check` has been testing your functions against inputs whose answers are known. You
+can do the same for your own functions with the `Test` standard library, and rerun the
+tests every time you change the code:
+
+```{julia}
+#| label: testset
+@testset "cv_checked" begin
+    @test cv_checked([10, 10, 10]) == 0          # no variation
+    @test cv_checked([1, 2, 3]) ≈ 50             # std 1, mean 2
+    @test_throws ArgumentError cv_checked([0, 0])
+    @test_throws ArgumentError cv_checked([-1, 1])
+end;
+```
+
+Good tests use cases you can work out by hand, and include the inputs the function
+should refuse. Type `≈` as `\approx` followed by `Tab`; it compares floating-point
+numbers with a tolerance, where `==` would fail over rounding.
+
+::: {.callout-tip}
+## Where your functions should live
+
+Once a function is useful beyond one script, move it to a file of its own — say
+`functions.jl` in your project folder — and load it with `include("functions.jl")` at
+the top of each analysis. The tests can live in a second file next to it. When the
+collection grows, the next step is a package, which `Pkg` can create for you with
+`Pkg.generate`.
+:::
+
+## Challenges {.unnumbered}
+
+1. Write a `@testset` for your `morisita` with cases you can compute by hand: all
+   individuals in one unit, and exactly one individual per unit. What should each
+   give?
+2. Add a `Matrix` method to `vmr` (@sec-dispatch) that returns one ratio per column,
+   treating each column as a species counted across quadrats (rows).
+3. `cv` fails on a column with missing values, such as `canopy`. Add a keyword
+   `skipmissing = false` that, when true, ignores them. Which default is safer, and why?
