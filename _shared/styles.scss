@@ -20,3 +20,8 @@ $code-bg: #f6f8fa !default;
 
 /* Wide model summaries should scroll, not blow out the page */
 pre.julia-output { overflow-x: auto; }
+
+/* "Your turn" exercise boxes: a green accent so they stand apart from notes */
+.callout.exercise { border-left-color: #2e8b57 !important; }
+.callout.exercise > .callout-header { background-color: rgba(46, 139, 87, 0.08) !important; }
+.callout.exercise > .callout-header .callout-icon::before { filter: hue-rotate(-90deg); }

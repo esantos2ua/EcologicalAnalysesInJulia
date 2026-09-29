@@ -1,100 +1,168 @@
 # Pré-requisitos {#sec-pre-requisitos}
 
-## Instalando Julia {#sec-instalando}
+Este capítulo prepara o seu computador para o resto do livro. Ao final, você terá
+instalado Julia e um editor, baixado os dados e os exercícios do livro e rodado um
+primeiro script que desenha um gráfico.
 
-Use **`juliaup`**, o gerenciador oficial de versões. Não instale Julia pelo gerenciador
-de pacotes do sistema (`apt`, `brew`), que tende a distribuir versões desatualizadas.
+Siga os passos na ordem. Onde eles mudam de um sistema operacional para outro,
+escolha a aba do seu sistema. Reserve cerca de uma hora na primeira vez — a maior
+parte é espera enquanto os pacotes são instalados — e mantenha a conexão com a
+internet até concluir a @sec-instanciar. Se algum passo não se comportar como
+descrito, veja a @sec-problemas.
+
+::: {.callout-note}
+## O que você vai instalar
+
+| O quê | Para quê |
+|---|---|
+| **Julia** (pelo `juliaup`) | a linguagem em si |
+| **VS Code** e a extensão de Julia | onde você escreve e roda o código |
+| **A pasta do livro** | dados, exercícios e a lista de pacotes que o livro usa |
+| **Os pacotes do livro** | data frames, gráficos e modelos, nas versões exatas com que o livro foi gerado |
+
+Você não precisa de git, R nem Quarto.
+:::
+
+## Passo 1: abra um terminal {#sec-terminal}
+
+Um terminal é uma janela onde você digita comandos em vez de clicar. Você só precisa
+dele para instalar Julia; depois disso, tudo acontece dentro do VS Code.
 
 ::: {.panel-tabset}
+## Windows
+
+Abra o menu Iniciar, digite **PowerShell** e abra o *Windows PowerShell* (ou o
+*Terminal*, no Windows 11).
+
+## macOS
+
+Pressione `Cmd+Espaço`, digite **Terminal** e pressione `Return`.
+
+## Linux
+
+Pressione `Ctrl+Alt+T` na maioria das distribuições, ou procure *Terminal* no menu de
+aplicativos.
+:::
+
+Para rodar um comando, cole-o no terminal e pressione `Enter`. Colar é `Ctrl+V` no
+Windows, `Cmd+V` no macOS e `Ctrl+Shift+V` na maioria dos terminais Linux.
+
+## Passo 2: instale Julia {#sec-instalando}
+
+Use o **`juliaup`**, o instalador e gerenciador oficial de versões. Não instale Julia
+pelo gerenciador de pacotes do sistema (`apt`, `brew`), que tende a distribuir
+versões desatualizadas.
+
+::: {.panel-tabset}
+## Windows
+
+```powershell
+winget install --name Julia --id 9NJNWW8PVKMN -e -s msstore
+```
+
+Se o Windows pedir que você aceite os termos da Microsoft Store, digite `Y` e
+pressione `Enter`.
+
 ## macOS e Linux
 
 ```bash
 curl -fsSL https://install.julialang.org | sh
 ```
 
-## Windows
-
-```powershell
-winget install julia -s msstore
-```
+O instalador pergunta se deve seguir com as configurações padrão. Pressione `Enter`
+para aceitá-las.
 :::
 
-Depois, `juliaup update` atualiza e `juliaup status` lista as versões instaladas.
-
-## Ambientes de projeto {#sec-ambientes}
-
-Este é o conceito mais importante do capítulo, e o que mais difere da prática usual em R.
-
-Em R, `install.packages()` instala em uma biblioteca global compartilhada por todos os
-seus projetos. Em Julia, cada projeto tem seu próprio ambiente, descrito por dois arquivos:
-
-- **`Project.toml`** — as dependências diretas que você declarou.
-- **`Manifest.toml`** — a árvore completa e resolvida de dependências, com as versões
-  exatas de tudo.
-
-Juntos eles tornam a análise reproduzível por construção: quem clonar seu repositório e
-rodar `Pkg.instantiate()` obtém exatamente as suas versões.
-
-::: {.r-equivalent}
-**Em R**
-
-`Project.toml` + `Manifest.toml` cumprem o papel de `renv.lock`, mas fazem parte da
-linguagem, não de um pacote adicional. Ativar um ambiente é a operação padrão, não a
-exceção.
-:::
-
-```{julia}
-#| label: ambiente-status
-using Pkg
-Pkg.status()
-```
-
-## O ambiente deste livro {#sec-ambiente-livro}
-
-```{julia}
-#| label: versioninfo
-versioninfo()
-```
-
-Para reproduzir o livro:
+Quando terminar, **feche o terminal e abra um novo** — o comando `julia` só fica
+disponível em terminais novos. Depois, confira a instalação:
 
 ```bash
-git clone <url-do-repositório>
-cd EcologicalAnalysesInJulia
-julia --project=. -e 'using Pkg; Pkg.instantiate()'
+julia --version
 ```
 
-## Editor {#sec-editor}
+Deve aparecer algo como `julia version 1.12.6`. Qualquer versão a partir da 1.10
+funciona com este livro. Agora digite `julia` e pressione `Enter` para abrir o Julia
+propriamente dito. O prompt muda para `julia>`; digite `1 + 1`, pressione `Enter`, e
+Julia responde `2`. Saia com `exit()`.
 
-**VS Code** com a extensão oficial de Julia é a recomendação padrão: oferece REPL
-integrado, navegador de variáveis, painel de gráficos, depurador e avaliação linha a
-linha, o equivalente funcional do RStudio.
+Mais tarde, `juliaup update` atualiza o Julia e `juliaup status` lista as versões
+instaladas.
+
+## Passo 3: baixe a pasta do livro {#sec-baixar}
+
+O livro vem com uma pasta que contém os dados de exemplo, o verificador de exercícios
+e a lista de pacotes de que o livro precisa.
+
+1. Acesse <https://github.com/esantos2ua/EcologicalAnalysesInJulia>.
+2. Clique no botão verde **Code** e depois em **Download ZIP**.
+3. Descompacte o arquivo:
+
+   ::: {.panel-tabset}
+   ## Windows
+
+   Clique com o botão direito no arquivo baixado e escolha **Extrair Tudo…**.
+   Trabalhe na pasta extraída, não dentro do ZIP: arquivos abertos de dentro de um
+   ZIP são cópias somente leitura.
+
+   ## macOS
+
+   Dê um duplo clique no arquivo baixado.
+
+   ## Linux
+
+   Clique com o botão direito no arquivo e escolha *Extrair aqui*, ou rode `unzip`
+   nele.
+   :::
+
+4. Mova a pasta extraída, `EcologicalAnalysesInJulia-main`, para um lugar
+   permanente, como a pasta *Documentos*. Você pode renomeá-la, mas evite deixá-la
+   em *Downloads*, que alguns sistemas limpam automaticamente.
+
+Dentro dela você deve ver, entre outras coisas, as pastas `data` e `exercises` e os
+arquivos `Project.toml` e `Manifest.toml`.
+
+::: {.callout-tip}
+## Se você já usa git
+
+Clone o repositório em vez de baixar o ZIP; depois, `git pull` traz as atualizações
+do livro:
+
+```bash
+git clone https://github.com/esantos2ua/EcologicalAnalysesInJulia.git
+```
+:::
+
+## Passo 4: instale o VS Code {#sec-editor}
+
+O **VS Code** com a extensão oficial de Julia é o editor padrão para Julia: oferece
+REPL integrado (o console onde o código roda), navegador de variáveis, painel de
+gráficos, depurador e avaliação linha a linha — o equivalente funcional do RStudio.
+
+1. **Instale o VS Code** a partir de <https://code.visualstudio.com> e abra-o.
+2. **Instale a extensão de Julia.** Abra o painel de extensões (`Ctrl+Shift+X`;
+   `Cmd+Shift+X` no macOS), procure por *Julia* e instale a extensão publicada por
+   *julialang*. Ela encontra sozinha o Julia instalado pelo `juliaup`.
 
 Se você prefere uma versão totalmente de código aberto, o
 [VSCodium](https://vscodium.com) é o VS Code compilado a partir do mesmo código-fonte
 sob licença MIT, sem a telemetria da Microsoft, e instala a mesma extensão de Julia
-pelo registro [Open VSX](https://open-vsx.org). Tudo o que segue vale para os dois.
+pelo registro [Open VSX](https://open-vsx.org). Tudo neste livro vale para os dois.
+Outras opções são o **Pluto.jl** (notebooks reativos, excelentes para ensino) e
+qualquer editor com suporte a LSP via `LanguageServer.jl`.
 
-Alternativas: **Pluto.jl** (notebooks reativos, excelentes para ensino) e qualquer
-editor com suporte a LSP via `LanguageServer.jl`.
+## Passo 5: abra a pasta do livro {#sec-vscode-config}
 
-### Configurando o VS Code {#sec-vscode-config}
-
-1. **Instale o VS Code** a partir de <https://code.visualstudio.com> (ou o VSCodium).
-2. **Instale a extensão de Julia.** Abra o painel de extensões (`Ctrl+Shift+X`;
-   `Cmd+Shift+X` no macOS), procure por *Julia* e instale a extensão publicada por
-   *julialang*. Ela encontra sozinha o Julia instalado pelo `juliaup`; se não
-   encontrar, aponte a configuração `julia.executablePath` para ele.
-3. **Abra uma pasta, não um arquivo.** Use *File → Open Folder…* e escolha a pasta do
-   seu projeto — para este livro, a pasta `EcologicalAnalysesInJulia` clonada. A pasta
-   determina tanto o diretório de trabalho quanto o ambiente.
-4. **Confira o ambiente.** A barra de status, embaixo, deve mostrar
-   `Julia env: EcologicalAnalysesInJulia`. Quando a pasta contém um `Project.toml` e
-   um `Manifest.toml`, a extensão ativa o ambiente automaticamente; caso contrário,
-   clique nessa entrada da barra de status e escolha a pasta.
-5. **Inicie o REPL.** Abra a paleta de comandos (`Ctrl+Shift+P`; `Cmd+Shift+P` no
-   macOS) e rode *Julia: Start REPL*, ou pressione `Alt+J` e depois `Alt+O`. O REPL
-   inicia na raiz da pasta, já com o ambiente ativo carregado.
+1. **Abra uma pasta, não um arquivo.** No VS Code, use *File → Open Folder…* e
+   escolha a pasta do livro da @sec-baixar. Se o VS Code perguntar se você confia nos
+   autores dos arquivos, responda que sim. A pasta aberta determina tanto onde Julia
+   procura arquivos quanto quais pacotes ela usa.
+2. **Confira o ambiente.** A barra de status, na parte de baixo da janela, deve
+   mostrar `Julia env:` seguido do nome da pasta do livro. Se aparecer algo como
+   `Julia env: v1.12`, clique nessa entrada e escolha a pasta do livro.
+3. **Inicie o REPL.** Abra a paleta de comandos (`Ctrl+Shift+P`; `Cmd+Shift+P` no
+   macOS) e rode *Julia: Start REPL*, ou pressione `Alt+J` e depois `Alt+O`. Um painel
+   se abre embaixo com o prompt `julia>`, já dentro da pasta do livro e do seu
+   ambiente.
 
 ::: {.r-equivalent}
 **Em R**
@@ -105,20 +173,53 @@ diretório de trabalho. Diferente do RStudio, também seleciona o ambiente de pa
 automaticamente.
 :::
 
-Os atalhos que você vai usar o tempo todo:
+## Passo 6: instale os pacotes do livro {#sec-instanciar}
 
-| Atalho | Ação |
-|---|---|
-| `Shift+Enter` | roda a linha atual ou a seleção e passa para a próxima |
-| `Ctrl+Enter` | roda a linha atual ou a seleção, sem sair do lugar |
-| `Alt+Enter` | roda a célula atual (um bloco delimitado por linhas `##`) |
-| `Alt+J`, `Alt+R` | reinicia o REPL |
-| `Ctrl+C` no REPL | interrompe uma computação em andamento |
+Clique no painel do REPL e rode:
 
-No macOS, `Alt` é a tecla Option; `Ctrl` continua sendo `Ctrl`. Atalhos e nomes de
-menu foram conferidos na versão 1.249 da extensão de Julia em setembro de 2026.
+```julia
+using Pkg
+Pkg.instantiate()
+```
 
-### Um primeiro script {#sec-primeiro-script}
+Isso lê o `Manifest.toml`, baixa cada pacote que o livro usa na versão exata listada
+ali e os compila.
+
+::: {.callout-warning}
+## Isso demora
+
+Na primeira vez, `Pkg.instantiate()` pode levar de vários minutos a meia hora,
+dependendo do seu computador e da sua conexão. Os pacotes de gráficos e de modelos
+são grandes, e Julia os compila antecipadamente para que rodem rápido depois. Linhas
+de progresso continuam aparecendo enquanto ele trabalha; deixe terminar e não feche
+o VS Code. Você só faz isso uma vez por computador.
+:::
+
+## Passo 7: confira se tudo funciona {#sec-conferir-instalacao}
+
+A pasta do livro inclui um verificador, que você também vai usar nos exercícios a
+partir do @sec-julia-basico. Carregue-o e peça que ele confira a sua instalação:
+
+```julia
+include("exercises/checar.jl")
+checar("setup")
+```
+
+Se estiver tudo certo, você verá:
+
+```
+✓ Julia 1.12.6
+✓ A pasta de trabalho é a pasta do livro
+✓ O ambiente do livro está ativo
+✓ Arquivo de dados encontrado: data/ponds.csv
+✓ Todos os 19 pacotes instalados
+Tudo pronto. Siga para o primeiro script.
+```
+
+Uma linha com ✗ diz o que está errado e como corrigir; a @sec-problemas tem mais
+detalhes.
+
+## Passo 8: um primeiro script {#sec-primeiro-script}
 
 Com a pasta do livro aberta e o REPL rodando, crie um arquivo chamado
 `primeiros-passos.jl` na raiz da pasta (*File → New File*, ou `Alt+J` e depois
@@ -137,17 +238,17 @@ ponds = CSV.read(joinpath("data", "ponds.csv"), DataFrame)
 first(ponds, 5)
 describe(ponds)
 
-## Gráfico de riqueza contra área da poça
+## Gráfico de riqueza contra área da lagoa
 fig = Figure()
-ax = Axis(fig[1, 1]; xlabel = "Área da poça (m²)", ylabel = "Riqueza de espécies",
+ax = Axis(fig[1, 1]; xlabel = "Área da lagoa (m²)", ylabel = "Riqueza de espécies",
           xscale = log10)
 scatter!(ax, ponds.area_m2, ponds.richness)
 fig
 ```
 
-Coloque o cursor na primeira célula e pressione `Alt+Enter` para rodá-la; depois siga
-célula por célula (`Alt+Shift+Enter` roda a célula e pula para a próxima). Algumas
-coisas a observar:
+Linhas que começam com `##` dividem o script em **células**. Coloque o cursor na
+primeira célula e pressione `Alt+Enter` para rodá-la; depois siga célula por célula
+(`Alt+Shift+Enter` roda a célula e pula para a próxima). Algumas coisas a observar:
 
 - **Carregar pacotes é lento na primeira vez** em cada sessão — é a latência de
   compilação discutida na @sec-latencia. As células seguintes rodam na hora.
@@ -157,6 +258,19 @@ coisas a observar:
 - **`describe` é a sua primeira checagem dos dados.** Ele mostra que `canopy` tem 7
   valores ausentes e que `area_m2` é fortemente assimétrica à direita (mediana perto
   de 149 m², máximo perto de 2000 m²) — por isso o gráfico usa escala logarítmica.
+
+Os atalhos que você vai usar o tempo todo:
+
+| Atalho | Ação |
+|---|---|
+| `Shift+Enter` | roda a linha atual ou a seleção e passa para a próxima |
+| `Ctrl+Enter` | roda a linha atual ou a seleção, sem sair do lugar |
+| `Alt+Enter` | roda a célula atual (um bloco delimitado por linhas `##`) |
+| `Alt+J`, `Alt+R` | reinicia o REPL |
+| `Ctrl+C` no REPL | interrompe uma computação em andamento |
+
+No macOS, `Alt` é a tecla Option; `Ctrl` continua sendo `Ctrl`. Atalhos e nomes de
+menu foram conferidos na versão 1.249 da extensão de Julia em setembro de 2026.
 
 **Inspecionando o ambiente.** Clique no ícone de Julia na barra de atividades (a faixa
 à esquerda). O painel **Workspace** lista todas as variáveis da sessão — `ponds`,
@@ -170,7 +284,102 @@ aba do VS Code. O painel **Plot Navigator**, abaixo do Workspace, guarda o hist�
 de gráficos da sessão; com o painel de gráficos em foco, as setas do teclado navegam
 por ele. Para salvar uma figura em disco, use `save("riqueza-area.png", fig)`.
 
-## Quarto {#sec-quarto}
+## Solução de problemas {#sec-problemas}
+
+**`julia` não é reconhecido / `command not found`.**
+: Feche todos os terminais e abra um novo; o instalador só atualiza terminais novos.
+  Se ainda falhar, rode de novo o comando de instalação da @sec-instalando.
+
+**Windows: `winget` não é reconhecido.**
+: O `winget` vem com o aplicativo *Instalador de Aplicativo* (*App Installer*).
+  Atualize-o pela Microsoft Store, ou procure **Julia** na Microsoft Store e instale
+  por lá — é o mesmo instalador `juliaup`.
+
+**Linux: `curl: command not found`.**
+: Instale o `curl` pelo gerenciador de pacotes da sua distribuição (por exemplo,
+  `sudo apt install curl` no Ubuntu) e repita a @sec-instalando.
+
+**O VS Code diz que não encontra o Julia.**
+: Em um terminal, rode `where.exe julia` (Windows) ou `which julia` (macOS, Linux) e
+  copie o caminho exibido. No VS Code, abra as configurações (`Ctrl+,`; `Cmd+,` no
+  macOS), procure por `julia.executablePath` e cole o caminho ali. Depois, reinicie o
+  VS Code.
+
+**A barra de status mostra `Julia env: v1.12` (ou outra versão) em vez da pasta do livro.**
+: O VS Code está com a pasta errada aberta, ou com um único arquivo. Use *File → Open
+  Folder…* e escolha a própria pasta do livro — a que contém o `Project.toml` —, não
+  uma pasta acima ou dentro dela. Depois, reinicie o REPL (`Alt+J`, `Alt+R`).
+
+**Digitar `"` (ou `'`, `` ` ``, `~`, `^`) não mostra nada.**
+: O seu layout de teclado — algo comum nos layouts Brasileiro e US Internacional —
+  trata esses símbolos como *teclas mortas*, que esperam a próxima tecla para formar
+  uma letra acentuada. Pressione `Espaço` depois do símbolo para obtê-lo sozinho. Se
+  preferir evitar isso, adicione o layout **ABC** (macOS) ou **EUA** (Windows, Linux)
+  nas configurações de teclado do sistema e alterne para ele enquanto programa.
+
+**`include("exercises/checar.jl")` falha com `No such file or directory`.**
+: O REPL não está rodando na pasta do livro. `pwd()` mostra onde ele está. Abra a
+  pasta do livro como descrito acima e reinicie o REPL.
+
+**`Pkg.instantiate()` parece travado.**
+: Provavelmente está compilando; essa é a parte lenta. Enquanto novas linhas
+  continuarem aparecendo a cada poucos minutos, espere. Se ele parou com um erro —
+  por exemplo, porque a conexão caiu —, rode `Pkg.instantiate()` de novo; ele
+  continua de onde parou.
+
+**`Package CairoMakie not found in current path` (ou outro pacote).**
+: Ou o ambiente do livro não está ativo (confira a barra de status), ou a
+  @sec-instanciar não terminou. `checar("setup")` diz qual dos dois.
+
+**O primeiro `using CairoMakie` de cada sessão leva um minuto.**
+: É normal: Julia compila o código na primeira vez que ele roda em uma sessão
+  (@sec-latencia). Os comandos seguintes são rápidos.
+
+## Por dentro: ambientes de projeto {#sec-ambientes}
+
+Você já usou um ambiente sem precisar pensar nele: é o que a barra de status da
+@sec-vscode-config mostra. Esta seção explica o que ele é — o conceito que mais
+difere da prática usual em R.
+
+Em R, `install.packages()` instala em uma biblioteca global compartilhada por todos os
+seus projetos. Em Julia, cada projeto tem seu próprio ambiente, descrito por dois
+arquivos:
+
+- **`Project.toml`** — as dependências diretas que você declarou.
+- **`Manifest.toml`** — a árvore completa e resolvida de dependências, com as versões
+  exatas de tudo.
+
+Juntos eles tornam a análise reproduzível por construção: quem tiver a pasta do seu
+projeto e rodar `Pkg.instantiate()` obtém exatamente as suas versões — foi o que você
+fez na @sec-instanciar.
+
+::: {.r-equivalent}
+**Em R**
+
+`Project.toml` + `Manifest.toml` cumprem o papel de `renv.lock`, mas fazem parte da
+linguagem, não de um pacote adicional. Ativar um ambiente é a operação padrão, não a
+exceção.
+:::
+
+`Pkg.status()` lista os pacotes do ambiente ativo:
+
+```{julia}
+#| label: ambiente-status
+using Pkg
+Pkg.status()
+```
+
+Este livro foi gerado com:
+
+```{julia}
+#| label: versioninfo
+versioninfo()
+```
+
+## Por dentro: Quarto {#sec-quarto}
+
+Você não precisa desta seção para acompanhar o livro. Ela é para quem quer gerar o
+livro por conta própria ou escrever documentos parecidos.
 
 Este livro é escrito em [Quarto](https://quarto.org), sucessor direto do `bookdown`.
 Desde a versão 1.5, Quarto executa blocos Julia nativamente, sem passar por Jupyter.
@@ -182,11 +391,16 @@ Desde a versão 1.5, Quarto executa blocos Julia nativamente, sem passar por Jup
 ```
 ````
 
-## Exercícios {.unnumbered}
+O `README.md` do repositório explica como gerar o livro.
 
-1. Crie um ambiente novo com `] activate .` em uma pasta vazia e adicione `DataFrames`.
-   Inspecione o `Project.toml` gerado.
-2. Delete o `Manifest.toml` e rode `Pkg.resolve()`. O que muda?
+## Desafios {.unnumbered}
+
+1. No REPL, pressione `]` para entrar no modo de pacotes (o prompt fica azul;
+   `Backspace` sai dele). Rode `activate meu-teste` e depois `add DataFrames`: isso
+   cria um ambiente em uma pasta nova, `meu-teste`. Inspecione o `Project.toml`
+   gerado e depois rode `activate .` para voltar ao ambiente do livro.
+2. Apague `meu-teste/Manifest.toml`, ative `meu-teste` de novo e rode `resolve`. O
+   que muda?
 3. Rode o `primeiros-passos.jl` (@sec-primeiro-script) célula por célula. No painel
    Workspace, que tipos o `CSV.jl` atribuiu às colunas `region` e `canopy`, e por que
    o tipo de `canopy` é diferente do de `area_m2`?

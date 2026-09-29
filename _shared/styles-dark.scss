@@ -15,3 +15,7 @@ $link-color: #7fb3d5 !default;
 }
 .r-equivalent > p:first-child { font-weight: 600; margin-bottom: 0.3rem; }
 pre.julia-output { overflow-x: auto; }
+
+.callout.exercise { border-left-color: #5cc48a !important; }
+.callout.exercise > .callout-header { background-color: rgba(92, 196, 138, 0.12) !important; }
+.callout.exercise > .callout-header .callout-icon::before { filter: hue-rotate(-90deg); }

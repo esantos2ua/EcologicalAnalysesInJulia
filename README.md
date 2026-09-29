@@ -67,6 +67,7 @@ pt/_freeze en/_freeze  committed execution cache (only changed chapters re-run)
 _shared/common.yml   shared config (Julia engine, format, execute options)
 _shared/             bibliography, SCSS themes, HTML header
 data/ponds.csv       simulated example dataset (regenerate with scripts/make_data.jl)
+exercises/           exercise checker: check.jl (en) / checar.jl (pt) load Checks.jl
 scripts/             environment setup, data generation, build
 Project.toml         the book's Julia environment
 Manifest.toml        pinned package versions

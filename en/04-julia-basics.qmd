@@ -10,6 +10,32 @@ using Random
 Random.seed!(42)
 ```
 
+```{julia}
+#| label: checker-04
+#| include: false
+include(joinpath("..", "exercises", "check.jl"))
+```
+
+::: {.callout-note .exercise}
+## How the exercises work
+
+Most sections end with a *Your turn* box. Work on them in VS Code with the book
+folder open (@sec-first-script), and load the checker once per session:
+
+```julia
+include("exercises/check.jl")
+```
+
+Then pass your answer — a value, or a function you wrote — with the exercise number:
+
+```julia
+check("4.3", simpson)
+```
+
+`check` says whether the answer is right and, if not, what it did and what was
+expected. Each box has a hint and a solution folded away: try first, then peek.
+:::
+
 ## Vectors and indexing {#sec-vectors}
 
 ```{julia}
@@ -46,6 +72,43 @@ R prioritises carrying on, Julia prioritises failing early. Which serves you bet
 depends on your workflow — what matters is knowing which one you are using.
 :::
 
+::: {.callout-note .exercise}
+## Your turn 4.1 — Drop a bad value
+
+These are the areas (m²) of five ponds. The last one is a data-entry error.
+
+```{julia}
+#| label: data-4-1
+areas = [174.1, 161.6, 233.9, 174.5, 1980.0]
+```
+
+Create `clean`, holding every pond except the last. Do not type the position `4`:
+your code should still work if more ponds are added.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Inside square brackets, `end` means "the last position", so `end - 1` is the one
+before it.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-4-1
+clean = areas[1:end-1]
+check("4.1", clean)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-4-1
+#| include: false
+Checks.verify("4.1", clean)
+```
+
 ## Broadcasting: the dot {#sec-broadcasting}
 
 In R, nearly every function is vectorized by default. In Julia you declare
@@ -79,6 +142,38 @@ An entire chain can be dotted at once with `@.`:
 ```
 :::
 
+::: {.callout-note .exercise}
+## Your turn 4.2 — Log-transform the areas
+
+The area plot in @sec-first-script used a log scale, because pond areas are strongly
+right-skewed. Compute the base-10 logarithm of every value in `areas` and store it
+in `log_areas`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`log10(areas)` fails. Read the error, then reread the dot rule just above.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-4-2
+log_areas = log10.(areas)
+check("4.2", log_areas)
+```
+
+`log10` is defined for a single number; the dot applies it to each element.
+:::
+:::
+
+```{julia}
+#| label: verify-4-2
+#| include: false
+Checks.verify("4.2", log_areas)
+```
+
 ## Functions {#sec-functions}
 
 ```{julia}
@@ -96,6 +191,43 @@ end
 
 community = [45, 12, 0, 8, 23, 0, 3]
 richness(community), shannon(community)
+```
+
+::: {.callout-note .exercise}
+## Your turn 4.3 — Simpson's index
+
+Write `simpson(abundances)`, returning Simpson's index $1 - \sum p_i^2$, where
+$p_i$ is the proportion of individuals belonging to species $i$. The first lines of
+`shannon` already compute the proportions.
+
+Before calling `check`, try `simpson([3, 1])` yourself: it should give 0.375.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`p .^ 2` squares each proportion and `sum` adds them up. Zeros need no special care
+here: $0^2 = 0$.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-4-3
+function simpson(abundances)
+    p = abundances ./ sum(abundances)
+    return 1 - sum(p .^ 2)
+end
+
+check("4.3", simpson)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-4-3
+#| include: false
+Checks.verify("4.3", simpson)
 ```
 
 ## Multiple dispatch {#sec-dispatch}
@@ -119,6 +251,52 @@ In practice this means that when someone defines a new ecological data type, `me
 `plot` and `fit` start working with it as soon as the appropriate methods are defined
 — without the authors of `Statistics` or `Makie` knowing the new type exists.
 
+::: {.callout-note .exercise}
+## Your turn 4.4 — One index per site
+
+`simpson` handles one community. Field data usually come as a site × species matrix,
+one row per site. Add a second method, `simpson(M::Matrix)`, that returns one index
+per row. The vector method must keep working.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`eachrow(M)` goes through the rows one at a time. Combine it with the dot, or with a
+comprehension: `[f(row) for row in eachrow(M)]`. If `check` complains about the
+argument types, read its message carefully — it is a common trap.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-4-4
+simpson(M::Matrix) = simpson.(eachrow(M))
+
+sites = [45 12  0 8;
+          5  5  5 5;
+         30  0  0 0]
+simpson(sites)
+```
+
+```{julia}
+#| label: answer-4-4-check
+check("4.4", simpson)
+length(methods(simpson))
+```
+
+The matrix method reuses the vector method for each row. One function, two methods,
+and Julia picks by the argument's type; run `methods(simpson)` in the REPL to see
+both.
+:::
+:::
+
+```{julia}
+#| label: verify-4-4
+#| include: false
+Checks.verify("4.4", simpson)
+```
+
 ## Missing data {#sec-missing}
 
 ```{julia}
@@ -141,6 +319,49 @@ and the compiler knows whether a column can contain it — a `Vector{Float64}` n
 contains `missing`, a `Vector{Union{Missing,Float64}}` may. That eliminates a whole
 class of silent bugs.
 :::
+
+::: {.callout-note .exercise}
+## Your turn 4.5 — How much is missing?
+
+Canopy cover was not recorded at every pond:
+
+```{julia}
+#| label: data-4-5
+canopy = [70.0, 42.6, missing, 49.4, missing, 81.2]
+```
+
+Write `missing_summary(x)` returning a tuple of two numbers: how many values are
+missing, and the mean of the rest. For `canopy` that is `(2, 60.8)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`count(f, x)` counts the elements for which `f` is `true`, and `ismissing` is such a
+function. The mean is in the block just above. Return both with `return (n, m)`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-4-5
+missing_summary(x) = (count(ismissing, x), mean(skipmissing(x)))
+
+missing_summary(canopy)
+```
+
+```{julia}
+#| label: answer-4-5-check
+check("4.5", missing_summary)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-4-5
+#| include: false
+Checks.verify("4.5", missing_summary)
+```
 
 ## Chaining {#sec-pipe}
 
@@ -180,6 +401,54 @@ the idea. This changes how null models and simulations are written — a topic t
 returns in the community-ecology chapters of a future edition.
 :::
 
+::: {.callout-note .exercise}
+## Your turn 4.6 — Shannon, one species at a time
+
+Rewrite `shannon` as `shannon_loop`, using a `for` loop instead of broadcasting. It
+must give the same result as `shannon`, including for communities with zero counts
+such as `community`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Start with `H = 0.0`, go through the counts one by one, turn each into a proportion
+and subtract `p * log(p)` from `H`. If you get `NaN`, type `0 * log(0)` in the REPL.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-4-6
+function shannon_loop(abundances)
+    total = sum(abundances)
+    H = 0.0
+    for a in abundances
+        a == 0 && continue       # absent species contribute nothing
+        p = a / total
+        H -= p * log(p)
+    end
+    return H
+end
+
+shannon_loop(community), shannon(community)
+```
+
+```{julia}
+#| label: answer-4-6-check
+check("4.6", shannon_loop)
+```
+
+`a == 0 && continue` is Julia shorthand for `if a == 0 continue end`.
+:::
+:::
+
+```{julia}
+#| label: verify-4-6
+#| include: false
+Checks.verify("4.6", shannon_loop)
+```
+
 ## Naming conventions {#sec-conventions}
 
 | Convention | Meaning |
@@ -190,8 +459,17 @@ returns in the community-ecology chapters of a future edition.
 | `Type` | types in `CamelCase` |
 | `function_name` | functions lowercase, usually without separators |
 
-## Exercises {.unnumbered}
+## Challenges {.unnumbered}
 
-1. Write `simpson(abundances)` computing Simpson's index $1 - \sum p_i^2$.
-2. Rewrite `shannon` using an explicit loop and confirm it gives the same result.
-3. Add a `Matrix` method to `diversity`, treating rows as sites.
+These have no checker and no single right answer. They are about what your code does
+— and what it does not tell you.
+
+1. `simpson([-3, 5])` returns a number. Which number, and should it? Change the vector
+   method of `simpson` so that negative counts raise an informative error with
+   `throw(ArgumentError("..."))`. Does the matrix method inherit the fix?
+2. Communities `[10, 4, 3, 3]` and `[8, 7, 4, 1]` have the same richness and the same
+   number of individuals. Compute Shannon and Simpson for both. Do the two indices
+   agree on which community is more diverse? What does this imply for a paper that
+   reports "diversity" as a single number?
+3. Load `data/ponds.csv` as in @sec-first-script and run `missing_summary` on
+   `ponds.canopy`. Does the count agree with what `describe(ponds)` reports?

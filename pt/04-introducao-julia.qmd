@@ -10,6 +10,35 @@ using Random
 Random.seed!(42)
 ```
 
+```{julia}
+#| label: verificador-04
+#| include: false
+include(joinpath("..", "exercises", "checar.jl"))
+```
+
+::: {.callout-note .exercise}
+## Como funcionam os exercícios
+
+A maioria das seções termina com um quadro *Sua vez*. Resolva no VS Code, com a
+pasta do livro aberta (@sec-primeiro-script), e carregue o verificador uma vez por
+sessão:
+
+```julia
+include("exercises/checar.jl")
+```
+
+Depois passe sua resposta — um valor, ou uma função que você escreveu — junto com o
+número do exercício:
+
+```julia
+checar("4.3", simpson)
+```
+
+`checar` diz se a resposta está certa e, se não estiver, o que ela fez e o que era
+esperado. Cada quadro tem uma dica e uma solução recolhidas: tente primeiro, depois
+espie.
+:::
+
 ## Vetores e indexação {#sec-vetores}
 
 ```{julia}
@@ -46,6 +75,43 @@ prioriza seguir adiante, Julia prioriza falhar cedo. Qual serve melhor depende d
 fluxo de trabalho — o que importa é saber qual das duas você está usando.
 :::
 
+::: {.callout-note .exercise}
+## Sua vez 4.1 — Tire um valor errado
+
+Estas são as áreas (m²) de cinco lagoas. A última é um erro de digitação.
+
+```{julia}
+#| label: data-4-1
+areas = [174.1, 161.6, 233.9, 174.5, 1980.0]
+```
+
+Crie `limpo`, com todas as lagoas menos a última. Não digite a posição `4`: seu
+código deve continuar funcionando se mais lagoas forem adicionadas.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Dentro dos colchetes, `end` significa "a última posição"; logo, `end - 1` é a
+anterior.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-4-1
+limpo = areas[1:end-1]
+checar("4.1", limpo)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-4-1
+#| include: false
+Checks.verify("4.1", limpo)
+```
+
 ## Broadcasting: o ponto {#sec-broadcasting}
 
 Em R, quase toda função é vetorizada por padrão. Em Julia, você declara a
@@ -79,6 +145,38 @@ Se você quer "aplicar isso a cada elemento", ponha um ponto. `f.(x)`, `x .+ y`,
 ```
 :::
 
+::: {.callout-note .exercise}
+## Sua vez 4.2 — Log das áreas
+
+O gráfico de área em @sec-primeiro-script usou escala log, porque as áreas das
+lagoas são muito assimétricas à direita. Calcule o logaritmo na base 10 de cada valor
+de `areas` e guarde em `log_areas`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+`log10(areas)` dá erro. Leia a mensagem e releia a regra do ponto logo acima.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-4-2
+log_areas = log10.(areas)
+checar("4.2", log_areas)
+```
+
+`log10` é definida para um número; o ponto a aplica a cada elemento.
+:::
+:::
+
+```{julia}
+#| label: verify-4-2
+#| include: false
+Checks.verify("4.2", log_areas)
+```
+
 ## Funções {#sec-funcoes}
 
 ```{julia}
@@ -96,6 +194,43 @@ end
 
 comunidade = [45, 12, 0, 8, 23, 0, 3]
 riqueza(comunidade), shannon(comunidade)
+```
+
+::: {.callout-note .exercise}
+## Sua vez 4.3 — Índice de Simpson
+
+Escreva `simpson(abundancias)`, que retorna o índice de Simpson $1 - \sum p_i^2$,
+onde $p_i$ é a proporção de indivíduos da espécie $i$. As primeiras linhas de
+`shannon` já calculam as proporções.
+
+Antes de chamar `checar`, teste `simpson([3, 1])` você mesmo: deve dar 0.375.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+`p .^ 2` eleva cada proporção ao quadrado e `sum` soma tudo. Zeros não precisam de
+cuidado especial aqui: $0^2 = 0$.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-4-3
+function simpson(abundancias)
+    p = abundancias ./ sum(abundancias)
+    return 1 - sum(p .^ 2)
+end
+
+checar("4.3", simpson)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-4-3
+#| include: false
+Checks.verify("4.3", simpson)
 ```
 
 ## Despacho múltiplo {#sec-despacho}
@@ -120,6 +255,52 @@ Na prática, isso significa que quando alguém define um novo tipo de dado ecol�
 sejam definidos — sem que os autores de `Statistics` ou `Makie` saibam da existência
 do novo tipo.
 
+::: {.callout-note .exercise}
+## Sua vez 4.4 — Um índice por local
+
+`simpson` trata uma comunidade. Dados de campo costumam vir como uma matriz locais ×
+espécies, uma linha por local. Adicione um segundo método, `simpson(M::Matrix)`, que
+retorne um índice por linha. O método para vetores tem que continuar funcionando.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+`eachrow(M)` percorre as linhas uma a uma. Combine com o ponto, ou com uma
+compreensão: `[f(linha) for linha in eachrow(M)]`. Se `checar` reclamar dos tipos dos
+argumentos, leia a mensagem com atenção — é uma armadilha comum.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-4-4
+simpson(M::Matrix) = simpson.(eachrow(M))
+
+locais = [45 12  0 8;
+           5  5  5 5;
+          30  0  0 0]
+simpson(locais)
+```
+
+```{julia}
+#| label: answer-4-4-check
+checar("4.4", simpson)
+length(methods(simpson))
+```
+
+O método para matrizes reaproveita o método para vetores em cada linha. Uma função,
+dois métodos, e Julia escolhe pelo tipo do argumento; rode `methods(simpson)` no REPL
+para ver os dois.
+:::
+:::
+
+```{julia}
+#| label: verify-4-4
+#| include: false
+Checks.verify("4.4", simpson)
+```
+
 ## Dados faltantes {#sec-missing}
 
 ```{julia}
@@ -142,6 +323,50 @@ compilador sabe se uma coluna pode ou não contê-lo — `Vector{Float64}` nunca
 `missing`, `Vector{Union{Missing,Float64}}` pode. Isso elimina uma classe inteira de
 bugs silenciosos.
 :::
+
+::: {.callout-note .exercise}
+## Sua vez 4.5 — Quanto está faltando?
+
+A cobertura de dossel não foi medida em todas as lagoas:
+
+```{julia}
+#| label: data-4-5
+dossel = [70.0, 42.6, missing, 49.4, missing, 81.2]
+```
+
+Escreva `resumo_faltantes(x)`, que retorna uma tupla com dois números: quantos
+valores estão faltando e a média dos demais. Para `dossel`, o resultado é `(2, 60.8)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+`count(f, x)` conta os elementos para os quais `f` é `true`, e `ismissing` é uma
+função desse tipo. A média está no bloco logo acima. Retorne os dois com
+`return (n, m)`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-4-5
+resumo_faltantes(x) = (count(ismissing, x), mean(skipmissing(x)))
+
+resumo_faltantes(dossel)
+```
+
+```{julia}
+#| label: answer-4-5-check
+checar("4.5", resumo_faltantes)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-4-5
+#| include: false
+Checks.verify("4.5", resumo_faltantes)
+```
 
 ## Encadeamento {#sec-pipe}
 
@@ -181,6 +406,55 @@ expressa a ideia. Isso muda como se escrevem modelos nulos e simulações — as
 volta nos capítulos de ecologia de comunidades de uma futura edição.
 :::
 
+::: {.callout-note .exercise}
+## Sua vez 4.6 — Shannon, uma espécie por vez
+
+Reescreva `shannon` como `shannon_laco`, usando um loop `for` em vez de broadcasting.
+O resultado tem que ser igual ao de `shannon`, inclusive para comunidades com
+contagens zero, como `comunidade`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Comece com `H = 0.0`, percorra as contagens uma a uma, transforme cada uma em
+proporção e subtraia `p * log(p)` de `H`. Se aparecer `NaN`, digite `0 * log(0)` no
+REPL.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-4-6
+function shannon_laco(abundancias)
+    total = sum(abundancias)
+    H = 0.0
+    for a in abundancias
+        a == 0 && continue       # espécies ausentes não contribuem
+        p = a / total
+        H -= p * log(p)
+    end
+    return H
+end
+
+shannon_laco(comunidade), shannon(comunidade)
+```
+
+```{julia}
+#| label: answer-4-6-check
+checar("4.6", shannon_laco)
+```
+
+`a == 0 && continue` é a forma curta, em Julia, de `if a == 0 continue end`.
+:::
+:::
+
+```{julia}
+#| label: verify-4-6
+#| include: false
+Checks.verify("4.6", shannon_laco)
+```
+
 ## Convenções de nomes {#sec-convencoes}
 
 | Convenção | Significado |
@@ -191,8 +465,17 @@ volta nos capítulos de ecologia de comunidades de uma futura edição.
 | `Tipo` | tipos em `CamelCase` |
 | `nome_funcao` | funções em minúsculas, geralmente sem separador |
 
-## Exercícios {.unnumbered}
+## Desafios {.unnumbered}
 
-1. Escreva `simpson(abundancias)` calculando o índice de Simpson $1 - \sum p_i^2$.
-2. Reescreva `shannon` usando um loop explícito e confirme que dá o mesmo resultado.
-3. Adicione a `diversidade` um método para `Matrix`, tratando as linhas como locais.
+Estes não têm verificador nem uma única resposta certa. São sobre o que o seu código
+faz — e o que ele não diz.
+
+1. `simpson([-3, 5])` retorna um número. Qual, e deveria? Altere o método de
+   `simpson` para vetores de modo que contagens negativas gerem um erro informativo
+   com `throw(ArgumentError("..."))`. O método para matrizes herda a correção?
+2. As comunidades `[10, 4, 3, 3]` e `[8, 7, 4, 1]` têm a mesma riqueza e o mesmo
+   número de indivíduos. Calcule Shannon e Simpson para as duas. Os dois índices
+   concordam sobre qual comunidade é mais diversa? O que isso implica para um artigo
+   que reporta "diversidade" como um único número?
+3. Carregue `data/ponds.csv` como em @sec-primeiro-script e rode `resumo_faltantes`
+   em `ponds.canopy`. A contagem bate com o que `describe(ponds)` mostra?
