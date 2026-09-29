@@ -1,0 +1,251 @@
+# Data wrangling with Tidier {#sec-tidier}
+
+In the original book this is the `tidyverse` chapter. Julia has a remarkably faithful
+translation: the [**Tidier**](https://tidierorg.github.io/Tidier.jl/stable/) family, a
+pure-Julia reimplementation of the `tidyverse` mini-language on top of `DataFrames.jl`.
+
+```{julia}
+#| label: setup-05
+using TidierData
+using DataFrames
+using Statistics
+```
+
+## The data {#sec-pond-data}
+
+Throughout the book we use a **simulated** survey of anurans in 180 ponds across three
+regions. The data are simulated on purpose: because the generating process is known,
+every model fitted in @sec-linear-models and @sec-glm can be checked against the
+truth. The generator lives in `scripts/make_data.jl`.
+
+```{julia}
+#| label: load-data
+using CSV
+
+ponds = CSV.read(joinpath("..", "data", "ponds.csv"), DataFrame)
+first(ponds, 5)
+```
+
+```{julia}
+#| label: structure
+describe(ponds, :eltype, :nmissing, :mean, :min, :max)
+```
+
+| Column | Meaning |
+|---|---|
+| `pond_id` | pond identifier |
+| `region` | region (Atlantic, Cerrado, Amazon) |
+| `hydro` | hydroperiod (permanent, temporary) |
+| `area_m2` | pond area (m²) |
+| `canopy` | canopy cover (%) |
+| `temp_c` | water temperature (°C) |
+| `richness` | species richness (count) |
+| `focal` | focal species occurrence (0/1) |
+| `body_size` | mean body size (mm) |
+
+::: {.callout-note}
+Column names are in English in both versions of the book, so that the code is
+literally identical in English and Portuguese.
+:::
+
+## `@chain`: the pipe {#sec-chain}
+
+`@chain` is the backbone of everything that follows. It passes each line's result as
+the first argument of the next — exactly the role of `|>` (or `%>%`) in R.
+
+```{julia}
+#| label: chain-basic
+@chain ponds begin
+    @filter(region == "Amazon")
+    @select(pond_id, area_m2, canopy, richness)
+    @arrange(desc(richness))
+    first(5)
+end
+```
+
+::: {.r-equivalent}
+**In R**
+
+```r
+ponds %>%
+  filter(region == "Amazon") %>%
+  select(pond_id, area_m2, canopy, richness) %>%
+  arrange(desc(richness)) %>%
+  head(5)
+```
+
+The correspondence is line for line. The only syntactic difference is the `@` and the
+`begin ... end`.
+:::
+
+## The five verbs {#sec-verbs}
+
+### `@filter` — pick rows
+
+```{julia}
+#| label: filter
+@chain ponds begin
+    @filter(richness > 8 && hydro == "permanent")
+    nrow
+end
+```
+
+Note: inside `@filter`, use `&&` and `||`, not `&` and `|` as in `dplyr`.
+
+### `@select` — pick columns
+
+```{julia}
+#| label: select
+@chain ponds begin
+    @select(pond_id, region, richness)
+    first(3)
+end
+```
+
+```{julia}
+#| label: select-negative
+# exclusion and ranges work as in dplyr
+@chain ponds begin
+    @select(-pond_id, -focal)
+    names
+end
+```
+
+### `@mutate` — create columns
+
+```{julia}
+#| label: mutate
+ponds_t = @chain ponds begin
+    @mutate(
+        log_area   = log(area_m2),
+        canopy_std = (canopy - mean(skipmissing(canopy))) / std(skipmissing(canopy)),
+        open       = canopy < 40,
+    )
+end
+
+@chain ponds_t begin
+    @select(pond_id, area_m2, log_area, canopy, canopy_std, open)
+    first(5)
+end
+```
+
+### `@group_by` + `@summarize` — aggregate
+
+```{julia}
+#| label: summarize
+@chain ponds begin
+    @group_by(region, hydro)
+    @summarize(
+        n            = n(),
+        mean_rich    = mean(richness),
+        sd_rich      = std(richness),
+        prop_focal   = mean(focal),
+    )
+    @arrange(region, hydro)
+end
+```
+
+### `@arrange` — sort
+
+```{julia}
+#| label: arrange
+@chain ponds begin
+    @arrange(region, desc(richness))
+    @select(region, pond_id, richness)
+    first(6)
+end
+```
+
+## Missing data {#sec-tidier-missing}
+
+The `canopy` column has missing values on purpose.
+
+```{julia}
+#| label: count-missing
+sum(ismissing.(ponds.canopy))
+```
+
+```{julia}
+#| label: drop-missing
+@chain ponds begin
+    @drop_missing(canopy)
+    nrow
+end
+```
+
+```{julia}
+#| label: missing-summarize
+# aggregating while ignoring missings
+@chain ponds begin
+    @group_by(region)
+    @summarize(mean_canopy = mean(skipmissing(canopy)))
+end
+```
+
+::: {.callout-warning}
+`mean(canopy)` returns `missing` if any value is missing — the same behaviour as R's
+`mean()` without `na.rm = TRUE`. Be explicit with `skipmissing`.
+:::
+
+## Long and wide formats {#sec-pivot}
+
+```{julia}
+#| label: pivot-longer
+long = @chain ponds begin
+    @select(pond_id, region, area_m2, canopy, temp_c)
+    @pivot_longer(area_m2:temp_c, names_to = "variable", values_to = "value")
+end
+
+first(long, 6)
+```
+
+```{julia}
+#| label: pivot-wider
+@chain long begin
+    @pivot_wider(names_from = variable, values_from = value)
+    first(3)
+end
+```
+
+## Joins {#sec-joins}
+
+```{julia}
+#| label: joins
+# an auxiliary table with region-level information
+regions = DataFrame(
+    region     = ["Atlantic", "Cerrado", "Amazon"],
+    biome_type = ["forest", "savanna", "forest"],
+    mean_rain  = [1400, 1500, 2300],
+)
+
+@chain ponds begin
+    @left_join(regions, region)
+    @select(pond_id, region, biome_type, mean_rain, richness)
+    first(5)
+end
+```
+
+## `DataFrames.jl` underneath {#sec-native-dataframes}
+
+Tidier is a convenience layer. It is worth knowing the native form, which is what you
+will meet in most of the ecosystem's documentation:
+
+```{julia}
+#| label: native-dataframes
+combine(
+    groupby(ponds, :region),
+    :richness => mean => :mean_rich,
+    :richness => length => :n,
+)
+```
+
+Same result as the `@group_by`/`@summarize` above. Use Tidier to write, and recognize
+the native form to read.
+
+## Exercises {.unnumbered}
+
+1. How many temporary ponds have canopy cover above 60% and richness below the overall
+   median?
+2. Compute, per region, the proportion of ponds where the focal species occurs, sorted
+   from highest to lowest.
+3. Rewrite exercise 2 using native `groupby`/`combine`.

@@ -1,0 +1,234 @@
+# Linear models {#sec-linear-models}
+
+```{julia}
+#| label: setup-07
+using TidierData
+using DataFrames, CSV
+using GLM, StatsModels, StatsBase, Statistics, Distributions
+using HypothesisTests
+using CairoMakie
+using MixedModels
+
+CairoMakie.activate!(type = "png")
+
+ponds = @chain CSV.read(joinpath("..", "data", "ponds.csv"), DataFrame) begin
+    @drop_missing(canopy)
+    @mutate(log_area = log(area_m2))
+end
+
+nrow(ponds)
+```
+
+## Hypothesis tests {#sec-tests}
+
+Before models, the basics. `HypothesisTests.jl` covers the usual repertoire.
+
+```{julia}
+#| label: ttest
+perm = @chain ponds begin @filter(hydro == "permanent") end
+temp_ = @chain ponds begin @filter(hydro == "temporary") end
+
+UnequalVarianceTTest(perm.richness, temp_.richness)
+```
+
+::: {.r-equivalent}
+**In R**
+
+`t.test(richness ~ hydro, data = ponds)` uses Welch by default — the same as
+`UnequalVarianceTTest`. For the equal-variance test, use `EqualVarianceTTest`.
+:::
+
+```{julia}
+#| label: other-tests
+# normality and correlation
+(
+    ks_normal = ExactOneSampleKSTest(
+        (ponds.body_size .- mean(ponds.body_size)) ./ std(ponds.body_size),
+        Normal(0, 1)) |> pvalue,
+    correlation = CorrelationTest(ponds.canopy, ponds.body_size) |> pvalue,
+)
+```
+
+## Simple linear regression {#sec-simple-lm}
+
+The dataset's continuous response is `body_size`, mean body size.
+
+```{julia}
+#| label: simple-lm
+m1 = lm(@formula(body_size ~ temp_c), ponds)
+```
+
+The formula interface of `StatsModels.jl` matches R's: `~`, `+`, `*`, `:`, `-1` and
+inline transformations such as `log(x)` all work as expected.
+
+```{julia}
+#| label: lm-extractors
+(
+    r2       = r2(m1),
+    adj_r2   = adjr2(m1),
+    aic      = aic(m1),
+    coefs    = coef(m1),
+    intervals = confint(m1),
+)
+```
+
+## Multiple regression {#sec-multiple-lm}
+
+```{julia}
+#| label: multiple-lm
+m2 = lm(@formula(body_size ~ temp_c + canopy), ponds)
+```
+
+The generating process (see `scripts/make_data.jl`) used
+$38.0 + 0.9\,(\text{temp} - 24.5) - 0.04\,\text{canopy}$. Compare with the estimates:
+this is the payoff of teaching with simulated data.
+
+```{julia}
+#| label: truth-comparison
+DataFrame(
+    term      = coefnames(m2),
+    estimated = round.(coef(m2), digits = 3),
+    truth     = [38.0 - 0.9 * 24.5, 0.9, -0.04],
+)
+```
+
+## Categorical predictors and interactions {#sec-categorical}
+
+```{julia}
+#| label: categorical-lm
+m3 = lm(@formula(body_size ~ temp_c + canopy + region), ponds)
+```
+
+Julia treats `String` and `CategoricalArray` columns as factors automatically, with
+treatment (dummy) coding and the first level as reference — same as R. To change the
+reference level or the contrast scheme:
+
+```{julia}
+#| label: contrasts
+m3b = lm(@formula(body_size ~ temp_c + region), ponds;
+         contrasts = Dict(:region => DummyCoding(base = "Cerrado")))
+
+coefnames(m3b)
+```
+
+```{julia}
+#| label: interaction-lm
+m4 = lm(@formula(body_size ~ temp_c * hydro), ponds)
+```
+
+## Model selection and comparison {#sec-selection}
+
+```{julia}
+#| label: model-comparison
+models = ["temp"          => m1,
+          "temp+canopy"   => m2,
+          "temp+can+reg"  => m3,
+          "temp*hydro"    => m4]
+
+DataFrame(
+    model  = first.(models),
+    k      = [length(coef(m)) for (_, m) in models],
+    aic    = round.([aic(m) for (_, m) in models], digits = 1),
+    bic    = round.([bic(m) for (_, m) in models], digits = 1),
+    adj_r2 = round.([adjr2(m) for (_, m) in models], digits = 3),
+)
+```
+
+```{julia}
+#| label: ftest
+# F test between nested models, equivalent to anova() in R
+ftest(m1.model, m2.model, m3.model)
+```
+
+## Diagnostics {#sec-diagnostics}
+
+```{julia}
+#| label: fig-diagnostics
+#| fig-cap: "Residual diagnostics for model `m3`."
+res = residuals(m3)
+fit_ = predict(m3)
+
+fig = Figure(size = (860, 350))
+
+ax1 = Axis(fig[1, 1], xlabel = "Fitted values", ylabel = "Residuals",
+           title = "(a) Residuals vs fitted")
+scatter!(ax1, fit_, res, color = (:steelblue, 0.6))
+hlines!(ax1, 0, color = :grey40, linestyle = :dash)
+
+ax2 = Axis(fig[1, 2], xlabel = "Theoretical quantiles", ylabel = "Sample quantiles",
+           title = "(b) QQ plot")
+# NOTE: Makie exports `qqnorm` as a plot recipe, so the quantiles are
+# computed explicitly here rather than taken from a helper.
+n = length(res)
+theoretical = quantile.(Normal(0, 1), ((1:n) .- 0.5) ./ n)
+scatter!(ax2, theoretical, sort(res), color = (:darkorange, 0.6))
+ablines!(ax2, 0, std(res), color = :grey40, linestyle = :dash)
+
+ax3 = Axis(fig[1, 3], xlabel = "Residuals", ylabel = "Frequency",
+           title = "(c) Distribution")
+hist!(ax3, res, bins = 20, color = (:seagreen, 0.7))
+
+fig
+```
+
+::: {.callout-warning}
+## A real gap
+
+R has `plot(model)`, which returns the four diagnostic plots at once, and
+`performance::check_model()`, which goes much further. Julia has no consolidated
+equivalent; the diagnostics above are assembled by hand. This is a genuine gap, and
+exactly the kind of thing a community package would fix well.
+:::
+
+## Mixed models {#sec-mixed-models}
+
+`MixedModels.jl` [@mixedmodelsjl] is maintained by Douglas Bates, first author of
+`lme4` [@bates2015lme4], and uses the same formula notation — including `(1 | group)`.
+
+On performance: comparisons between the two depend heavily on the model, the size of
+the data and the random-effects structure, and I know of no published benchmark I can
+cite here. If fitting time matters for your problem, measure it on your own case.
+
+```{julia}
+#| label: lmm
+mm1 = fit(MixedModel,
+          @formula(body_size ~ temp_c + canopy + (1 | region)),
+          ponds)
+```
+
+```{julia}
+#| label: lmm-components
+(
+    fixed_effects = fixef(mm1),
+    variance      = VarCorr(mm1),
+    icc           = first(mm1.σs.region)^2 /
+                    (first(mm1.σs.region)^2 + mm1.σ^2),
+)
+```
+
+::: {.r-equivalent}
+**In R**
+
+```r
+lmer(body_size ~ temp_c + canopy + (1 | region), data = ponds)
+```
+
+Identical, down to the `(1 | group)` notation. `MixedModels.jl` also supports
+`(1 + x | group)`, `(1 | a) + (1 | b)` and nested terms.
+:::
+
+```{julia}
+#| label: lmm-bootstrap
+#| eval: false
+# parametric bootstrap intervals — fast enough to be routine
+using Random
+boot = parametricbootstrap(MersenneTwister(42), 1000, mm1)
+DataFrame(shortestcovint(boot))
+```
+
+## Exercises {.unnumbered}
+
+1. Fit `body_size ~ canopy` separately for each region and compare the coefficients
+   with those of a model with a `canopy * region` interaction.
+2. Does `m4` have a significant interaction? Interpret the coefficient.
+3. Compare `mm1` with a fixed-effects model for `region`. When is each preferable?

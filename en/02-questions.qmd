@@ -1,0 +1,74 @@
+# From question to model {#sec-questions}
+
+::: {.callout-important}
+## Status of this chapter
+
+This chapter is not yet written. What follows is a **plan**, together with the
+references it will be built on.
+
+The plan is my own, not a summary of any other work. It does not reproduce the content
+of the corresponding chapter in @silva2022analises, which I did not consult while
+writing it.
+:::
+
+## Why a chapter about questions in a book about code {#sec-why-questions}
+
+No amount of statistical sophistication rescues a badly posed question. The right
+order is: question → design → data → model → inference. Tools like Julia act on the
+last two steps, and are useless if the first two fail.
+
+This chapter exists to join the book's two halves: the question you ask determines the
+model structure that appears in @sec-linear-models and @sec-glm.
+
+## Multiple working hypotheses {#sec-hypotheses}
+
+This section will be built on @chamberlin1890method, which argued for holding several
+rival hypotheses in play at once rather than defending a single one — an 1890 argument
+that remains the best available description of what separates a productive question
+from a defensive one.
+
+To develop:
+
+- Observation, pattern and process: the three levels, and why conflating them yields
+  models that answer a different question than the one asked.
+- Mechanistic versus phenomenological hypotheses, and what each licenses you to
+  conclude.
+
+## Design and dependence structure {#sec-design}
+
+This section will be built on @hurlbert1984pseudoreplication, which named
+pseudoreplication and catalogued its forms, and on @zuur2009mixed, whose treatment of
+dependence structure connects directly to the random effects used in this book.
+
+To develop:
+
+- Sampling unit, experimental unit, and why the distinction sets the denominator of
+  your test.
+- How design structure translates into `(1 | group)` terms — the direct link to
+  @sec-mixed-models.
+- Effect size and power before collection, not after.
+
+## Computation-limited questions {#sec-julia-questions}
+
+A section specific to this book. Some ecological questions are limited by computation
+rather than by data: null models with many permutations, individual-based simulation,
+fitting mechanistic models by optimization. These benefit most from the language, for
+the reasons discussed in @sec-why-julia.
+
+This section needs to be written with runnable examples, like the rest of the book —
+not with unverified performance claims.
+
+## Further reading {.unnumbered}
+
+- @chamberlin1890method on multiple working hypotheses.
+- @hurlbert1984pseudoreplication on pseudoreplication and experimental design.
+- @zuur2009mixed, chapter 1, on design and dependence structure.
+- @silva2022analises, for the same material treated in R.
+
+## Exercises {.unnumbered}
+
+1. Write your project's central question in one sentence, without statistical jargon.
+2. Sketch the model it implies *before* looking at the data: what response, what
+   predictors, what grouping structure?
+3. Identify the experimental unit in your design. How many true replicates do you
+   have — not how many measurements?

@@ -1,0 +1,198 @@
+# Introdução ao Julia {#sec-julia-basico}
+
+Este capítulo apresenta a linguagem para quem já programa em R. O foco está nas
+diferenças que importam na prática, não em uma varredura exaustiva da sintaxe.
+
+```{julia}
+#| label: setup-04
+using Statistics
+using Random
+Random.seed!(42)
+```
+
+## Vetores e indexação {#sec-vetores}
+
+```{julia}
+#| label: vetores
+alturas = [12.4, 8.1, 15.7, 9.3, 11.0]
+
+length(alturas), first(alturas), last(alturas)
+```
+
+Duas diferenças imediatas em relação ao R:
+
+```{julia}
+#| label: indexacao
+alturas[1]        # indexação começa em 1, como em R
+alturas[2:4]      # intervalos são inclusivos nas duas pontas
+```
+
+```{julia}
+#| label: sem-reciclagem
+# Julia NÃO recicla vetores silenciosamente:
+try
+    [1, 2, 3] + [1, 2]
+catch e
+    e
+end
+```
+
+::: {.r-equivalent}
+**Em R**
+
+`c(1,2,3) + c(1,2)` recicla o vetor mais curto e emite apenas um aviso; Julia lança
+`DimensionMismatch`, como o bloco acima demonstra. A diferença é de política: R
+prioriza seguir adiante, Julia prioriza falhar cedo. Qual serve melhor depende do seu
+fluxo de trabalho — o que importa é saber qual das duas você está usando.
+:::
+
+## Broadcasting: o ponto {#sec-broadcasting}
+
+Em R, quase toda função é vetorizada por padrão. Em Julia, você declara a
+vetorização com um ponto. Isso é explícito e vale para *qualquer* função, inclusive
+as que você escreve.
+
+```{julia}
+#| label: broadcasting
+log.(alturas)              # aplica log elemento a elemento
+alturas .^ 2               # potência elemento a elemento
+alturas .> 10              # comparação elemento a elemento
+```
+
+```{julia}
+#| label: broadcasting-custom
+# funciona igual com uma função sua
+padroniza(x, μ, σ) = (x - μ) / σ
+
+padroniza.(alturas, mean(alturas), std(alturas))
+```
+
+::: {.callout-tip}
+## A regra do ponto
+
+Se você quer "aplicar isso a cada elemento", ponha um ponto. `f.(x)`, `x .+ y`,
+`x .== y`. Uma cadeia inteira pode ser pontuada de uma vez com `@.`:
+
+```{julia}
+#| label: macro-ponto
+@. log(alturas) + 1
+```
+:::
+
+## Funções {#sec-funcoes}
+
+```{julia}
+#| label: funcoes
+# forma curta, para funções de uma linha
+riqueza(abundancias) = count(>(0), abundancias)
+
+# forma longa
+function shannon(abundancias)
+    total = sum(abundancias)
+    p = abundancias ./ total
+    p = filter(>(0), p)          # log(0) é indefinido
+    return -sum(p .* log.(p))
+end
+
+comunidade = [45, 12, 0, 8, 23, 0, 3]
+riqueza(comunidade), shannon(comunidade)
+```
+
+## Despacho múltiplo {#sec-despacho}
+
+Esta é a ideia central da linguagem, e a razão pela qual pacotes Julia compõem sem
+código de cola. Uma função pode ter vários **métodos**, e Julia escolhe qual rodar com
+base nos tipos de *todos* os argumentos.
+
+```{julia}
+#| label: despacho
+# um método para contagens inteiras
+diversidade(x::Vector{<:Integer}) = "índice para dados de contagem"
+
+# outro para coberturas proporcionais
+diversidade(x::Vector{<:AbstractFloat}) = "índice para dados de cobertura"
+
+diversidade([45, 12, 8]), diversidade([0.45, 0.12, 0.08])
+```
+
+Na prática, isso significa que quando alguém define um novo tipo de dado ecológico,
+`mean`, `plot` e `fit` passam a funcionar com ele desde que os métodos apropriados
+sejam definidos — sem que os autores de `Statistics` ou `Makie` saibam da existência
+do novo tipo.
+
+## Dados faltantes {#sec-missing}
+
+```{julia}
+#| label: missing
+medidas = [12.4, missing, 15.7, 9.3]
+
+mean(medidas)              # propaga, como em R
+```
+
+```{julia}
+#| label: skipmissing
+mean(skipmissing(medidas))   # equivalente a na.rm = TRUE
+```
+
+::: {.r-equivalent}
+**Em R**
+
+`NA` corresponde a `missing`. A diferença é que `missing` é um tipo próprio, e o
+compilador sabe se uma coluna pode ou não contê-lo — `Vector{Float64}` nunca contém
+`missing`, `Vector{Union{Missing,Float64}}` pode. Isso elimina uma classe inteira de
+bugs silenciosos.
+:::
+
+## Encadeamento {#sec-pipe}
+
+```{julia}
+#| label: pipe
+# o pipe nativo |> encadeia funções de um argumento
+comunidade |> shannon |> exp    # número de Hill de ordem 1
+```
+
+Para pipelines com múltiplos argumentos, `@chain` (do `Chain.jl`, reexportado por
+`TidierData.jl`) cumpre o papel de `|>` do R. Ele é o eixo do @sec-tidier.
+
+## Estruturas de controle {#sec-controle}
+
+```{julia}
+#| label: controle
+resultado = String[]
+
+for (i, a) in enumerate(comunidade)
+    if a == 0
+        push!(resultado, "espécie $i ausente")
+    elseif a < 10
+        push!(resultado, "espécie $i rara")
+    else
+        push!(resultado, "espécie $i comum")
+    end
+end
+
+resultado
+```
+
+::: {.callout-tip}
+## Loops são rápidos
+
+Ao contrário do R, você não precisa vetorizar por performance. Escreva o loop que
+expressa a ideia. Isso muda como se escrevem modelos nulos e simulações — assunto que
+volta nos capítulos de ecologia de comunidades de uma futura edição.
+:::
+
+## Convenções de nomes {#sec-convencoes}
+
+| Convenção | Significado |
+|---|---|
+| `f!(x)` | modifica `x` no lugar (`sort!`, `push!`) |
+| `f.(x)` | aplica `f` elemento a elemento |
+| `@f x` | macro, não função — reescreve código antes de rodar |
+| `Tipo` | tipos em `CamelCase` |
+| `nome_funcao` | funções em minúsculas, geralmente sem separador |
+
+## Exercícios {.unnumbered}
+
+1. Escreva `simpson(abundancias)` calculando o índice de Simpson $1 - \sum p_i^2$.
+2. Reescreva `shannon` usando um loop explícito e confirme que dá o mesmo resultado.
+3. Adicione a `diversidade` um método para `Matrix`, tratando as linhas como locais.

@@ -1,0 +1,160 @@
+# Visualização de dados {#sec-visualizacao}
+
+Julia tem três caminhos razoáveis para gráficos, todos assentados sobre
+[**Makie.jl**](https://docs.makie.org) [@danisch2021makie]:
+
+| Caminho | Para quem |
+|---|---|
+| `TidierPlots.jl` | quem vem do `ggplot2` e quer a mesma gramática |
+| `AlgebraOfGraphics.jl` | quem quer gramática de gráficos idiomática em Julia |
+| `Makie.jl` puro | controle total sobre a figura |
+
+Este capítulo mostra os três sobre o mesmo conjunto de dados, porque a escolha certa
+depende da tarefa — e porque saber traduzir entre eles evita ficar preso.
+
+```{julia}
+#| label: setup-06
+using TidierData
+using CairoMakie
+using AlgebraOfGraphics
+using CSV, DataFrames
+
+CairoMakie.activate!(type = "png")
+
+ponds = CSV.read(joinpath("..", "data", "ponds.csv"), DataFrame)
+ponds_c = @chain ponds begin
+    @drop_missing(canopy)
+    @mutate(log_area = log(area_m2))
+end
+
+nrow(ponds_c)
+```
+
+## `TidierPlots.jl`: a gramática do ggplot {#sec-tidierplots}
+
+```{julia}
+#| label: fig-tidierplots-scatter
+#| fig-cap: "Riqueza em função da cobertura de dossel, por região."
+using TidierPlots
+
+ggplot(ponds_c, @aes(x = canopy, y = richness, color = region)) +
+    geom_point(alpha = 0.7) +
+    labs(x = "Cobertura de dossel (%)", y = "Riqueza de espécies",
+         title = "Riqueza declina com o sombreamento")
+```
+
+::: {.r-equivalent}
+**Em R**
+
+```r
+ggplot(ponds_c, aes(x = canopy, y = richness, colour = region)) +
+  geom_point(alpha = 0.7) +
+  labs(x = "Canopy cover (%)", y = "Species richness")
+```
+
+A tradução é quase caractere a caractere; a diferença é o `@` em `@aes`.
+:::
+
+## `AlgebraOfGraphics.jl`: gramática algébrica {#sec-aog}
+
+AoG trata gráficos como uma álgebra: `*` combina camadas, `+` as sobrepõe.
+
+```{julia}
+#| label: fig-aog-scatter
+#| fig-cap: "O mesmo gráfico em AlgebraOfGraphics, com ajuste linear por região."
+plt = AlgebraOfGraphics.data(ponds_c) *
+      mapping(:canopy => "Cobertura de dossel (%)",
+              :richness => "Riqueza de espécies",
+              color = :region => "Região") *
+      (visual(Scatter, alpha = 0.6) + AlgebraOfGraphics.linear())
+
+draw(plt; figure = (size = (700, 450),))
+```
+
+::: {.callout-note}
+`AlgebraOfGraphics.data` e `AlgebraOfGraphics.linear` são qualificados porque os nomes
+`data` e `linear` colidem com outros pacotes carregados. Em um script que use só AoG,
+`data(...)` e `linear()` bastam.
+:::
+
+## Facetas {#sec-facetas}
+
+```{julia}
+#| label: fig-facetas
+#| fig-cap: "Relação riqueza–área facetada por hidroperíodo."
+plt = AlgebraOfGraphics.data(ponds_c) *
+      mapping(:log_area => "log(área)",
+              :richness => "Riqueza",
+              color = :region,
+              layout = :hydro) *
+      (visual(Scatter, alpha = 0.6) + AlgebraOfGraphics.linear())
+
+draw(plt; figure = (size = (800, 400),))
+```
+
+## Distribuições {#sec-distribuicoes}
+
+```{julia}
+#| label: fig-boxplot
+#| fig-cap: "Distribuição da riqueza por região e hidroperíodo."
+plt = AlgebraOfGraphics.data(ponds_c) *
+      mapping(:region => "Região",
+              :richness => "Riqueza",
+              color = :hydro => "Hidroperíodo",
+              dodge = :hydro) *
+      visual(BoxPlot)
+
+draw(plt; figure = (size = (700, 420),))
+```
+
+## `Makie.jl` puro: controle total {#sec-makie}
+
+Quando a figura precisa de um layout que a gramática não expressa, desça ao Makie.
+
+```{julia}
+#| label: fig-makie-composta
+#| fig-cap: "Figura composta montada manualmente com Makie."
+fig = Figure(size = (860, 380))
+
+ax1 = Axis(fig[1, 1], xlabel = "Cobertura de dossel (%)", ylabel = "Riqueza",
+           title = "(a) Dossel")
+scatter!(ax1, ponds_c.canopy, ponds_c.richness, color = (:steelblue, 0.6))
+
+ax2 = Axis(fig[1, 2], xlabel = "log(área)", ylabel = "Riqueza",
+           title = "(b) Área")
+scatter!(ax2, ponds_c.log_area, ponds_c.richness, color = (:darkorange, 0.6))
+
+ax3 = Axis(fig[1, 3], xlabel = "Riqueza", ylabel = "Frequência",
+           title = "(c) Distribuição")
+hist!(ax3, ponds_c.richness, bins = 12, color = (:seagreen, 0.7))
+
+fig
+```
+
+O sistema de layout do Makie é baseado em grade (`fig[linha, coluna]`), cobrindo o
+papel de `patchwork` e `cowplot` no R sem pacote adicional.
+
+## Salvando figuras {#sec-salvando}
+
+```{julia}
+#| label: salvar
+#| eval: false
+save("figura.png", fig; px_per_unit = 3)   # raster em alta resolução
+save("figura.pdf", fig)                    # vetorial, para publicação
+save("figura.svg", fig)
+```
+
+::: {.callout-tip}
+## Escolhendo o backend
+
+`CairoMakie` gera saída estática de qualidade de publicação (PNG, PDF, SVG) e é o que
+este livro usa. `GLMakie` abre janelas interativas com aceleração de GPU — útil para
+explorar dados, inadequado para gerar um livro.
+:::
+
+## Exercícios {.unnumbered}
+
+1. Refaça a @fig-tidierplots-scatter usando `temp_c` no eixo x. O padrão se mantém?
+2. Construa uma figura com dois painéis: à esquerda, riqueza por região; à direita,
+   proporção de ocorrência da espécie-foco por região.
+3. Traduza a @fig-facetas para `TidierPlots.jl` usando `facet_wrap`.

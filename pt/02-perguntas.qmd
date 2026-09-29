@@ -1,0 +1,74 @@
+# Da pergunta ao modelo {#sec-perguntas}
+
+::: {.callout-important}
+## Status deste capítulo
+
+Este capítulo ainda não foi escrito. O que segue é um **plano**, com as referências
+sobre as quais ele será construído.
+
+O plano é meu, não um resumo de nenhuma outra obra. Ele não reproduz o conteúdo do
+capítulo correspondente de @silva2022analises, que não consultei ao escrevê-lo.
+:::
+
+## Por que um capítulo sobre perguntas em um livro de código {#sec-por-que-perguntas}
+
+Nenhuma quantidade de sofisticação estatística resgata uma pergunta mal formulada.
+A ordem correta é: pergunta → desenho amostral → dados → modelo → inferência.
+Ferramentas como Julia atuam nos dois últimos passos, e são inúteis se os dois
+primeiros falharem.
+
+Este capítulo existe para ligar as duas metades do livro: a pergunta que você faz
+determina a estrutura do modelo que aparece no @sec-modelos-lineares e no @sec-glm.
+
+## Hipóteses múltiplas de trabalho {#sec-hipoteses}
+
+A seção será construída sobre @chamberlin1890method, que propôs manter várias
+hipóteses rivais em jogo simultaneamente em vez de defender uma única — um argumento
+de 1890 que continua sendo a melhor descrição do que distingue uma pergunta produtiva
+de uma pergunta defensiva.
+
+A desenvolver:
+
+- Observação, padrão e processo: os três níveis, e por que confundi-los leva a
+  modelos que respondem outra pergunta.
+- Hipóteses mecanicistas versus fenomenológicas, e o que cada tipo permite concluir.
+
+## Desenho amostral e estrutura de dependência {#sec-desenho}
+
+A seção será construída sobre @hurlbert1984pseudoreplication, que nomeou a
+pseudorreplicação e catalogou suas formas, e sobre @zuur2009mixed, cujo tratamento de
+estrutura de dependência conecta diretamente aos efeitos aleatórios usados neste
+livro.
+
+A desenvolver:
+
+- Unidade amostral, unidade experimental, e por que a distinção determina o
+  denominador do seu teste.
+- Como a estrutura do desenho se traduz em termos `(1 | grupo)` — o elo direto com o
+  @sec-modelos-mistos.
+- Tamanho de efeito e poder antes da coleta, não depois.
+
+## Perguntas limitadas por computação {#sec-perguntas-julia}
+
+Uma seção específica deste livro. Certas perguntas ecológicas são limitadas por
+computação, não por dados: modelos nulos com muitas permutações, simulação baseada em
+indivíduos, ajuste de modelos mecanicistas por otimização. São essas que mais se
+beneficiam da linguagem, pelas razões discutidas no @sec-por-que-julia.
+
+Esta seção precisa ser escrita com exemplos executáveis, como o resto do livro — não
+com afirmações de desempenho não verificadas.
+
+## Leitura recomendada {.unnumbered}
+
+- @chamberlin1890method sobre hipóteses múltiplas de trabalho.
+- @hurlbert1984pseudoreplication sobre pseudorreplicação e desenho experimental.
+- @zuur2009mixed, capítulo 1, sobre desenho e estrutura de dependência.
+- @silva2022analises, para o tratamento do mesmo tema em R.
+
+## Exercícios {.unnumbered}
+
+1. Escreva a pergunta central do seu projeto em uma frase, sem jargão estatístico.
+2. Desenhe o modelo que ela implica *antes* de olhar para os dados: que resposta,
+   que preditores, que estrutura de agrupamento?
+3. Identifique a unidade experimental do seu desenho. Quantas réplicas verdadeiras
+   você tem — não quantas medidas?

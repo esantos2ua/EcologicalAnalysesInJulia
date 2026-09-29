@@ -1,0 +1,93 @@
+# Introduction {#sec-introduction}
+
+## Why Julia? {#sec-why-julia}
+
+Julia was built to solve what its authors called the *two-language problem*
+[@bezanson2017julia]: you prototype in a high-level, productive language (R, Python)
+and then, when the code is too slow, rewrite the bottleneck in C, C++ or Fortran. The
+result is that the library you use and the code you write are written in different
+languages — which makes the inside of a package opaque to its user.
+
+In Julia, `vegan` would be written in Julia. That matters to an ecologist for three
+practical reasons:
+
+1. **You can read the package you are using.** When `metaMDS` does something
+   unexpected, the answer is in Fortran. In Julia, `@edit` drops you into readable
+   source.
+2. **Simulation stops being prohibitive.** Null models, bootstrapping, randomization —
+   the bread and butter of community ecology — run in loops. Loops in Julia are fast.
+3. **Packages compose.** Types defined in one package work with functions from another
+   without glue code, because of multiple dispatch (@sec-dispatch).
+
+## The honest cost {#sec-limits}
+
+None of this is free, and this book will not pretend otherwise.
+
+| What you gain | What you give up |
+|---|---|
+| Fast loops without vectorizing | The community-ecology ecosystem (`vegan`, `picante`, `FD`) |
+| Readable package source | Generalized additive models (`mgcv`) |
+| `MixedModels.jl`, with `lme4`'s formula syntax | `DHARMa`-style residual diagnostics |
+| Composition through multiple dispatch | Critical mass of tutorials and Stack Overflow answers |
+| One reproducible environment (`Project.toml` + `Manifest.toml`) | Compilation latency on first call |
+
+::: {.callout-note}
+## How long this table stays true
+
+The right-hand column is an assessment of the Julia ecosystem as of **August 2026**,
+made by checking the public package registries. Ecosystems change. Before concluding
+that something does not exist, check — and if you find a package that fills one of
+these gaps, this chapter is wrong and should be corrected.
+:::
+
+::: {.callout-note}
+## When *not* to use Julia
+
+If your analysis is essentially `vegan::adonis2()` followed by `metaMDS()`, use R.
+This book stops at GLMs precisely because that is as far as the "use Julia"
+recommendation holds without caveats.
+:::
+
+## Compilation latency {#sec-latency}
+
+Julia compiles each method the first time it is called with a given set of types.
+That is what makes the second call fast, and the first one slow.
+
+```{julia}
+#| label: latency-demo
+#| echo: true
+
+sum_of_squares(v) = sum(x^2 for x in v)
+
+v = randn(1_000_000)
+
+# first call: includes compilation
+@elapsed sum_of_squares(v)
+```
+
+```{julia}
+#| label: latency-demo-2
+
+# second call: execution only
+@elapsed sum_of_squares(v)
+```
+
+The difference between the two is compilation time. In a real analysis session you pay
+it once; in a short script that runs and exits, it dominates. Worth knowing about
+before concluding that "Julia is slow".
+
+## Structure of the book {#sec-structure}
+
+- **Foundations** (@sec-introduction – @sec-julia-basics): why Julia, how to frame the
+  question, how to install, and the language itself.
+- **Wrangling and visualization** (@sec-tidier – @sec-visualization): `TidierData.jl`
+  and the Makie family.
+- **Modelling** (@sec-linear-models – @sec-glm): `GLM.jl`, `MixedModels.jl`,
+  `HypothesisTests.jl`.
+
+## Exercises {.unnumbered}
+
+1. Install Julia via `juliaup` and reproduce the latency example above. How long does
+   your first call take?
+2. List three analyses you run often. For each, search [JuliaHub](https://juliahub.com)
+   for an equivalent package.

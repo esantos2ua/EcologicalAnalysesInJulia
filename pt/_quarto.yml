@@ -1,0 +1,40 @@
+project:
+  type: book
+  output-dir: _book
+
+metadata-files:
+  - ../_shared/common.yml
+
+lang: pt
+
+book:
+  title: "Análises Ecológicas em Julia"
+  subtitle: "Uma introdução à ciência de dados ecológicos com Julia"
+  author:
+    - name: "Eduardo Santos"
+      affiliation: "University of Alberta"
+      email: "esantos2@ualberta.ca"
+  date: today
+  date-format: "DD/MM/YYYY"
+  language: pt
+  search:
+    location: sidebar
+  sidebar:
+    style: docked
+  chapters:
+    - index.qmd
+    - part: "Fundamentos"
+      chapters:
+        - 01-introducao.qmd
+        - 02-perguntas.qmd
+        - 03-pre-requisitos.qmd
+        - 04-introducao-julia.qmd
+    - part: "Manipulação e visualização"
+      chapters:
+        - 05-tidier.qmd
+        - 06-visualizacao.qmd
+    - part: "Modelagem"
+      chapters:
+        - 07-modelos-lineares.qmd
+        - 08-glm.qmd
+    - 99-referencias.qmd

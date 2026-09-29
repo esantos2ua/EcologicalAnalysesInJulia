@@ -1,0 +1,20 @@
+# Quarto
+/_book/
+pt/_book/
+en/_book/
+pt/.quarto/
+en/.quarto/
+/.quarto/
+# pt/_freeze/ and en/_freeze/ are committed: CI reuses the execution cache
+# and only re-runs chapters whose source changed.
+
+# Julia
+# Manifest.toml is committed so readers and CI get the exact package versions.
+*.jl.cov
+*.jl.mem
+/docs/build/
+
+# OS / editor
+.DS_Store
+.vscode/
+*.swp

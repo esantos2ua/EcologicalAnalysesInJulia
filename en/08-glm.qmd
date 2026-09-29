@@ -1,0 +1,257 @@
+# Generalized Linear Models {#sec-glm}
+
+```{julia}
+#| label: setup-08
+using TidierData
+using DataFrames, CSV
+using GLM, StatsModels, StatsBase, Statistics, Distributions
+using MixedModels
+using CairoMakie
+
+CairoMakie.activate!(type = "png")
+
+ponds = @chain CSV.read(joinpath("..", "data", "ponds.csv"), DataFrame) begin
+    @drop_missing(canopy)
+    @mutate(log_area = log(area_m2))
+end
+
+nrow(ponds)
+```
+
+## Why GLMs in ecology {#sec-why-glm}
+
+Counts are not normal, proportions live in $[0,1]$, presences are binary. The Gaussian
+linear model treats all of them as if they were continuous and unbounded, and fails in
+predictable ways: confidence intervals that include negative richness, misspecified
+variance, fan-shaped residuals.
+
+The GLM fixes this with two choices: the **distribution** of the response and the
+**link function** connecting the mean to the linear predictor.
+
+| Response | Distribution | Link | In Julia |
+|---|---|---|---|
+| Count | Poisson | log | `Poisson(), LogLink()` |
+| Overdispersed count | Negative binomial | log | `negbin(...)` |
+| Presence/absence | Bernoulli/Binomial | logit | `Binomial(), LogitLink()` |
+| Proportion with denominator | Binomial | logit | `Binomial(), LogitLink()` |
+| Positive skewed continuous | Gamma | log | `Gamma(), LogLink()` |
+
+## Poisson: species richness {#sec-poisson}
+
+```{julia}
+#| label: glm-poisson
+g1 = glm(@formula(richness ~ log_area + canopy + temp_c),
+         ponds, Poisson(), LogLink())
+```
+
+The generating process used
+$\log\mu = 0.9 + 0.28\log(\text{area}) - 0.011\,\text{canopy} + 0.03\,(\text{temp}-24.5) + \dots$
+
+```{julia}
+#| label: poisson-truth
+DataFrame(
+    term      = coefnames(g1),
+    estimated = round.(coef(g1), digits = 4),
+    truth     = [missing, 0.28, -0.011, 0.03],
+)
+```
+
+::: {.callout-tip}
+## Interpreting coefficients on the log scale
+
+A coefficient $\beta$ under a log link means that a one-unit increase in the predictor
+multiplies the mean by $e^\beta$. For `canopy`:
+
+```{julia}
+#| label: interpretation
+exp(coef(g1)[3]), (exp(coef(g1)[3]) - 1) * 100
+```
+
+That is, each additional percentage point of canopy reduces expected richness by about
+1%.
+:::
+
+## Overdispersion {#sec-overdispersion}
+
+The Poisson assumes $\text{Var}(Y) = \text{E}(Y)$. Ecological data rarely cooperate.
+
+```{julia}
+#| label: dispersion
+# Pearson residual: (y - mu) / sqrt(Var(mu)). For the Poisson, Var(mu) = mu.
+mu = predict(g1)
+pearson_res = (ponds.richness .- mu) ./ sqrt.(mu)
+df_res = dof_residual(g1)
+phi = sum(pearson_res .^ 2) / df_res
+
+(dispersion_statistic = phi,
+ verdict = phi > 1.5 ? "overdispersed" : "acceptable")
+```
+
+If $\hat\phi \gg 1$, the alternatives are the negative binomial or a mixed model with
+an observation-level random effect.
+
+::: {.callout-important}
+## Overdispersion is a symptom, not a diagnosis
+
+`ponds.csv` was generated as a *pure* Poisson process — there is no extra-Poisson
+variance in the data-generating code. Yet $\hat\phi \approx 1.95$. Why?
+
+Because the generating model included a region effect that `g1` omits. Unmodelled
+heterogeneity inflates the dispersion statistic exactly as genuine overdispersion
+does, and the statistic cannot tell you which one you have.
+
+This matters practically: the reflex of reaching for a negative binomial whenever
+$\hat\phi > 1.5$ can paper over a missing predictor. Check your model structure
+before you change your distribution. The GLMM in @sec-glmm addresses the actual cause
+here.
+:::
+
+```{julia}
+#| label: negbin
+g2 = negbin(@formula(richness ~ log_area + canopy + temp_c), ponds, LogLink())
+```
+
+```{julia}
+#| label: poisson-vs-nb
+DataFrame(
+    model  = ["Poisson", "Negative binomial"],
+    aic    = round.([aic(g1), aic(g2)], digits = 1),
+    bic    = round.([bic(g1), bic(g2)], digits = 1),
+    loglik = round.([loglikelihood(g1), loglikelihood(g2)], digits = 1),
+)
+```
+
+## Offsets {#sec-offset}
+
+When sampling effort varies across units, model the **rate** rather than the raw
+count, using an offset.
+
+```{julia}
+#| label: offset
+g3 = glm(@formula(richness ~ canopy + temp_c), ponds, Poisson(), LogLink();
+         offset = log.(ponds.area_m2))
+
+coeftable(g3)
+```
+
+This models richness *per unit area*, fixing the `log(area)` coefficient at 1.
+
+## Logistic regression {#sec-logistic}
+
+```{julia}
+#| label: glm-logistic
+g4 = glm(@formula(focal ~ canopy + temp_c + hydro),
+         ponds, Binomial(), LogitLink())
+```
+
+```{julia}
+#| label: odds-ratios
+DataFrame(
+    term       = coefnames(g4),
+    coef       = round.(coef(g4), digits = 4),
+    odds_ratio = round.(exp.(coef(g4)), digits = 3),
+    ci_lower   = round.(exp.(confint(g4)[:, 1]), digits = 3),
+    ci_upper   = round.(exp.(confint(g4)[:, 2]), digits = 3),
+)
+```
+
+```{julia}
+#| label: fig-logistic
+#| fig-cap: "Predicted probability of focal-species occurrence along the canopy gradient."
+grid = DataFrame(
+    canopy = repeat(range(0, 100, length = 100), 2),
+    temp_c = fill(mean(ponds.temp_c), 200),
+    hydro  = repeat(["permanent", "temporary"], inner = 100),
+)
+grid.p = predict(g4, grid)
+
+fig = Figure(size = (700, 430))
+ax = Axis(fig[1, 1], xlabel = "Canopy cover (%)",
+          ylabel = "P(occurrence)", title = "Focal species")
+
+for (h, col) in zip(["permanent", "temporary"], [:steelblue, :darkorange])
+    sub = grid[grid.hydro .== h, :]
+    lines!(ax, sub.canopy, sub.p, color = col, linewidth = 2.5, label = h)
+end
+scatter!(ax, ponds.canopy, Float64.(ponds.focal), color = (:grey40, 0.25))
+axislegend(ax, position = :lt)
+
+fig
+```
+
+## GLMMs {#sec-glmm}
+
+```{julia}
+#| label: glmm
+gm1 = fit(MixedModel,
+          @formula(richness ~ log_area + canopy + (1 | region)),
+          ponds, Poisson())
+```
+
+::: {.r-equivalent}
+**In R**
+
+```r
+glmer(richness ~ log_area + canopy + (1 | region),
+      data = ponds, family = poisson)
+```
+
+The formula notation is the same, `(1 | group)` included. For the estimation method
+used and the options available, consult the `MixedModels.jl` documentation
+[@mixedmodelsjl]: these are details that change between versions, and not worth
+reproducing here from memory.
+:::
+
+## Gaps you will hit {#sec-glm-gaps}
+
+This is the point where being honest is worth more than being enthusiastic. The table
+below is an assessment as of **August 2026**, made by checking the public package
+registries; check before concluding that something does not exist.
+
+| You need | In R | In Julia today |
+|---|---|---|
+| Zero-inflation, hurdle | `glmmTMB`, `pscl` | no mature equivalent |
+| Beta regression | `betareg`, `glmmTMB` | no mature equivalent |
+| Additive models (GAM) | `mgcv` | no mature equivalent |
+| Simulated quantile residuals | `DHARMa` | none; implementable by hand |
+| Marginal means, contrasts | `emmeans` | `Effects.jl`, partial coverage |
+| Ordinal regression | `ordinal`, `MASS::polr` | partial coverage |
+
+### The pragmatic escape hatch: `RCall.jl` {#sec-rcall}
+
+There is no shame in calling R from inside Julia when the right package only exists
+there. The workflow stays reproducible, and data crosses the boundary automatically.
+
+```{julia}
+#| label: rcall-example
+#| eval: false
+using RCall
+
+@rput ponds        # send the DataFrame to R
+
+R"""
+library(mgcv)
+m <- gam(richness ~ s(canopy) + s(log_area) + region,
+         family = poisson, data = ponds)
+summary(m)
+"""
+```
+
+::: {.callout-note}
+## Where this leaves you
+
+For the repertoire covered by this chapter — Poisson, negative binomial, binomial,
+gamma, offsets, GLMMs — Julia covers what you need, and this chapter has demonstrated
+it with executed code. Outside it, `RCall.jl` is the bridge. Naming the boundary
+clearly serves the reader better than hiding it.
+:::
+
+## Exercises {.unnumbered}
+
+1. Fit a Poisson GLM for `richness` including `hydro` and test whether it improves AIC
+   relative to `g1`.
+2. Compute the dispersion statistic for `g2`. Did the negative binomial fix it?
+3. Build the predicted-probability curve of @fig-logistic for all three regions,
+   holding `hydro` at `"permanent"`.
+4. Implement `DHARMa`-style quantile residuals: simulate 250 datasets from the fitted
+   model and compare each observation with its predictive distribution.

@@ -1,0 +1,94 @@
+# Prerequisites {#sec-prerequisites}
+
+## Installing Julia {#sec-installing}
+
+Use **`juliaup`**, the official version manager. Do not install Julia through a system
+package manager (`apt`, `brew`), which tends to ship outdated versions.
+
+::: {.panel-tabset}
+## macOS and Linux
+
+```bash
+curl -fsSL https://install.julialang.org | sh
+```
+
+## Windows
+
+```powershell
+winget install julia -s msstore
+```
+:::
+
+Afterwards, `juliaup update` upgrades and `juliaup status` lists installed versions.
+
+## Project environments {#sec-environments}
+
+This is the most important concept in the chapter, and the one that differs most from
+common practice in R.
+
+In R, `install.packages()` installs into a global library shared by all your projects.
+In Julia, each project has its own environment, described by two files:
+
+- **`Project.toml`** — the direct dependencies you declared.
+- **`Manifest.toml`** — the full resolved dependency tree, with exact versions of
+  everything.
+
+Together they make an analysis reproducible by construction: anyone who clones your
+repository and runs `Pkg.instantiate()` gets exactly your versions.
+
+::: {.r-equivalent}
+**In R**
+
+`Project.toml` + `Manifest.toml` play the role of `renv.lock`, but they are part of the
+language rather than an add-on package. Activating an environment is the default
+operation, not the exception.
+:::
+
+```{julia}
+#| label: env-status
+using Pkg
+Pkg.status()
+```
+
+## This book's environment {#sec-book-environment}
+
+```{julia}
+#| label: versioninfo
+versioninfo()
+```
+
+To reproduce the book:
+
+```bash
+git clone <repository-url>
+cd EcologicalAnalysesInJulia
+julia --project=. -e 'using Pkg; Pkg.instantiate()'
+```
+
+## Editor {#sec-editor}
+
+**VS Code** with the official language extension is the standard recommendation: it
+offers an integrated REPL, variable inspector, debugger and line-by-line evaluation
+(`Shift+Enter`) — the functional equivalent of RStudio.
+
+Alternatives: **Pluto.jl** (reactive notebooks, excellent for teaching) and any editor
+with LSP support through `LanguageServer.jl`.
+
+## Quarto {#sec-quarto}
+
+This book is written in [Quarto](https://quarto.org), the direct successor to
+`bookdown`. Since version 1.5, Quarto executes Julia blocks natively, without going
+through Jupyter.
+
+````markdown
+```{{julia}}
+#| label: example
+1 + 1
+```
+````
+
+## Exercises {.unnumbered}
+
+1. Create a new environment with `] activate .` in an empty folder and add
+   `DataFrames`. Inspect the generated `Project.toml`.
+2. Delete `Manifest.toml` and run `Pkg.resolve()`. What changes?

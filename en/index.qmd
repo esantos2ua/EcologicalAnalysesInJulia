@@ -1,0 +1,88 @@
+# Preface {.unnumbered}
+
+This book is an introduction to ecological data analysis using the
+[Julia](https://julialang.org) language. It began as an answer to a simple question:
+*how much of the ecologist's toolkit already exists in Julia today, and how much still
+has to be built?*
+
+The obvious reference point is [**Análises Ecológicas no R**](https://analises-ecologicas.com/)
+[@silva2022analises] by Silva, Gonçalves-Souza, Paterno, Provete and Vancine — an open,
+Portuguese-language book that became the entry point for a generation of Brazilian
+ecologists. This volume deliberately follows its structure, chapter by chapter, so the
+two can be read side by side.
+
+## Scope of this edition {.unnumbered}
+
+::: {.callout-important}
+## What this book covers — and what it doesn't yet
+
+This first edition runs **from language basics through generalized linear models**
+(chapters 1–8). The community-ecology chapters of the original book — multivariate
+analysis, rarefaction, richness estimators, taxonomic, phylogenetic and functional
+diversity, and geospatial data — **are not included**.
+
+That is not an oversight. In R those chapters rest on `vegan`, `iNEXT`, `picante` and
+`FD`. Julia has no mature equivalents today. Writing those chapters honestly means
+writing the packages first, and that is a separate project. See @sec-limits for a
+detailed assessment.
+:::
+
+Chapters 1–8 are not a small slice. They cover what most of an ecological analysis
+actually consumes: importing and cleaning data, visualizing it, fitting linear and
+generalized linear models, and handling hierarchical structure through mixed models.
+At every one of those points the Julia ecosystem is solid: the packages exist, they
+are maintained, and they do the work. Where this book compares Julia to R, the
+comparisons are limited to what can be checked — syntax, feature coverage, behaviour
+demonstrable in the code — and not to performance claims I do not measure here.
+
+## How to use this book {.unnumbered}
+
+All code is executable and runs in the Julia environment defined by `Project.toml`.
+To reproduce the book locally:
+
+```bash
+git clone <repository-url>
+cd EcologicalAnalysesInJulia
+julia --project=. scripts/setup.jl
+quarto render en
+```
+
+Throughout the text, boxes like this one translate from R's idiom into Julia's:
+
+::: {.r-equivalent}
+**In R**
+
+`dplyr::filter(data, height > 10)` corresponds to `@filter(data, height > 10)` in
+`TidierData.jl`. The semantics are the same; the difference is that `@filter` is a
+macro rather than a function.
+:::
+
+## Relationship to *Análises Ecológicas no R* {.unnumbered}
+
+This project is **inspired by** *Análises Ecológicas no R* [@silva2022analises], by
+Fernando Rodrigues da Silva, Thiago Gonçalves-Souza, Gustavo Brant Paterno, Diogo
+Borges Provete and Maurício Humberto Vancine, and owes it an explicit structural debt:
+this book's chapter sequence deliberately follows theirs, so the two can be read side
+by side.
+
+What this book does **not** do is reproduce the original's content. The text, examples,
+dataset and exercises here are written from scratch for Julia. The authors of the
+original book have no involvement in this project, have not reviewed it, and do not
+endorse it; any errors here are mine.
+
+*Análises Ecológicas no R* is freely available at <https://analises-ecologicas.com/>
+under a CC BY-NC 4.0 licence, and in print from Nupeea and Canal 6 (2022, 640 pp.,
+ISBN 978-85-7917-564-0). If this book is useful to you, the original will probably be
+more so.
+
+## Bilingual edition {.unnumbered}
+
+This book exists in English and Portuguese, built from the same repository. The
+Portuguese version is at [`/pt`](../pt/). The chapters are translations of one
+another, and the code is identical in both.
+
+## License {.unnumbered}
+
+Text under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/);
+code under the [MIT license](https://opensource.org/licenses/MIT). Contributions,
+corrections and bug reports are welcome in the repository.

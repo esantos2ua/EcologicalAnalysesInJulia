@@ -1,0 +1,88 @@
+# Prefácio {.unnumbered}
+
+Este livro é uma introdução à análise de dados ecológicos usando a linguagem
+[Julia](https://julialang.org). Ele nasceu como uma resposta a uma pergunta simples:
+*o que da caixa de ferramentas do ecólogo já existe em Julia hoje, e o que ainda
+precisa ser construído?*
+
+A referência óbvia é [**Análises Ecológicas no R**](https://analises-ecologicas.com/)
+[@silva2022analises], de Silva, Gonçalves-Souza, Paterno, Provete e Vancine — um livro
+aberto, em português, que se tornou porta de entrada para uma geração de ecólogos
+brasileiros. A estrutura deste volume segue deliberadamente a daquele livro, capítulo
+a capítulo, para que os dois possam ser lidos lado a lado.
+
+## Escopo desta edição {.unnumbered}
+
+::: {.callout-important}
+## O que este livro cobre — e o que ainda não cobre
+
+Esta primeira edição vai **do básico da linguagem até modelos lineares generalizados**
+(capítulos 1–8). Os capítulos de ecologia de comunidades do livro original — análises
+multidimensionais, rarefação, estimadores de riqueza, diversidade taxonômica,
+filogenética e funcional, e dados geoespaciais — **não estão incluídos**.
+
+Isso não é um descuido. Em R, esses capítulos se apoiam em `vegan`, `iNEXT`, `picante`
+e `FD`. Julia hoje não tem equivalentes maduros desses pacotes. Escrever aqueles
+capítulos honestamente exige escrever os pacotes primeiro, e esse é um projeto separado.
+Veja o @sec-limites para uma avaliação detalhada.
+:::
+
+O recorte 1–8 não é pequeno. Ele cobre tudo o que a maior parte de uma análise
+ecológica realmente consome: importar e limpar dados, visualizá-los, ajustar modelos
+lineares e generalizados, e lidar com estrutura hierárquica via modelos mistos. Em
+todos esses pontos, o ecossistema Julia é sólido: os pacotes existem, são mantidos, e
+fazem o trabalho. Onde este livro faz comparações com R, elas se limitam ao que pode
+ser verificado — sintaxe, cobertura de funcionalidade, comportamento demonstrável no
+código — e não a afirmações de desempenho que eu não meça aqui.
+
+## Como usar este livro {.unnumbered}
+
+Todo o código é executável e roda no ambiente Julia definido em `Project.toml`.
+Para reproduzir o livro na sua máquina:
+
+```bash
+git clone <url-do-repositório>
+cd EcologicalAnalysesInJulia
+julia --project=. scripts/setup.jl
+quarto render pt
+```
+
+Ao longo do texto, caixas como esta traduzem o idioma do R para o de Julia:
+
+::: {.r-equivalent}
+**Em R**
+
+`dplyr::filter(dados, altura > 10)` corresponde a `@filter(dados, altura > 10)`
+em `TidierData.jl`. A semântica é a mesma; a diferença é que `@filter` é um macro,
+não uma função.
+:::
+
+## Relação com *Análises Ecológicas no R* {.unnumbered}
+
+Este projeto é **inspirado em** *Análises Ecológicas no R* [@silva2022analises], de
+Fernando Rodrigues da Silva, Thiago Gonçalves-Souza, Gustavo Brant Paterno, Diogo
+Borges Provete e Maurício Humberto Vancine, e tem com ele uma dívida estrutural
+explícita: a sequência de capítulos deste livro segue deliberadamente a daquele, para
+que os dois possam ser lidos lado a lado.
+
+O que este livro **não** faz é reproduzir o conteúdo do original. O texto, os exemplos,
+o conjunto de dados e os exercícios aqui são escritos do zero para Julia. Os autores do
+livro original não têm envolvimento neste projeto, não o revisaram e não o endossam;
+qualquer erro aqui é meu.
+
+*Análises Ecológicas no R* está disponível gratuitamente em
+<https://analises-ecologicas.com/> sob licença CC BY-NC 4.0, e em edição impressa pela
+Nupeea e Canal 6 (2022, 640 p., ISBN 978-85-7917-564-0). Se este livro lhe for útil, o
+original provavelmente lhe será mais ainda.
+
+## Versão bilíngue {.unnumbered}
+
+Este livro existe em português e inglês, a partir do mesmo repositório. A versão em
+inglês está em [`/en`](../en/). Os capítulos são traduções um do outro, e o código é
+idêntico nas duas versões.
+
+## Licença {.unnumbered}
+
+Texto sob [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/);
+código sob [licença MIT](https://opensource.org/licenses/MIT). Contribuições,
+correções e relatos de erro são bem-vindos no repositório.

@@ -1,0 +1,197 @@
+# Introduction to Julia {#sec-julia-basics}
+
+This chapter introduces the language for readers who already program in R. The focus
+is on the differences that matter in practice, not an exhaustive sweep of the syntax.
+
+```{julia}
+#| label: setup-04
+using Statistics
+using Random
+Random.seed!(42)
+```
+
+## Vectors and indexing {#sec-vectors}
+
+```{julia}
+#| label: vectors
+heights = [12.4, 8.1, 15.7, 9.3, 11.0]
+
+length(heights), first(heights), last(heights)
+```
+
+Two immediate differences from R:
+
+```{julia}
+#| label: indexing
+heights[1]        # indexing starts at 1, as in R
+heights[2:4]      # ranges are inclusive at both ends
+```
+
+```{julia}
+#| label: no-recycling
+# Julia does NOT silently recycle vectors:
+try
+    [1, 2, 3] + [1, 2]
+catch e
+    e
+end
+```
+
+::: {.r-equivalent}
+**In R**
+
+`c(1,2,3) + c(1,2)` recycles the shorter vector and emits only a warning; Julia
+raises `DimensionMismatch`, as the block above shows. The difference is one of policy:
+R prioritises carrying on, Julia prioritises failing early. Which serves you better
+depends on your workflow — what matters is knowing which one you are using.
+:::
+
+## Broadcasting: the dot {#sec-broadcasting}
+
+In R, nearly every function is vectorized by default. In Julia you declare
+vectorization with a dot. This is explicit and works for *any* function, including
+the ones you write.
+
+```{julia}
+#| label: broadcasting
+log.(heights)              # elementwise log
+heights .^ 2               # elementwise power
+heights .> 10              # elementwise comparison
+```
+
+```{julia}
+#| label: broadcasting-custom
+# works identically with your own function
+standardize(x, μ, σ) = (x - μ) / σ
+
+standardize.(heights, mean(heights), std(heights))
+```
+
+::: {.callout-tip}
+## The dot rule
+
+If you mean "apply this to each element", add a dot. `f.(x)`, `x .+ y`, `x .== y`.
+An entire chain can be dotted at once with `@.`:
+
+```{julia}
+#| label: dot-macro
+@. log(heights) + 1
+```
+:::
+
+## Functions {#sec-functions}
+
+```{julia}
+#| label: functions
+# short form, for one-line functions
+richness(abundances) = count(>(0), abundances)
+
+# long form
+function shannon(abundances)
+    total = sum(abundances)
+    p = abundances ./ total
+    p = filter(>(0), p)          # log(0) is undefined
+    return -sum(p .* log.(p))
+end
+
+community = [45, 12, 0, 8, 23, 0, 3]
+richness(community), shannon(community)
+```
+
+## Multiple dispatch {#sec-dispatch}
+
+This is the central idea of the language, and the reason Julia packages compose
+without glue code. A function can have several **methods**, and Julia picks which one
+to run based on the types of *all* the arguments.
+
+```{julia}
+#| label: dispatch
+# one method for integer counts
+diversity(x::Vector{<:Integer}) = "index for count data"
+
+# another for proportional cover
+diversity(x::Vector{<:AbstractFloat}) = "index for cover data"
+
+diversity([45, 12, 8]), diversity([0.45, 0.12, 0.08])
+```
+
+In practice this means that when someone defines a new ecological data type, `mean`,
+`plot` and `fit` start working with it as soon as the appropriate methods are defined
+— without the authors of `Statistics` or `Makie` knowing the new type exists.
+
+## Missing data {#sec-missing}
+
+```{julia}
+#| label: missing
+measurements = [12.4, missing, 15.7, 9.3]
+
+mean(measurements)              # propagates, as in R
+```
+
+```{julia}
+#| label: skipmissing
+mean(skipmissing(measurements))   # equivalent to na.rm = TRUE
+```
+
+::: {.r-equivalent}
+**In R**
+
+`NA` corresponds to `missing`. The difference is that `missing` is a type of its own,
+and the compiler knows whether a column can contain it — a `Vector{Float64}` never
+contains `missing`, a `Vector{Union{Missing,Float64}}` may. That eliminates a whole
+class of silent bugs.
+:::
+
+## Chaining {#sec-pipe}
+
+```{julia}
+#| label: pipe
+# the native pipe |> chains single-argument functions
+community |> shannon |> exp    # Hill number of order 1
+```
+
+For pipelines with multiple arguments, `@chain` (from `Chain.jl`, re-exported by
+`TidierData.jl`) plays the role of R's `|>`. It is the backbone of @sec-tidier.
+
+## Control flow {#sec-control}
+
+```{julia}
+#| label: control
+result = String[]
+
+for (i, a) in enumerate(community)
+    if a == 0
+        push!(result, "species $i absent")
+    elseif a < 10
+        push!(result, "species $i rare")
+    else
+        push!(result, "species $i common")
+    end
+end
+
+result
+```
+
+::: {.callout-tip}
+## Loops are fast
+
+Unlike R, you do not need to vectorize for performance. Write the loop that expresses
+the idea. This changes how null models and simulations are written — a topic that
+returns in the community-ecology chapters of a future edition.
+:::
+
+## Naming conventions {#sec-conventions}
+
+| Convention | Meaning |
+|---|---|
+| `f!(x)` | modifies `x` in place (`sort!`, `push!`) |
+| `f.(x)` | applies `f` elementwise |
+| `@f x` | a macro, not a function — rewrites code before running |
+| `Type` | types in `CamelCase` |
+| `function_name` | functions lowercase, usually without separators |
+
+## Exercises {.unnumbered}
+
+1. Write `simpson(abundances)` computing Simpson's index $1 - \sum p_i^2$.
+2. Rewrite `shannon` using an explicit loop and confirm it gives the same result.
+3. Add a `Matrix` method to `diversity`, treating rows as sites.

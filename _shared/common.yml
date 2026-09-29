@@ -1,0 +1,31 @@
+# Shared settings for both language editions.
+# Included from pt/_quarto.yml and en/_quarto.yml via `metadata-files`.
+
+# Julia is the execution engine for every chapter (QuartoNotebookRunner.jl).
+# `--project=@.` resolves to the repository's Project.toml.
+engine: julia
+julia:
+  exeflags: ["--project=@.", "--color=yes"]
+
+execute:
+  freeze: auto      # cache chapter output; only re-run what changed
+  cache: false
+  echo: true
+  warning: true
+  error: false      # a broken chunk fails the build instead of shipping silently
+
+bibliography: ../_shared/references.bib
+
+format:
+  html:
+    theme:
+      light: [cosmo, ../_shared/styles.scss]
+      dark: [darkly, ../_shared/styles-dark.scss]
+    code-copy: true
+    code-overflow: wrap
+    toc-depth: 3
+    fig-width: 7
+    fig-height: 4.5
+    fig-dpi: 300
+    df-print: paged
+    include-in-header: ../_shared/header.html
