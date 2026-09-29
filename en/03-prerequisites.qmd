@@ -67,12 +67,107 @@ julia --project=. -e 'using Pkg; Pkg.instantiate()'
 
 ## Editor {#sec-editor}
 
-**VS Code** with the official language extension is the standard recommendation: it
-offers an integrated REPL, variable inspector, debugger and line-by-line evaluation
-(`Shift+Enter`) — the functional equivalent of RStudio.
+**VS Code** with the official Julia extension is the standard recommendation: it
+offers an integrated REPL, a variable browser, a plot pane, a debugger and
+line-by-line evaluation — the functional equivalent of RStudio.
+
+If you prefer a fully open-source build, [VSCodium](https://vscodium.com) is VS Code
+compiled from the same MIT-licensed source without Microsoft's telemetry, and installs
+the same Julia extension from the [Open VSX](https://open-vsx.org) registry. Everything
+below applies to both.
 
 Alternatives: **Pluto.jl** (reactive notebooks, excellent for teaching) and any editor
 with LSP support through `LanguageServer.jl`.
+
+### Setting up VS Code {#sec-vscode-setup}
+
+1. **Install VS Code** from <https://code.visualstudio.com> (or VSCodium).
+2. **Install the Julia extension.** Open the Extensions panel (`Ctrl+Shift+X`;
+   `Cmd+Shift+X` on macOS), search for *Julia* and install the extension published
+   by *julialang*. It finds the Julia installed by `juliaup` on its own; if it does
+   not, point the `julia.executablePath` setting at it.
+3. **Open a folder, not a file.** Use *File → Open Folder…* and choose your project
+   folder — for this book, the cloned `EcologicalAnalysesInJulia` folder. The folder
+   determines both the working directory and the environment.
+4. **Check the environment.** The status bar at the bottom should read
+   `Julia env: EcologicalAnalysesInJulia`. When the folder contains both a
+   `Project.toml` and a `Manifest.toml`, the extension activates it automatically;
+   otherwise, click the status bar entry and choose the folder.
+5. **Start the REPL.** Open the Command Palette (`Ctrl+Shift+P`; `Cmd+Shift+P` on
+   macOS) and run *Julia: Start REPL*, or press `Alt+J` then `Alt+O`. The REPL starts
+   in the folder root, with the active environment already loaded.
+
+::: {.r-equivalent}
+**In R**
+
+Opening a folder in VS Code plays the role of opening an `.Rproj` in RStudio: it sets
+the working directory. Unlike RStudio, it also selects the package environment
+(@sec-environments), so the right package versions come along automatically.
+:::
+
+The shortcuts you will use constantly:
+
+| Shortcut | Action |
+|---|---|
+| `Shift+Enter` | run the current line or selection, then move to the next |
+| `Ctrl+Enter` | run the current line or selection, staying put |
+| `Alt+Enter` | run the current cell (a block delimited by `##` lines) |
+| `Alt+J`, `Alt+R` | restart the REPL |
+| `Ctrl+C` in the REPL | interrupt a running computation |
+
+On macOS, `Alt` is the Option key; `Ctrl` stays `Ctrl`. Shortcuts and menu names were
+checked against version 1.249 of the Julia extension in September 2026.
+
+### A first script {#sec-first-script}
+
+With the book folder open and the REPL running, create a file called `first-steps.jl`
+in the folder root (*File → New File*, or `Alt+J` then `Alt+N`) and paste:
+
+```julia
+## Load packages
+using CSV, DataFrames, CairoMakie
+
+## Where am I?
+pwd()               # the folder you opened
+readdir("data")     # files inside data/
+
+## Read the example data
+ponds = CSV.read(joinpath("data", "ponds.csv"), DataFrame)
+first(ponds, 5)
+describe(ponds)
+
+## Plot richness against pond area
+fig = Figure()
+ax = Axis(fig[1, 1]; xlabel = "Pond area (m²)", ylabel = "Species richness",
+          xscale = log10)
+scatter!(ax, ponds.area_m2, ponds.richness)
+fig
+```
+
+Put the cursor on the first cell and press `Alt+Enter` to run it, then keep going cell
+by cell (`Alt+Shift+Enter` runs the cell and jumps to the next one). A few things to
+notice:
+
+- **Loading packages is slow the first time** in each session — that is the
+  compilation latency discussed in @sec-latency. Later cells run immediately.
+- **Paths are relative to the folder you opened.** `pwd()` confirms it, which is why
+  `joinpath("data", "ponds.csv")` works without typing the full path. `joinpath`
+  inserts the right separator on every operating system.
+- **`describe` is your first data check.** It shows that `canopy` has 7 missing
+  values and that `area_m2` is strongly right-skewed (median around 149 m², maximum
+  near 2000 m²) — which is why the plot uses a log scale.
+
+**Inspecting the environment.** Click the Julia icon in the Activity Bar (the
+left-hand strip). The **Workspace** panel lists every variable in the session —
+`ponds`, `fig`, `ax` — with its type and size; expand an entry to look inside. For a
+data frame, hover over its name and click the *Open in VS Code* icon, or run
+`vscodedisplay(ponds)` in the REPL, to open it in a spreadsheet-like grid — the
+equivalent of RStudio's `View()`.
+
+**Plots.** Evaluating `fig` opens the figure in the **plot pane**, a VS Code tab. The
+**Plot Navigator** panel, below the Workspace, keeps the history of the session's
+plots; with the plot pane focused, the arrow keys move through it. To save a figure
+to disk, use `save("richness-area.png", fig)`.
 
 ## Quarto {#sec-quarto}
 
@@ -92,3 +187,6 @@ through Jupyter.
 1. Create a new environment with `] activate .` in an empty folder and add
    `DataFrames`. Inspect the generated `Project.toml`.
 2. Delete `Manifest.toml` and run `Pkg.resolve()`. What changes?
+3. Run `first-steps.jl` (@sec-first-script) cell by cell. In the Workspace panel,
+   which types did `CSV.jl` assign to the `region` and `canopy` columns, and why is
+   the type of `canopy` different from that of `area_m2`?
