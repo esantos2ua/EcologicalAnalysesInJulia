@@ -146,7 +146,9 @@ gráficos, depurador e avaliação linha a linha — o equivalente funcional do 
 Se você prefere uma versão totalmente de código aberto, o
 [VSCodium](https://vscodium.com) é o VS Code compilado a partir do mesmo código-fonte
 sob licença MIT, sem a telemetria da Microsoft, e instala a mesma extensão de Julia
-pelo registro [Open VSX](https://open-vsx.org). Tudo neste livro vale para os dois.
+pelo registro [Open VSX](https://open-vsx.org). O
+[Antigravity](https://antigravity.google), outro editor derivado do VS Code, também
+roda a mesma extensão. Tudo neste livro vale para os três.
 Outras opções são o **Pluto.jl** (notebooks reativos, excelentes para ensino) e
 qualquer editor com suporte a LSP via `LanguageServer.jl`.
 
@@ -309,13 +311,6 @@ por ele. Para salvar uma figura em disco, use `save("riqueza-area.png", fig)`.
 : O VS Code está com a pasta errada aberta, ou com um único arquivo. Use *File → Open
   Folder…* e escolha a própria pasta do livro — a que contém o `Project.toml` —, não
   uma pasta acima ou dentro dela. Depois, reinicie o REPL (`Alt+J`, `Alt+R`).
-
-**Digitar `"` (ou `'`, `` ` ``, `~`, `^`) não mostra nada.**
-: O seu layout de teclado — algo comum nos layouts Brasileiro e US Internacional —
-  trata esses símbolos como *teclas mortas*, que esperam a próxima tecla para formar
-  uma letra acentuada. Pressione `Espaço` depois do símbolo para obtê-lo sozinho. Se
-  preferir evitar isso, adicione o layout **ABC** (macOS) ou **EUA** (Windows, Linux)
-  nas configurações de teclado do sistema e alterne para ele enquanto programa.
 
 **`include("exercises/checar.jl")` falha com `No such file or directory`.**
 : O REPL não está rodando na pasta do livro. `pwd()` mostra onde ele está. Abra a

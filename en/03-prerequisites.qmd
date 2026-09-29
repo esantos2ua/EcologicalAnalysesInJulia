@@ -141,8 +141,9 @@ pane, a debugger and line-by-line evaluation — the functional equivalent of RS
 
 If you prefer a fully open-source build, [VSCodium](https://vscodium.com) is VS Code
 compiled from the same MIT-licensed source without Microsoft's telemetry, and installs
-the same Julia extension from the [Open VSX](https://open-vsx.org) registry. Everything
-in this book applies to both. Other options are **Pluto.jl** (reactive notebooks,
+the same Julia extension from the [Open VSX](https://open-vsx.org) registry.
+[Antigravity](https://antigravity.google), another editor derived from VS Code, also
+runs the same extension. Everything in this book applies to all three. Other options are **Pluto.jl** (reactive notebooks,
 excellent for teaching) and any editor with LSP support through `LanguageServer.jl`.
 
 ## Step 5: open the book folder {#sec-vscode-setup}
@@ -301,13 +302,6 @@ to disk, use `save("richness-area.png", fig)`.
 : VS Code has the wrong folder open, or a single file. Use *File → Open Folder…* and
   choose the book folder itself — the one containing `Project.toml` — not a folder
   above or inside it. Then restart the REPL (`Alt+J`, `Alt+R`).
-
-**Typing `"` (or `'`, `` ` ``, `~`, `^`) shows nothing.**
-: Your keyboard layout — common with the Brazilian and US International layouts —
-  treats these as *dead keys*, which wait for the next key to form an accented
-  letter. Press `Space` after the symbol to get it on its own. If you would rather
-  not, add the **ABC** (macOS) or **US** (Windows, Linux) layout in your system's
-  keyboard settings and switch to it while coding.
 
 **`include("exercises/check.jl")` fails with `No such file or directory`.**
 : The REPL is not running in the book folder. `pwd()` shows where it is. Open the
