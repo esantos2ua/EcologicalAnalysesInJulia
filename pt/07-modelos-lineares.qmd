@@ -19,6 +19,30 @@ end
 nrow(ponds)
 ```
 
+```{julia}
+#| label: verificador-07
+#| include: false
+include(joinpath("..", "exercises", "checar.jl"))
+```
+
+::: {.callout-note .exercise}
+## Exercícios deste capítulo
+
+Nos quadros *Sua vez*, você ajusta um modelo e passa para `checar` um número extraído
+dele — um valor-p, coeficientes, um intervalo. Todos usam as lagoas com dossel medido,
+como este capítulo. Comece cada sessão com:
+
+```julia
+include("exercises/checar.jl")
+using TidierData, DataFrames, CSV, GLM, StatsModels, Statistics
+using HypothesisTests, MixedModels
+ponds = @chain CSV.read(joinpath("data", "ponds.csv"), DataFrame) begin
+    @drop_missing(canopy)
+    @mutate(log_area = log(area_m2))
+end
+```
+:::
+
 ## Testes de hipótese {#sec-testes}
 
 Antes dos modelos, o básico. `HypothesisTests.jl` cobre o repertório usual.
@@ -37,6 +61,45 @@ UnequalVarianceTTest(perm.richness, temp_.richness)
 `t.test(richness ~ hydro, data = ponds)` usa Welch por padrão — o mesmo que
 `UnequalVarianceTTest`. Para o teste de variâncias iguais, use `EqualVarianceTTest`.
 :::
+
+::: {.callout-note .exercise}
+## Sua vez 7.1 — O hidroperíodo afeta o tamanho corporal?
+
+Compare `body_size` entre lagoas permanentes e temporárias com um teste t de Welch.
+Passe o valor-p para `checar("7.1", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Reaproveite `perm` e `temp_` do bloco acima. `pvalue(teste)` extrai o valor-p.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-7-1
+t_corpo = UnequalVarianceTTest(perm.body_size, temp_.body_size)
+pvalue(t_corpo)
+```
+
+```{julia}
+#| label: answer-7-1-check
+checar("7.1", pvalue(t_corpo))
+```
+
+p ≈ 0,10: nenhuma evidência de diferença. Aqui podemos ir além do usual, porque na
+simulação o hidroperíodo realmente não afeta o tamanho corporal. Com dados reais, um
+teste não significativo não mostra que o efeito não existe — só que os dados não
+permitem dizer.
+:::
+:::
+
+```{julia}
+#| label: verify-7-1
+#| include: false
+Checks.verify("7.1", pvalue(t_corpo))
+```
 
 ```{julia}
 #| label: outros-testes
@@ -72,6 +135,43 @@ e transformações inline como `log(x)` funcionam como esperado.
 )
 ```
 
+::: {.callout-note .exercise}
+## Sua vez 7.2 — Tamanho corporal e dossel
+
+Ajuste uma regressão simples de `body_size` em `canopy` e passe os dois coeficientes
+para `checar("7.2", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+`coef(m)` retorna o intercepto e a inclinação, nessa ordem.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-7-2
+m_dossel = lm(@formula(body_size ~ canopy), ponds)
+coef(m_dossel)
+```
+
+```{julia}
+#| label: answer-7-2-check
+checar("7.2", coef(m_dossel))
+```
+
+A inclinação, cerca de −0,050, fica mais longe do verdadeiro −0,04 do que em `m2`
+(próxima seção), porque este modelo deixa a temperatura de fora.
+:::
+:::
+
+```{julia}
+#| label: verify-7-2
+#| include: false
+Checks.verify("7.2", coef(m_dossel))
+```
+
 ## Regressão múltipla {#sec-lm-multipla}
 
 ```{julia}
@@ -92,6 +192,45 @@ DataFrame(
 )
 ```
 
+::: {.callout-note .exercise}
+## Sua vez 7.3 — O intervalo captura a verdade?
+
+Ajuste `body_size ~ temp_c + canopy + hydro` e calcule o intervalo de confiança de 95%
+para o coeficiente de `temp_c`. Ele contém o valor verdadeiro, 0,9? Passe o intervalo
+(dois números) para `checar("7.3", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+`confint(m)` retorna uma linha por coeficiente; `temp_c` é a segunda, então
+`confint(m)[2, :]`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-7-3
+m_hidro = lm(@formula(body_size ~ temp_c + canopy + hydro), ponds)
+ic_temp = confint(m_hidro)[2, :]
+```
+
+```{julia}
+#| label: answer-7-3-check
+checar("7.3", ic_temp)
+```
+
+O intervalo, cerca de [0,78; 1,02], contém 0,9. Em cerca de um a cada 20 conjuntos de
+dados simulados, não conteria: é isso que "95%" significa.
+:::
+:::
+
+```{julia}
+#| label: verify-7-3
+#| include: false
+Checks.verify("7.3", ic_temp)
+```
+
 ## Preditores categóricos e interações {#sec-categoricos}
 
 ```{julia}
@@ -109,6 +248,45 @@ m3b = lm(@formula(body_size ~ temp_c + region), ponds;
          contrasts = Dict(:region => DummyCoding(base = "Cerrado")))
 
 coefnames(m3b)
+```
+
+::: {.callout-note .exercise}
+## Sua vez 7.4 — Escolhendo a referência
+
+Ajuste `body_size ~ temp_c + region` com a região Atlantic como nível de referência e
+passe os nomes dos coeficientes para `checar("7.4", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Copie o argumento `contrasts` do bloco acima e troque o nível.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-7-4
+m_atl = lm(@formula(body_size ~ temp_c + region), ponds;
+           contrasts = Dict(:region => DummyCoding(base = "Atlantic")))
+coefnames(m_atl)
+```
+
+```{julia}
+#| label: answer-7-4-check
+checar("7.4", coefnames(m_atl))
+```
+
+O nível de referência não tem coeficiente próprio: ele fica absorvido no intercepto, e
+as outras regiões são comparadas com ele. Sem `contrasts`, a referência é o primeiro
+nível em ordem alfabética, Amazon.
+:::
+:::
+
+```{julia}
+#| label: verify-7-4
+#| include: false
+Checks.verify("7.4", coefnames(m_atl))
 ```
 
 ```{julia}
@@ -180,6 +358,45 @@ consolidado; os diagnósticos acima são montados à mão. É uma lacuna genuín
 o tipo de coisa que um pacote da comunidade resolveria bem.
 :::
 
+::: {.callout-note .exercise}
+## Sua vez 7.5 — Quantos resíduos grandes?
+
+Se os resíduos de `m3` forem aproximadamente normais, cerca de 5% deles devem estar a
+mais de dois desvios-padrão de zero. Calcule a proporção que está e passe-a para
+`checar("7.5", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Divida `res` (do bloco de diagnóstico) por `std(res)` e tire a média de
+`abs.(z) .> 2` — a média de valores `true`/`false` é uma proporção.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-7-5
+z = res ./ std(res)
+prop_grandes = mean(abs.(z) .> 2)
+```
+
+```{julia}
+#| label: answer-7-5-check
+checar("7.5", prop_grandes)
+```
+
+Cerca de 5,8% — 10 de 173 resíduos, perto dos 5% esperados. É a versão numérica do
+QQ-plot acima.
+:::
+:::
+
+```{julia}
+#| label: verify-7-5
+#| include: false
+Checks.verify("7.5", prop_grandes)
+```
+
 ## Modelos mistos {#sec-modelos-mistos}
 
 `MixedModels.jl` [@mixedmodelsjl] é mantido por Douglas Bates, primeiro autor do
@@ -218,6 +435,50 @@ Idêntico, inclusive a notação `(1 | grupo)`. `MixedModels.jl` também suporta
 `(1 + x | grupo)`, `(1 | a) + (1 | b)` e termos aninhados.
 :::
 
+::: {.callout-note .exercise}
+## Sua vez 7.6 — Um intercepto aleatório para região
+
+Ajuste um modelo misto de `body_size` em `temp_c` com intercepto aleatório para
+`region` e passe os efeitos fixos para `checar("7.6", ...)`. Depois olhe o `VarCorr` do
+seu modelo: quanto da variação a região explica?
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Mesma estrutura de `mm1`, com uma fórmula menor. `fixef(mm)` retorna os efeitos
+fixos.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-7-6
+mm_temp = fit(MixedModel, @formula(body_size ~ temp_c + (1 | region)), ponds;
+              progress = false)
+fixef(mm_temp)
+```
+
+```{julia}
+#| label: answer-7-6-check
+checar("7.6", fixef(mm_temp))
+VarCorr(mm_temp)
+```
+
+A variância de região é estimada como exatamente zero — um ajuste *singular*. A
+simulação não tem efeito de região sobre o tamanho corporal, e três regiões trazem
+muito pouca informação sobre uma variância de qualquer forma. Com variância zero, o
+modelo misto se reduz a `lm(@formula(body_size ~ temp_c), ponds)`: compare os
+coeficientes.
+:::
+:::
+
+```{julia}
+#| label: verify-7-6
+#| include: false
+Checks.verify("7.6", fixef(mm_temp))
+```
+
 ```{julia}
 #| label: lmm-bootstrap
 #| eval: false
@@ -227,10 +488,11 @@ boot = parametricbootstrap(MersenneTwister(42), 1000, mm1)
 DataFrame(shortestcovint(boot))
 ```
 
-## Exercícios {.unnumbered}
+## Desafios {.unnumbered}
 
-1. Ajuste `body_size ~ canopy` separadamente para cada região e compare os
-   coeficientes com os de um modelo com interação `canopy * region`.
-2. O modelo `m4` tem interação significativa? Interprete o coeficiente.
-3. Compare `mm1` com um modelo de efeitos fixos para `region`. Quando cada um é
-   preferível?
+1. Ajuste `body_size ~ canopy` separadamente para cada região e compare as inclinações
+   com as de um único modelo com interação `canopy * region`. Por que elas coincidem?
+2. O modelo `m4` tem interação significativa? A simulação não tem interação
+   `temp_c × hydro`: se a sua fosse significativa, o que isso significaria?
+3. No 7.6 a variância de região saiu zero. Compare `mm1` com um modelo que trata
+   `region` como efeito fixo. Com três regiões, qual você reportaria, e por quê?

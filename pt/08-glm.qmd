@@ -18,6 +18,28 @@ end
 nrow(ponds)
 ```
 
+```{julia}
+#| label: verificador-08
+#| include: false
+include(joinpath("..", "exercises", "checar.jl"))
+```
+
+::: {.callout-note .exercise}
+## Exercícios deste capítulo
+
+Como no @sec-modelos-lineares, em cada quadro *Sua vez* você ajusta um modelo e passa
+para `checar` um número extraído dele. Comece cada sessão com:
+
+```julia
+include("exercises/checar.jl")
+using TidierData, DataFrames, CSV, GLM, StatsModels, Statistics, MixedModels
+ponds = @chain CSV.read(joinpath("data", "ponds.csv"), DataFrame) begin
+    @drop_missing(canopy)
+    @mutate(log_area = log(area_m2))
+end
+```
+:::
+
 ## Por que GLMs em ecologia {#sec-por-que-glm}
 
 Contagens não são normais, proporções vivem em $[0,1]$, presenças são binárias.
@@ -56,6 +78,46 @@ DataFrame(
 )
 ```
 
+::: {.callout-note .exercise}
+## Sua vez 8.1 — Incluindo o hidroperíodo
+
+Ajuste um GLM Poisson como o `g1`, incluindo `hydro` no fim da fórmula. Passe os
+coeficientes para `checar("8.1", ...)` e depois compare o AIC dele com o de `g1`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Copie o `g1` e acrescente `+ hydro`. `aic(g)` dá o AIC; quanto menor, melhor.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-8-1
+g_hidro = glm(@formula(richness ~ log_area + canopy + temp_c + hydro),
+              ponds, Poisson(), LogLink())
+coef(g_hidro)
+```
+
+```{julia}
+#| label: answer-8-1-check
+checar("8.1", coef(g_hidro))
+(aic_g1 = aic(g1), aic_hidro = aic(g_hidro))
+```
+
+O AIC cai cerca de 9, então `hydro` merece o lugar. A simulação somou 0,22 à média
+log das lagoas permanentes; o modelo estima −0,19 para as temporárias, o mesmo efeito
+visto do outro lado.
+:::
+:::
+
+```{julia}
+#| label: verify-8-1
+#| include: false
+Checks.verify("8.1", coef(g_hidro))
+```
+
 ::: {.callout-tip}
 ## Interpretando coeficientes na escala log
 
@@ -70,6 +132,44 @@ exp(coef(g1)[3]), (exp(coef(g1)[3]) - 1) * 100
 Ou seja, cada ponto percentual de dossel a mais reduz a riqueza esperada em cerca de
 1%.
 :::
+
+::: {.callout-note .exercise}
+## Sua vez 8.2 — Lagoas temporárias, em números simples
+
+Usando o modelo do 8.1, por qual fator a riqueza esperada muda em uma lagoa temporária
+em comparação com uma permanente, mantido o resto igual? Passe esse fator para
+`checar("8.2", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+O coeficiente de `hydro: temporary` é o quinto. Na ligação log, um coeficiente
+$\beta$ multiplica a média por $e^\beta$.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-8-2
+fator_temp = exp(coef(g_hidro)[5])
+```
+
+```{julia}
+#| label: answer-8-2-check
+checar("8.2", fator_temp)
+```
+
+Cerca de 0,83: espera-se que lagoas temporárias tenham cerca de 17% menos espécies
+que as permanentes.
+:::
+:::
+
+```{julia}
+#| label: verify-8-2
+#| include: false
+Checks.verify("8.2", fator_temp)
+```
 
 ## Sobredispersão {#sec-sobredispersao}
 
@@ -104,6 +204,51 @@ Isso importa na prática: o reflexo de recorrer à binomial negativa sempre que
 $\hat\phi > 1.5$ pode encobrir um preditor ausente. Verifique a estrutura do modelo
 antes de trocar a distribuição. O GLMM da @sec-glmm trata da causa real aqui.
 :::
+
+::: {.callout-note .exercise}
+## Sua vez 8.3 — Testando o aviso
+
+O quadro acima afirma que a sobredispersão de `g1` vem de um preditor ausente. Teste
+isso: ajuste um GLM Poisson com `log_area`, `canopy`, `temp_c`, `hydro` e `region`,
+calcule a estatística de dispersão como no bloco de dispersão e passe-a para
+`checar("8.3", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Copie o bloco de dispersão, trocando `g1` pelo seu modelo. `predict(g)` dá as médias
+ajustadas.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-8-3
+g_completo = glm(@formula(richness ~ log_area + canopy + temp_c + hydro + region),
+                 ponds, Poisson(), LogLink())
+
+mu_completo = predict(g_completo)
+phi_completo = sum(((ponds.richness .- mu_completo) ./ sqrt.(mu_completo)) .^ 2) /
+               dof_residual(g_completo)
+```
+
+```{julia}
+#| label: answer-8-3-check
+checar("8.3", phi_completo)
+```
+
+Cerca de 0,94: com os preditores do modelo gerador no lugar, a "sobredispersão"
+desaparece. Incluir só `hydro` (8.1) quase não a mudou; `region` era a peça que
+faltava.
+:::
+:::
+
+```{julia}
+#| label: verify-8-3
+#| include: false
+Checks.verify("8.3", phi_completo)
+```
 
 ```{julia}
 #| label: negbin
@@ -154,6 +299,43 @@ DataFrame(
 )
 ```
 
+::: {.callout-note .exercise}
+## Sua vez 8.4 — Chances para uma mudança que faz sentido
+
+A razão de chances para um ponto percentual de dossel fica perto de 1, o que é difícil
+de interpretar. Calcule, a partir de `g4`, a razão de chances para um aumento de **10**
+pontos percentuais e passe-a para `checar("8.4", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Dez pontos multiplicam as chances por $e^{10\beta}$, não por $10\,e^{\beta}$.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-8-4
+rc_10 = exp(10 * coef(g4)[2])
+```
+
+```{julia}
+#| label: answer-8-4-check
+checar("8.4", rc_10)
+```
+
+Cerca de 1,19: cada 10 pontos a mais de dossel multiplicam as chances de encontrar a
+espécie-foco por 1,19, um aumento de 19%.
+:::
+:::
+
+```{julia}
+#| label: verify-8-4
+#| include: false
+Checks.verify("8.4", rc_10)
+```
+
 ```{julia}
 #| label: fig-logistica
 #| fig-cap: "Probabilidade prevista de ocorrência da espécie-foco ao longo do gradiente de dossel."
@@ -178,6 +360,44 @@ axislegend(ax, position = :lt)
 fig
 ```
 
+::: {.callout-note .exercise}
+## Sua vez 8.5 — Prevendo uma lagoa nova
+
+Uma lagoa temporária tem 80% de dossel e água a 26 °C. Segundo o `g4`, qual a
+probabilidade de encontrar a espécie-foco nela? Passe-a para `checar("8.5", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Monte um `DataFrame` de uma linha com as colunas `canopy`, `temp_c` e `hydro` e passe-o
+para `predict(g4, ...)`, como com `grade` acima.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-8-5
+lagoa_nova = DataFrame(canopy = [80.0], temp_c = [26.0], hydro = ["temporary"])
+p_nova = predict(g4, lagoa_nova)
+```
+
+```{julia}
+#| label: answer-8-5-check
+checar("8.5", p_nova)
+```
+
+Cerca de 0,52. Em um GLM logístico, `predict` retorna probabilidades por padrão: a
+função de ligação é desfeita para você.
+:::
+:::
+
+```{julia}
+#| label: verify-8-5
+#| include: false
+Checks.verify("8.5", p_nova)
+```
+
 ## GLMMs {#sec-glmm}
 
 ```{julia}
@@ -200,6 +420,43 @@ usado e as opções disponíveis, consulte a documentação de `MixedModels.jl`
 [@mixedmodelsjl]: são detalhes que mudam entre versões, e não vale reproduzi-los aqui
 de memória.
 :::
+
+::: {.callout-note .exercise}
+## Sua vez 8.6 — Um GLMM com hidroperíodo
+
+Inclua `hydro` no `gm1` e passe os efeitos fixos do novo modelo para
+`checar("8.6", ...)`. Compare a estimativa de `hydro` com a do 8.1.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Acrescente `+ hydro` antes do termo de efeito aleatório. `fixef(gm)` retorna os
+efeitos fixos.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-8-6
+gm_hidro = fit(MixedModel,
+               @formula(richness ~ log_area + canopy + hydro + (1 | region)),
+               ponds, Poisson(); progress = false)
+fixef(gm_hidro)
+```
+
+```{julia}
+#| label: answer-8-6-check
+checar("8.6", fixef(gm_hidro))
+```
+:::
+:::
+
+```{julia}
+#| label: verify-8-6
+#| include: false
+Checks.verify("8.6", fixef(gm_hidro))
+```
 
 ## Lacunas que você vai encontrar {#sec-lacunas-glm}
 
@@ -245,12 +502,13 @@ código executado. Fora dele, `RCall.jl` é a ponte. Reconhecer a fronteira com 
 mais útil ao leitor do que escondê-la.
 :::
 
-## Exercícios {.unnumbered}
+## Desafios {.unnumbered}
 
-1. Ajuste um GLM Poisson para `richness` incluindo `hydro` e teste se ele melhora o
-   AIC em relação a `g1`.
-2. Calcule a estatística de dispersão para `g2`. A binomial negativa resolveu?
-3. Construa a curva de probabilidade prevista da @fig-logistica para as três regiões,
-   fixando `hydro` em `"permanent"`.
-4. Implemente resíduos quantílicos ao estilo `DHARMa`: simule 250 conjuntos de dados
-   do modelo ajustado e compare cada observação com sua distribuição preditiva.
+1. Calcule a estatística de dispersão para `g2`. A binomial negativa resolveu a
+   sobredispersão? Depois do 8.3, você ainda a escolheria?
+2. Construa a curva de probabilidade prevista da @fig-logistica para cada hidroperíodo
+   em três temperaturas (22, 24,5 e 27 °C). Quanto a temperatura desloca a curva?
+3. Implemente resíduos quantílicos ao estilo `DHARMa` para o `g1`: simule 250 conjuntos
+   de dados a partir do modelo ajustado e, para cada lagoa, calcule a proporção de
+   valores simulados abaixo do observado. Se o modelo estiver certo, essas proporções
+   são uniformes. Elas são? Repita para o modelo do 8.3.

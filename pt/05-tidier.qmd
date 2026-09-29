@@ -45,6 +45,27 @@ describe(ponds, :eltype, :nmissing, :mean, :min, :max)
 | `focal` | ocorrência da espécie-foco (0/1) |
 | `body_size` | tamanho corporal médio (mm) |
 
+```{julia}
+#| label: verificador-05
+#| include: false
+include(joinpath("..", "exercises", "checar.jl"))
+```
+
+::: {.callout-note .exercise}
+## Exercícios deste capítulo
+
+Os quadros *Sua vez* funcionam como no @sec-julia-basico. Aqui as respostas são tabelas
+e números calculados a partir dos dados das lagoas; por isso, comece cada sessão
+carregando o verificador, os pacotes e os dados, com a pasta do livro aberta no VS
+Code:
+
+```julia
+include("exercises/checar.jl")
+using TidierData, DataFrames, Statistics, CSV
+ponds = CSV.read(joinpath("data", "ponds.csv"), DataFrame)
+```
+:::
+
 ::: {.callout-note}
 Os nomes das colunas estão em inglês nas duas versões do livro, de modo que o código
 seja literalmente idêntico em português e em inglês.
@@ -80,6 +101,45 @@ A correspondência é linha a linha. A única diferença sintática é o `@` e o
 `begin ... end`.
 :::
 
+::: {.callout-note .exercise}
+## Sua vez 5.1 — As maiores lagoas do Cerrado
+
+Escreva um `@chain` que retorne as três maiores lagoas (por `area_m2`) do Cerrado, da
+maior para a menor. Guarde o resultado em `top3` e verifique com
+`checar("5.1", top3)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Três passos, um por linha: fique com as linhas do Cerrado, ordene pela área da maior
+para a menor e fique com as três primeiras. O bloco acima faz algo bem parecido.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-5-1
+top3 = @chain ponds begin
+    @filter(region == "Cerrado")
+    @arrange(desc(area_m2))
+    first(3)
+end
+```
+
+```{julia}
+#| label: answer-5-1-check
+checar("5.1", top3)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-5-1
+#| include: false
+Checks.verify("5.1", top3)
+```
+
 ## Os cinco verbos {#sec-verbos}
 
 ### `@filter` — selecionar linhas
@@ -93,6 +153,55 @@ end
 ```
 
 Atenção: dentro de `@filter`, use `&&` e `||`, não `&` e `|` como no `dplyr`.
+
+::: {.callout-note .exercise}
+## Sua vez 5.2 — Várias condições ao mesmo tempo
+
+Quantas lagoas temporárias têm cobertura de dossel acima de 60% **e** riqueza abaixo
+da mediana geral de riqueza? Verifique o número com `checar("5.2", n)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Calcule a mediana antes, fora da cadeia: `med = median(ponds.richness)`. Dentro de
+uma macro do Tidier, um nome solto significa uma coluna; para usar a variável `med`,
+escreva `!!med`.
+
+Se aparecer `TypeError: non-boolean (Missing) used in boolean context`, algumas lagoas
+não têm valor de dossel, e `missing > 60` não é nem verdadeiro nem falso. Remova essas
+linhas antes com `@drop_missing(canopy)` (@sec-faltantes-tidier).
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-5-2
+med = median(ponds.richness)
+
+n = @chain ponds begin
+    @drop_missing(canopy)
+    @filter(hydro == "temporary" && canopy > 60 && richness < !!med)
+    nrow
+end
+```
+
+```{julia}
+#| label: answer-5-2-check
+checar("5.2", n)
+```
+
+Descartar as lagoas sem dossel é a decisão certa aqui: não dá para saber se o dossel
+delas passa de 60%. Já a mediana é calculada sobre as 180 lagoas, antes de descartar
+qualquer coisa.
+:::
+:::
+
+```{julia}
+#| label: verify-5-2
+#| include: false
+Checks.verify("5.2", n)
+```
 
 ### `@select` — selecionar colunas
 
@@ -131,6 +240,39 @@ end
 end
 ```
 
+::: {.callout-note .exercise}
+## Sua vez 5.3 — Riqueza por 100 m²
+
+Lagoas maiores tendem a ter mais espécies. Adicione uma coluna `rich_per_100m2` com o
+número de espécies por 100 m² de lagoa, mantendo todas as linhas e colunas de `ponds`.
+Guarde o resultado em `ponds_d` e verifique com `checar("5.3", ponds_d)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+`richness / area_m2` é espécies por m²; multiplique por 100.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-5-3
+ponds_d = @chain ponds begin
+    @mutate(rich_per_100m2 = richness / area_m2 * 100)
+end
+
+checar("5.3", ponds_d)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-5-3
+#| include: false
+Checks.verify("5.3", ponds_d)
+```
+
 ### `@group_by` + `@summarize` — agregar
 
 ```{julia}
@@ -145,6 +287,42 @@ end
     )
     @arrange(region, hydro)
 end
+```
+
+::: {.callout-note .exercise}
+## Sua vez 5.4 — Onde está a espécie-foco?
+
+Calcule, para cada região, a proporção de lagoas onde a espécie-foco ocorre, em uma
+coluna chamada `prop_focal`, ordenada da maior para a menor. Verifique com
+`checar("5.4", por_regiao)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+`focal` vale 0 ou 1, então a média é a proporção de lagoas onde ela vale 1. Ordenar da
+maior para a menor é `@arrange(desc(...))`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-5-4
+por_regiao = @chain ponds begin
+    @group_by(region)
+    @summarize(prop_focal = mean(focal))
+    @arrange(desc(prop_focal))
+end
+
+checar("5.4", por_regiao)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-5-4
+#| include: false
+Checks.verify("5.4", por_regiao)
 ```
 
 ### `@arrange` — ordenar
@@ -189,6 +367,46 @@ end
 de `mean()` em R sem `na.rm = TRUE`. Seja explícito com `skipmissing`.
 :::
 
+::: {.callout-note .exercise}
+## Sua vez 5.5 — Onde estão as lacunas?
+
+Antes de descartar valores faltantes, vale saber onde eles estão: se estiverem
+concentrados em uma região, descartá-los muda essa região mais do que as outras. Conte,
+por região, quantas lagoas não têm valor de dossel, em uma coluna chamada `n_missing`.
+Verifique com `checar("5.5", lacunas)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+`ismissing.(canopy)` dá `true` para cada valor faltante, e `sum` conta os `true`. Os
+dois funcionam dentro de `@summarize`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-5-5
+lacunas = @chain ponds begin
+    @group_by(region)
+    @summarize(n_missing = sum(ismissing.(canopy)))
+end
+
+checar("5.5", lacunas)
+```
+
+Sete valores faltantes espalhados pelas três regiões: nenhuma região é muito mais
+afetada que as outras, então descartá-los dificilmente distorce comparações entre
+regiões.
+:::
+:::
+
+```{julia}
+#| label: verify-5-5
+#| include: false
+Checks.verify("5.5", lacunas)
+```
+
 ## Formato longo e largo {#sec-pivot}
 
 ```{julia}
@@ -227,6 +445,41 @@ regioes = DataFrame(
 end
 ```
 
+::: {.callout-note .exercise}
+## Sua vez 5.6 — Floresta contra savana
+
+Usando a tabela `regioes` acima, calcule a riqueza média das lagoas de floresta e de
+savana, em uma coluna chamada `mean_rich`. Verifique com `checar("5.6", por_bioma)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Primeiro faça a junção, para que cada lagoa ganhe seu `biome_type`; depois agrupe por
+`biome_type` e resuma.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-5-6
+por_bioma = @chain ponds begin
+    @left_join(regioes, region)
+    @group_by(biome_type)
+    @summarize(mean_rich = mean(richness))
+end
+
+checar("5.6", por_bioma)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-5-6
+#| include: false
+Checks.verify("5.6", por_bioma)
+```
+
 ## `DataFrames.jl` por baixo {#sec-dataframes-nativo}
 
 Tidier é uma camada de conveniência. Vale saber a forma nativa, que é o que você vai
@@ -244,10 +497,49 @@ combine(
 O mesmo resultado do `@group_by`/`@summarize` acima. Use Tidier para escrever, e
 reconheça a forma nativa para ler.
 
-## Exercícios {.unnumbered}
+::: {.callout-note .exercise}
+## Sua vez 5.7 — O mesmo, na forma nativa
 
-1. Quantas lagoas temporárias têm cobertura de dossel acima de 60% e riqueza abaixo
-   da mediana geral?
-2. Calcule, por região, a proporção de lagoas onde a espécie-foco ocorre, ordenando
-   da maior para a menor.
-3. Reescreva o exercício 2 usando `groupby`/`combine` nativos.
+Reescreva sua resposta ao 5.4 com `groupby`, `combine` e `sort` do `DataFrames.jl`,
+sem as macros do Tidier. Verifique com `checar("5.7", por_regiao_nativo)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+`sort(df, :coluna, rev = true)` ordena da maior para a menor.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-5-7
+por_regiao_nativo = sort(
+    combine(groupby(ponds, :region), :focal => mean => :prop_focal),
+    :prop_focal, rev = true)
+
+checar("5.7", por_regiao_nativo)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-5-7
+#| include: false
+Checks.verify("5.7", por_regiao_nativo)
+```
+
+## Desafios {.unnumbered}
+
+Estes não têm verificador. São sobre o que os números dizem — e o que não dizem.
+
+1. No 5.4 o Cerrado fica em primeiro, mas as três proporções vão só de 0,42 a 0,48,
+   cada uma calculada sobre 48 a 66 lagoas. Abra `scripts/make_data.jl`: a região afeta
+   a espécie-foco na simulação? O que isso diz sobre ler um ranking em uma tabela
+   resumo?
+2. No 5.6 as lagoas de floresta são mais ricas que as de savana. Mas "floresta" aqui
+   significa Atlantic mais Amazon. Calcule a riqueza média por região e decida se
+   "floresta" é um agrupamento útil para essa pergunta.
+3. Use `@pivot_longer` para colocar `area_m2`, `canopy` e `temp_c` em uma única coluna
+   e depois calcule a média de cada variável por região em um único pipeline. Como você
+   lida com os valores faltantes de dossel?

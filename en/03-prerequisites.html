@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>3&nbsp; Prerequisites – Ecological Analyses in Julia</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./04-julia-basics.html" rel="next">
+<link href="./02-questions.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-5a5dabac6308952b9efa3e4a757695a8.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-a66101a33466f5efadbbd2b4bd0b6a91.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-5a5dabac6308952b9efa3e4a757695a8.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-3ba0fb867c8040eb1e52fc79203affbb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-08d9cbc512b0bf43d64a377bffd44206.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-3ba0fb867c8040eb1e52fc79203affbb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<meta name="description" content="An open, bilingual introduction to ecological data analysis in Julia.">
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./01-introduction.html">Foundations</a></li><li class="breadcrumb-item"><a href="./03-prerequisites.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Prerequisites</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Ecological Analyses in Julia</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Foundations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-questions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">From question to model</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-prerequisites.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Prerequisites</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-julia-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Introduction to Julia</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Wrangling and visualization</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-tidier.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Data wrangling with Tidier</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-visualization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Data visualization</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Modelling</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-linear-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Linear models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-glm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Generalized Linear Models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-terminal" id="toc-sec-terminal" class="nav-link active" data-scroll-target="#sec-terminal"><span class="header-section-number">3.1</span> Step 1: open a terminal</a></li>
+  <li><a href="#sec-installing" id="toc-sec-installing" class="nav-link" data-scroll-target="#sec-installing"><span class="header-section-number">3.2</span> Step 2: install Julia</a></li>
+  <li><a href="#sec-download" id="toc-sec-download" class="nav-link" data-scroll-target="#sec-download"><span class="header-section-number">3.3</span> Step 3: download the book folder</a></li>
+  <li><a href="#sec-editor" id="toc-sec-editor" class="nav-link" data-scroll-target="#sec-editor"><span class="header-section-number">3.4</span> Step 4: install VS Code</a></li>
+  <li><a href="#sec-vscode-setup" id="toc-sec-vscode-setup" class="nav-link" data-scroll-target="#sec-vscode-setup"><span class="header-section-number">3.5</span> Step 5: open the book folder</a></li>
+  <li><a href="#sec-instantiate" id="toc-sec-instantiate" class="nav-link" data-scroll-target="#sec-instantiate"><span class="header-section-number">3.6</span> Step 6: install the book’s packages</a></li>
+  <li><a href="#sec-setup-check" id="toc-sec-setup-check" class="nav-link" data-scroll-target="#sec-setup-check"><span class="header-section-number">3.7</span> Step 7: check that everything works</a></li>
+  <li><a href="#sec-first-script" id="toc-sec-first-script" class="nav-link" data-scroll-target="#sec-first-script"><span class="header-section-number">3.8</span> Step 8: a first script</a></li>
+  <li><a href="#sec-troubleshooting" id="toc-sec-troubleshooting" class="nav-link" data-scroll-target="#sec-troubleshooting"><span class="header-section-number">3.9</span> Troubleshooting</a></li>
+  <li><a href="#sec-environments" id="toc-sec-environments" class="nav-link" data-scroll-target="#sec-environments"><span class="header-section-number">3.10</span> Under the hood: project environments</a></li>
+  <li><a href="#sec-quarto" id="toc-sec-quarto" class="nav-link" data-scroll-target="#sec-quarto"><span class="header-section-number">3.11</span> Under the hood: Quarto</a></li>
+  <li><a href="#challenges" id="toc-challenges" class="nav-link" data-scroll-target="#challenges">Challenges</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./01-introduction.html">Foundations</a></li><li class="breadcrumb-item"><a href="./03-prerequisites.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Prerequisites</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-prerequisites" class="quarto-section-identifier"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Prerequisites</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This chapter gets your computer ready for the rest of the book. By the end you will have installed Julia and an editor, downloaded the book’s data and exercises, and run a first script that draws a plot.</p>
+<p>Follow the steps in order. Where they differ between operating systems, pick your system’s tab. Plan for about an hour the first time — most of it is waiting while packages install — and keep an internet connection until <a href="#sec-instantiate" class="quarto-xref"><span>Section 3.6</span></a> is done. If a step does not behave as described, see <a href="#sec-troubleshooting" class="quarto-xref"><span>Section 3.9</span></a>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>What you will install
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>What</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Julia</strong> (through <code>juliaup</code>)</td>
+<td>the language itself</td>
+</tr>
+<tr class="even">
+<td><strong>VS Code</strong> and its Julia extension</td>
+<td>where you write and run code</td>
+</tr>
+<tr class="odd">
+<td><strong>The book folder</strong></td>
+<td>data, exercises and the list of packages the book uses</td>
+</tr>
+<tr class="even">
+<td><strong>The book’s packages</strong></td>
+<td>data frames, plots and models, at the exact versions the book was built with</td>
+</tr>
+</tbody>
+</table>
+<p>You do not need git, R or Quarto.</p>
+</div>
+</div>
+<section id="sec-terminal" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="sec-terminal"><span class="header-section-number">3.1</span> Step 1: open a terminal</h2>
+<p>A terminal is a window where you type commands instead of clicking. You need it only for installing Julia; after that, everything happens inside VS Code.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="" aria-current="page">Windows</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">macOS</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href="">Linux</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<p>Open the Start menu, type <strong>PowerShell</strong> and open <em>Windows PowerShell</em> (or <em>Terminal</em>, on Windows 11).</p>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<p>Press <code>Cmd+Space</code>, type <strong>Terminal</strong> and press <code>Return</code>.</p>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<p>Press <code>Ctrl+Alt+T</code> on most distributions, or look for <em>Terminal</em> in the applications menu.</p>
+</div>
+</div>
+</div>
+<p>To run a command, paste it into the terminal and press <code>Enter</code>. Pasting is <code>Ctrl+V</code> on Windows, <code>Cmd+V</code> on macOS and <code>Ctrl+Shift+V</code> in most Linux terminals.</p>
+</section>
+<section id="sec-installing" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="sec-installing"><span class="header-section-number">3.2</span> Step 2: install Julia</h2>
+<p>Use <strong><code>juliaup</code></strong>, the official installer and version manager. Do not install Julia through a system package manager (<code>apt</code>, <code>brew</code>), which tends to ship outdated versions.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">Windows</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">macOS and Linux</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>winget install <span class="op">--</span>name Julia <span class="op">--</span>id 9NJNWW8PVKMN <span class="op">-</span>e <span class="op">-</span>s msstore</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If Windows asks you to accept the Microsoft Store terms, type <code>Y</code> and press <code>Enter</code>.</p>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsSL</span> https://install.julialang.org <span class="kw">|</span> <span class="fu">sh</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The installer asks whether to proceed with the default settings. Press <code>Enter</code> to accept them.</p>
+</div>
+</div>
+</div>
+<p>When it finishes, <strong>close the terminal and open a new one</strong> — the <code>julia</code> command only becomes available in new terminals. Then check the installation:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">julia</span> <span class="at">--version</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>It should print something like <code>julia version 1.12.6</code>. Any version from 1.10 upwards works with this book. Now type <code>julia</code> and press <code>Enter</code> to start Julia itself. The prompt changes to <code>julia&gt;</code>; type <code>1 + 1</code>, press <code>Enter</code>, and Julia answers <code>2</code>. Leave with <code>exit()</code>.</p>
+<p>Later, <code>juliaup update</code> upgrades Julia and <code>juliaup status</code> lists the installed versions.</p>
+</section>
+<section id="sec-download" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="sec-download"><span class="header-section-number">3.3</span> Step 3: download the book folder</h2>
+<p>The book comes with a folder that holds the example data, the exercise checker and the list of packages the book needs.</p>
+<ol type="1">
+<li><p>Go to <a href="https://github.com/esantos2ua/EcologicalAnalysesInJulia" class="uri">https://github.com/esantos2ua/EcologicalAnalysesInJulia</a>.</p></li>
+<li><p>Click the green <strong>Code</strong> button, then <strong>Download ZIP</strong>.</p></li>
+<li><p>Unzip the file:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">Windows</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">macOS</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-3" role="tab" aria-controls="tabset-3-3" aria-selected="false" href="">Linux</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<p>Right-click the downloaded file and choose <strong>Extract All…</strong>. Work in the extracted folder, not inside the ZIP: files opened from inside a ZIP are read-only copies.</p>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<p>Double-click the downloaded file.</p>
+</div>
+<div id="tabset-3-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-3-tab">
+<p>Right-click the file and choose <em>Extract Here</em>, or run <code>unzip</code> on it.</p>
+</div>
+</div>
+</div></li>
+<li><p>Move the extracted folder, <code>EcologicalAnalysesInJulia-main</code>, somewhere permanent such as your <em>Documents</em> folder. You can rename it, but avoid putting it inside <em>Downloads</em>, which some systems clean up automatically.</p></li>
+</ol>
+<p>Inside you should see, among others, the folders <code>data</code> and <code>exercises</code> and the files <code>Project.toml</code> and <code>Manifest.toml</code>.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>If you already use git
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Clone the repository instead of downloading the ZIP; <code>git pull</code> then brings in updates to the book:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/esantos2ua/EcologicalAnalysesInJulia.git</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</section>
+<section id="sec-editor" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="sec-editor"><span class="header-section-number">3.4</span> Step 4: install VS Code</h2>
+<p><strong>VS Code</strong> with the official Julia extension is the standard editor for Julia: it offers an integrated REPL (the console where code runs), a variable browser, a plot pane, a debugger and line-by-line evaluation — the functional equivalent of RStudio.</p>
+<ol type="1">
+<li><strong>Install VS Code</strong> from <a href="https://code.visualstudio.com" class="uri">https://code.visualstudio.com</a> and open it.</li>
+<li><strong>Install the Julia extension.</strong> Open the Extensions panel (<code>Ctrl+Shift+X</code>; <code>Cmd+Shift+X</code> on macOS), search for <em>Julia</em> and install the extension published by <em>julialang</em>. It finds the Julia installed by <code>juliaup</code> on its own.</li>
+</ol>
+<p>If you prefer a fully open-source build, <a href="https://vscodium.com">VSCodium</a> is VS Code compiled from the same MIT-licensed source without Microsoft’s telemetry, and installs the same Julia extension from the <a href="https://open-vsx.org">Open VSX</a> registry. <a href="https://antigravity.google">Antigravity</a>, another editor derived from VS Code, also runs the same extension. Everything in this book applies to all three. Other options are <strong>Pluto.jl</strong> (reactive notebooks, excellent for teaching) and any editor with LSP support through <code>LanguageServer.jl</code>.</p>
+</section>
+<section id="sec-vscode-setup" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="sec-vscode-setup"><span class="header-section-number">3.5</span> Step 5: open the book folder</h2>
+<ol type="1">
+<li><strong>Open a folder, not a file.</strong> In VS Code, use <em>File → Open Folder…</em> and choose the book folder from <a href="#sec-download" class="quarto-xref"><span>Section 3.3</span></a>. If VS Code asks whether you trust the authors of the files, answer yes. The folder you open determines both where Julia looks for files and which packages it uses.</li>
+<li><strong>Check the environment.</strong> The status bar at the bottom of the window should read <code>Julia env:</code> followed by the name of the book folder. If it shows something like <code>Julia env: v1.12</code> instead, click that entry and choose the book folder.</li>
+<li><strong>Start the REPL.</strong> Open the Command Palette (<code>Ctrl+Shift+P</code>; <code>Cmd+Shift+P</code> on macOS) and run <em>Julia: Start REPL</em>, or press <code>Alt+J</code> then <code>Alt+O</code>. A panel opens at the bottom with the <code>julia&gt;</code> prompt, already inside the book folder and its environment.</li>
+</ol>
+<div class="r-equivalent">
+<p><strong>In R</strong></p>
+<p>Opening a folder in VS Code plays the role of opening an <code>.Rproj</code> in RStudio: it sets the working directory. Unlike RStudio, it also selects the package environment (<a href="#sec-environments" class="quarto-xref"><span>Section 3.10</span></a>), so the right package versions come along automatically.</p>
+</div>
+</section>
+<section id="sec-instantiate" class="level2" data-number="3.6">
+<h2 data-number="3.6" class="anchored" data-anchor-id="sec-instantiate"><span class="header-section-number">3.6</span> Step 6: install the book’s packages</h2>
+<p>Click in the REPL panel and run:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Pkg</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">Pkg</span>.<span class="fu">instantiate</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This reads <code>Manifest.toml</code>, downloads every package the book uses at the exact version listed there, and compiles them.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>This takes a while
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The first time, <code>Pkg.instantiate()</code> can take from several minutes to half an hour, depending on your computer and connection. Plotting and modelling packages are large, and Julia compiles them ahead of time so they run fast later. Progress lines keep appearing while it works; let it finish and do not close VS Code. You only do this once per computer.</p>
+</div>
+</div>
+</section>
+<section id="sec-setup-check" class="level2" data-number="3.7">
+<h2 data-number="3.7" class="anchored" data-anchor-id="sec-setup-check"><span class="header-section-number">3.7</span> Step 7: check that everything works</h2>
+<p>The book folder includes a checker that you will also use for the exercises from <a href="04-julia-basics.html" class="quarto-xref"><span>Chapter 4</span></a> on. Load it and ask it to check your setup:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">include</span>(<span class="st">"exercises/check.jl"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">check</span>(<span class="st">"setup"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If everything is in place you will see:</p>
+<pre><code>✓ Julia 1.12.6
+✓ Working folder is the book folder
+✓ Book environment is active
+✓ Data file found: data/ponds.csv
+✓ All 19 packages installed
+Ready. Continue with the first script.</code></pre>
+<p>A line with ✗ says what is wrong and how to fix it; <a href="#sec-troubleshooting" class="quarto-xref"><span>Section 3.9</span></a> has more detail.</p>
+</section>
+<section id="sec-first-script" class="level2" data-number="3.8">
+<h2 data-number="3.8" class="anchored" data-anchor-id="sec-first-script"><span class="header-section-number">3.8</span> Step 8: a first script</h2>
+<p>With the book folder open and the REPL running, create a file called <code>first-steps.jl</code> in the folder root (<em>File → New File</em>, or <code>Alt+J</code> then <code>Alt+N</code>) and paste:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">## Load packages</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CSV</span>, <span class="bu">DataFrames</span>, <span class="bu">CairoMakie</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">## Where am I?</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">pwd</span>()               <span class="co"># the folder you opened</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">readdir</span>(<span class="st">"data"</span>)     <span class="co"># files inside data/</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">## Read the example data</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>ponds <span class="op">=</span> CSV.<span class="fu">read</span>(<span class="fu">joinpath</span>(<span class="st">"data"</span>, <span class="st">"ponds.csv"</span>), DataFrame)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="fu">first</span>(ponds, <span class="fl">5</span>)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="fu">describe</span>(ponds)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">## Plot richness against pond area</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> <span class="fu">Figure</span>()</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>ax <span class="op">=</span> <span class="fu">Axis</span>(fig[<span class="fl">1</span>, <span class="fl">1</span>]; xlabel <span class="op">=</span> <span class="st">"Pond area (m²)"</span>, ylabel <span class="op">=</span> <span class="st">"Species richness"</span>,</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>          xscale <span class="op">=</span> log10)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="fu">scatter!</span>(ax, ponds.area_m2, ponds.richness)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>fig</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Lines starting with <code>##</code> split the script into <strong>cells</strong>. Put the cursor in the first cell and press <code>Alt+Enter</code> to run it, then keep going cell by cell (<code>Alt+Shift+Enter</code> runs the cell and jumps to the next one). A few things to notice:</p>
+<ul>
+<li><strong>Loading packages is slow the first time</strong> in each session — that is the compilation latency discussed in <a href="01-introduction.html#sec-latency" class="quarto-xref"><span>Section 1.3</span></a>. Later cells run immediately.</li>
+<li><strong>Paths are relative to the folder you opened.</strong> <code>pwd()</code> confirms it, which is why <code>joinpath("data", "ponds.csv")</code> works without typing the full path. <code>joinpath</code> inserts the right separator on every operating system.</li>
+<li><strong><code>describe</code> is your first data check.</strong> It shows that <code>canopy</code> has 7 missing values and that <code>area_m2</code> is strongly right-skewed (median around 149 m², maximum near 2000 m²) — which is why the plot uses a log scale.</li>
+</ul>
+<p>The shortcuts you will use constantly:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Shortcut</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Shift+Enter</code></td>
+<td>run the current line or selection, then move to the next</td>
+</tr>
+<tr class="even">
+<td><code>Ctrl+Enter</code></td>
+<td>run the current line or selection, staying put</td>
+</tr>
+<tr class="odd">
+<td><code>Alt+Enter</code></td>
+<td>run the current cell (a block delimited by <code>##</code> lines)</td>
+</tr>
+<tr class="even">
+<td><code>Alt+J</code>, <code>Alt+R</code></td>
+<td>restart the REPL</td>
+</tr>
+<tr class="odd">
+<td><code>Ctrl+C</code> in the REPL</td>
+<td>interrupt a running computation</td>
+</tr>
+</tbody>
+</table>
+<p>On macOS, <code>Alt</code> is the Option key; <code>Ctrl</code> stays <code>Ctrl</code>. Shortcuts and menu names were checked against version 1.249 of the Julia extension in September 2026.</p>
+<p><strong>Inspecting the environment.</strong> Click the Julia icon in the Activity Bar (the left-hand strip). The <strong>Workspace</strong> panel lists every variable in the session — <code>ponds</code>, <code>fig</code>, <code>ax</code> — with its type and size; expand an entry to look inside. For a data frame, hover over its name and click the <em>Open in VS Code</em> icon, or run <code>vscodedisplay(ponds)</code> in the REPL, to open it in a spreadsheet-like grid — the equivalent of RStudio’s <code>View()</code>.</p>
+<p><strong>Plots.</strong> Evaluating <code>fig</code> opens the figure in the <strong>plot pane</strong>, a VS Code tab. The <strong>Plot Navigator</strong> panel, below the Workspace, keeps the history of the session’s plots; with the plot pane focused, the arrow keys move through it. To save a figure to disk, use <code>save("richness-area.png", fig)</code>.</p>
+</section>
+<section id="sec-troubleshooting" class="level2" data-number="3.9">
+<h2 data-number="3.9" class="anchored" data-anchor-id="sec-troubleshooting"><span class="header-section-number">3.9</span> Troubleshooting</h2>
+<dl>
+<dt><strong><code>julia</code> is not recognized / <code>command not found</code>.</strong></dt>
+<dd>
+Close every terminal and open a new one; the installer only updates new terminals. If it still fails, run the installation command of <a href="#sec-installing" class="quarto-xref"><span>Section 3.2</span></a> again.
+</dd>
+<dt><strong>Windows: <code>winget</code> is not recognized.</strong></dt>
+<dd>
+<code>winget</code> comes with the <em>App Installer</em> app. Update <em>App Installer</em> from the Microsoft Store, or search for <strong>Julia</strong> in the Microsoft Store and install it from there — it is the same <code>juliaup</code> installer.
+</dd>
+<dt><strong>Linux: <code>curl: command not found</code>.</strong></dt>
+<dd>
+Install <code>curl</code> with your distribution’s package manager (for example <code>sudo apt install curl</code> on Ubuntu), then repeat <a href="#sec-installing" class="quarto-xref"><span>Section 3.2</span></a>.
+</dd>
+<dt><strong>VS Code says it cannot find Julia.</strong></dt>
+<dd>
+In a terminal, run <code>where.exe julia</code> (Windows) or <code>which julia</code> (macOS, Linux) and copy the path it prints. In VS Code, open the settings (<code>Ctrl+,</code>; <code>Cmd+,</code> on macOS), search for <code>julia.executablePath</code> and paste the path there. Then restart VS Code.
+</dd>
+<dt><strong>The status bar shows <code>Julia env: v1.12</code> (or another version) instead of the book folder.</strong></dt>
+<dd>
+VS Code has the wrong folder open, or a single file. Use <em>File → Open Folder…</em> and choose the book folder itself — the one containing <code>Project.toml</code> — not a folder above or inside it. Then restart the REPL (<code>Alt+J</code>, <code>Alt+R</code>).
+</dd>
+<dt><strong><code>include("exercises/check.jl")</code> fails with <code>No such file or directory</code>.</strong></dt>
+<dd>
+The REPL is not running in the book folder. <code>pwd()</code> shows where it is. Open the book folder as above and restart the REPL.
+</dd>
+<dt><strong><code>Pkg.instantiate()</code> seems frozen.</strong></dt>
+<dd>
+It is probably compiling; this is the slow part. As long as new lines keep appearing every few minutes, wait. If it stopped with an error — for example because the connection dropped — run <code>Pkg.instantiate()</code> again; it picks up where it left off.
+</dd>
+<dt><strong><code>Package CairoMakie not found in current path</code> (or another package).</strong></dt>
+<dd>
+Either the book environment is not active (check the status bar) or <a href="#sec-instantiate" class="quarto-xref"><span>Section 3.6</span></a> has not finished. <code>check("setup")</code> tells you which.
+</dd>
+<dt><strong>The first <code>using CairoMakie</code> in each session takes a minute.</strong></dt>
+<dd>
+That is normal: Julia compiles code the first time it runs in a session (<a href="01-introduction.html#sec-latency" class="quarto-xref"><span>Section 1.3</span></a>). Later commands are fast.
+</dd>
+</dl>
+</section>
+<section id="sec-environments" class="level2" data-number="3.10">
+<h2 data-number="3.10" class="anchored" data-anchor-id="sec-environments"><span class="header-section-number">3.10</span> Under the hood: project environments</h2>
+<p>You have already used an environment without having to think about it: that is what the status bar in <a href="#sec-vscode-setup" class="quarto-xref"><span>Section 3.5</span></a> shows. This section explains what it is — the concept that differs most from common practice in R.</p>
+<p>In R, <code>install.packages()</code> installs into a global library shared by all your projects. In Julia, each project has its own environment, described by two files:</p>
+<ul>
+<li><strong><code>Project.toml</code></strong> — the direct dependencies you declared.</li>
+<li><strong><code>Manifest.toml</code></strong> — the full resolved dependency tree, with exact versions of everything.</li>
+</ul>
+<p>Together they make an analysis reproducible by construction: anyone who has your project folder and runs <code>Pkg.instantiate()</code> gets exactly your versions — which is what you did in <a href="#sec-instantiate" class="quarto-xref"><span>Section 3.6</span></a>.</p>
+<div class="r-equivalent">
+<p><strong>In R</strong></p>
+<p><code>Project.toml</code> + <code>Manifest.toml</code> play the role of <code>renv.lock</code>, but they are part of the language rather than an add-on package. Activating an environment is the default operation, not the exception.</p>
+</div>
+<p><code>Pkg.status()</code> lists the packages in the active environment:</p>
+<div id="env-status" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Pkg</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">Pkg</span>.<span class="fu">status</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<div class="ansi-escaped-output">
+<pre><span class="ansi-green-fg ansi-bold">Status</span> `~/Documents/Repos/EcologicalAnalysesInJulia/Project.toml`
+<span class="ansi-green-fg">⌃</span> <span class="ansi-bright-black-fg">[cbdf2221] </span>AlgebraOfGraphics v0.13.1
+<span class="ansi-yellow-fg">⌅</span> <span class="ansi-bright-black-fg">[336ed68f] </span>CSV v0.10.17
+<span class="ansi-green-fg">⌃</span> <span class="ansi-bright-black-fg">[13f3f980] </span>CairoMakie v0.15.13
+<span class="ansi-yellow-fg">⌅</span> <span class="ansi-bright-black-fg">[324d7699] </span>CategoricalArrays v0.10.9
+  <span class="ansi-bright-black-fg">[a93c6f00] </span>DataFrames v1.8.2
+  <span class="ansi-bright-black-fg">[31c24e10] </span>Distributions v0.25.131
+  <span class="ansi-bright-black-fg">[8f03c58b] </span>Effects v1.7.1
+  <span class="ansi-bright-black-fg">[38e38edf] </span>GLM v1.9.5
+<span class="ansi-green-fg">⌃</span> <span class="ansi-bright-black-fg">[09f84164] </span>HypothesisTests v0.11.8
+<span class="ansi-green-fg">⌃</span> <span class="ansi-bright-black-fg">[ff71e718] </span>MixedModels v5.8.2
+<span class="ansi-yellow-fg">⌅</span> <span class="ansi-bright-black-fg">[ce6b1742] </span>RDatasets v0.7.7
+<span class="ansi-green-fg">⌃</span> <span class="ansi-bright-black-fg">[10745b16] </span>Statistics v1.11.4
+  <span class="ansi-bright-black-fg">[2913bbd2] </span>StatsBase v0.34.13
+  <span class="ansi-bright-black-fg">[3eaba693] </span>StatsModels v0.7.10
+  <span class="ansi-bright-black-fg">[79ddc9fe] </span>TidierCats v0.2.2
+  <span class="ansi-bright-black-fg">[fe2206b3] </span>TidierData v0.17.2
+  <span class="ansi-bright-black-fg">[8ae5e7a9] </span>TidierFiles v0.3.2
+  <span class="ansi-bright-black-fg">[337ecbd1] </span>TidierPlots v1.0.0
+  <span class="ansi-bright-black-fg">[9a3f8284] </span>Random v1.11.0
+<span class="ansi-cyan-fg ansi-bold">Info</span> Packages marked with <span class="ansi-green-fg">⌃</span> and <span class="ansi-yellow-fg">⌅</span> have new versions available. Those with <span class="ansi-green-fg">⌃</span> may be upgradable, but those with <span class="ansi-yellow-fg">⌅</span> are restricted by compatibility constraints from upgrading. To see why use `status --outdated`
+</pre>
+</div>
+</div>
+</div>
+<p>This book was built with:</p>
+<div id="versioninfo" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">versioninfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Julia Version 1.12.6
+Commit 15346901f00 (2026-04-09 19:20 UTC)
+Build Info:
+  Official https://julialang.org release
+Platform Info:
+  OS: macOS (arm64-apple-darwin24.0.0)
+  CPU: 10 × Apple M5
+  WORD_SIZE: 64
+  LLVM: libLLVM-18.1.7 (ORCJIT, apple-m1)
+  GC: Built with stock GC
+Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)
+Environment:
+  JULIA_LOAD_PATH = @:@stdlib</code></pre>
+</div>
+</div>
+</section>
+<section id="sec-quarto" class="level2" data-number="3.11">
+<h2 data-number="3.11" class="anchored" data-anchor-id="sec-quarto"><span class="header-section-number">3.11</span> Under the hood: Quarto</h2>
+<p>You do not need this section to follow the book. It is for readers who want to build the book themselves or write documents like it.</p>
+<p>This book is written in <a href="https://quarto.org">Quarto</a>, the direct successor to <code>bookdown</code>. Since version 1.5, Quarto executes Julia blocks natively, without going through Jupyter.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{julia}</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: example</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fl">1</span> <span class="op">+</span> <span class="fl">1</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The repository’s <code>README.md</code> explains how to render the book.</p>
+</section>
+<section id="challenges" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="challenges">Challenges</h2>
+<ol type="1">
+<li>In the REPL, press <code>]</code> to enter package mode (the prompt turns blue; <code>Backspace</code> leaves it). Run <code>activate my-test</code> and then <code>add DataFrames</code>: this creates an environment in a new folder, <code>my-test</code>. Inspect the <code>Project.toml</code> it generated, then run <code>activate .</code> to return to the book’s environment.</li>
+<li>Delete <code>my-test/Manifest.toml</code>, activate <code>my-test</code> again and run <code>resolve</code>. What changes?</li>
+<li>Run <code>first-steps.jl</code> (<a href="#sec-first-script" class="quarto-xref"><span>Section 3.8</span></a>) cell by cell. In the Workspace panel, which types did <code>CSV.jl</code> assign to the <code>region</code> and <code>canopy</code> columns, and why is the type of <code>canopy</code> different from that of <code>area_m2</code>?</li>
+</ol>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./02-questions.html" class="pagination-link" aria-label="From question to model">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">From question to model</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./04-julia-basics.html" class="pagination-link" aria-label="Introduction to Julia">
+        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Introduction to Julia</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

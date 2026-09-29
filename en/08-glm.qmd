@@ -18,6 +18,28 @@ end
 nrow(ponds)
 ```
 
+```{julia}
+#| label: checker-08
+#| include: false
+include(joinpath("..", "exercises", "check.jl"))
+```
+
+::: {.callout-note .exercise}
+## Exercises in this chapter
+
+As in @sec-linear-models, you fit a model in each *Your turn* box and pass a number
+extracted from it to `check`. Start each session with:
+
+```julia
+include("exercises/check.jl")
+using TidierData, DataFrames, CSV, GLM, StatsModels, Statistics, MixedModels
+ponds = @chain CSV.read(joinpath("data", "ponds.csv"), DataFrame) begin
+    @drop_missing(canopy)
+    @mutate(log_area = log(area_m2))
+end
+```
+:::
+
 ## Why GLMs in ecology {#sec-why-glm}
 
 Counts are not normal, proportions live in $[0,1]$, presences are binary. The Gaussian
@@ -56,6 +78,46 @@ DataFrame(
 )
 ```
 
+::: {.callout-note .exercise}
+## Your turn 8.1 — Adding hydroperiod
+
+Fit a Poisson GLM like `g1`, adding `hydro` at the end of the formula. Pass its
+coefficients to `check("8.1", ...)`, then compare its AIC with that of `g1`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Copy `g1` and add `+ hydro`. `aic(g)` gives the AIC; lower is better.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-8-1
+g_hydro = glm(@formula(richness ~ log_area + canopy + temp_c + hydro),
+              ponds, Poisson(), LogLink())
+coef(g_hydro)
+```
+
+```{julia}
+#| label: answer-8-1-check
+check("8.1", coef(g_hydro))
+(aic_g1 = aic(g1), aic_hydro = aic(g_hydro))
+```
+
+The AIC drops by about 9, so `hydro` earns its place. The simulation added 0.22 to
+the log mean of permanent ponds; the model estimates −0.19 for temporary ones, the same
+effect seen from the other side.
+:::
+:::
+
+```{julia}
+#| label: verify-8-1
+#| include: false
+Checks.verify("8.1", coef(g_hydro))
+```
+
 ::: {.callout-tip}
 ## Interpreting coefficients on the log scale
 
@@ -70,6 +132,44 @@ exp(coef(g1)[3]), (exp(coef(g1)[3]) - 1) * 100
 That is, each additional percentage point of canopy reduces expected richness by about
 1%.
 :::
+
+::: {.callout-note .exercise}
+## Your turn 8.2 — Temporary ponds, in plain numbers
+
+Using the model from 8.1, by what factor does expected richness change in a temporary
+pond compared with a permanent one, all else equal? Pass that factor to
+`check("8.2", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+The `hydro: temporary` coefficient is the fifth. Under a log link, a coefficient
+$\beta$ multiplies the mean by $e^\beta$.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-8-2
+factor_temp = exp(coef(g_hydro)[5])
+```
+
+```{julia}
+#| label: answer-8-2-check
+check("8.2", factor_temp)
+```
+
+About 0.83: temporary ponds are expected to hold about 17% fewer species than
+permanent ones.
+:::
+:::
+
+```{julia}
+#| label: verify-8-2
+#| include: false
+Checks.verify("8.2", factor_temp)
+```
 
 ## Overdispersion {#sec-overdispersion}
 
@@ -105,6 +205,51 @@ $\hat\phi > 1.5$ can paper over a missing predictor. Check your model structure
 before you change your distribution. The GLMM in @sec-glmm addresses the actual cause
 here.
 :::
+
+::: {.callout-note .exercise}
+## Your turn 8.3 — Testing the warning
+
+The box above claims that the overdispersion of `g1` comes from a missing predictor.
+Test it: fit a Poisson GLM with `log_area`, `canopy`, `temp_c`, `hydro` and `region`,
+compute its dispersion statistic as in the block above, and pass it to
+`check("8.3", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Copy the dispersion block, replacing `g1` with your model. `predict(g)` gives the
+fitted means.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-8-3
+g_full = glm(@formula(richness ~ log_area + canopy + temp_c + hydro + region),
+             ponds, Poisson(), LogLink())
+
+mu_full = predict(g_full)
+phi_full = sum(((ponds.richness .- mu_full) ./ sqrt.(mu_full)) .^ 2) /
+           dof_residual(g_full)
+```
+
+```{julia}
+#| label: answer-8-3-check
+check("8.3", phi_full)
+```
+
+About 0.94: with the predictors of the generating model in place, the
+"overdispersion" is gone. Adding `hydro` alone (8.1) barely moved it; `region` was the
+missing piece.
+:::
+:::
+
+```{julia}
+#| label: verify-8-3
+#| include: false
+Checks.verify("8.3", phi_full)
+```
 
 ```{julia}
 #| label: negbin
@@ -155,6 +300,43 @@ DataFrame(
 )
 ```
 
+::: {.callout-note .exercise}
+## Your turn 8.4 — Odds for a meaningful change
+
+The odds ratio for one percentage point of canopy is close to 1, which is hard to
+interpret. Compute the odds ratio for an increase of **10** percentage points, from
+`g4`, and pass it to `check("8.4", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Ten points multiply the odds by $e^{10\beta}$, not by $10\,e^{\beta}$.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-8-4
+or_10 = exp(10 * coef(g4)[2])
+```
+
+```{julia}
+#| label: answer-8-4-check
+check("8.4", or_10)
+```
+
+About 1.19: each extra 10 points of canopy multiply the odds of finding the focal
+species by 1.19, an increase of 19%.
+:::
+:::
+
+```{julia}
+#| label: verify-8-4
+#| include: false
+Checks.verify("8.4", or_10)
+```
+
 ```{julia}
 #| label: fig-logistic
 #| fig-cap: "Predicted probability of focal-species occurrence along the canopy gradient."
@@ -179,6 +361,44 @@ axislegend(ax, position = :lt)
 fig
 ```
 
+::: {.callout-note .exercise}
+## Your turn 8.5 — Predicting a new pond
+
+A temporary pond has 80% canopy and water at 26 °C. According to `g4`, what is the
+probability of finding the focal species there? Pass it to `check("8.5", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Build a one-row `DataFrame` with the columns `canopy`, `temp_c` and `hydro`, and pass
+it to `predict(g4, ...)`, as with `grid` above.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-8-5
+new_pond = DataFrame(canopy = [80.0], temp_c = [26.0], hydro = ["temporary"])
+p_new = predict(g4, new_pond)
+```
+
+```{julia}
+#| label: answer-8-5-check
+check("8.5", p_new)
+```
+
+About 0.52. `predict` returns probabilities for a logistic GLM by default: the link
+function is undone for you.
+:::
+:::
+
+```{julia}
+#| label: verify-8-5
+#| include: false
+Checks.verify("8.5", p_new)
+```
+
 ## GLMMs {#sec-glmm}
 
 ```{julia}
@@ -201,6 +421,42 @@ used and the options available, consult the `MixedModels.jl` documentation
 [@mixedmodelsjl]: these are details that change between versions, and not worth
 reproducing here from memory.
 :::
+
+::: {.callout-note .exercise}
+## Your turn 8.6 — A GLMM with hydroperiod
+
+Add `hydro` to `gm1` and pass the fixed effects of the new model to
+`check("8.6", ...)`. Compare the `hydro` estimate with the one from 8.1.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Add `+ hydro` before the random-effect term. `fixef(gm)` returns the fixed effects.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-8-6
+gm_hydro = fit(MixedModel,
+               @formula(richness ~ log_area + canopy + hydro + (1 | region)),
+               ponds, Poisson(); progress = false)
+fixef(gm_hydro)
+```
+
+```{julia}
+#| label: answer-8-6-check
+check("8.6", fixef(gm_hydro))
+```
+:::
+:::
+
+```{julia}
+#| label: verify-8-6
+#| include: false
+Checks.verify("8.6", fixef(gm_hydro))
+```
 
 ## Gaps you will hit {#sec-glm-gaps}
 
@@ -246,12 +502,13 @@ it with executed code. Outside it, `RCall.jl` is the bridge. Naming the boundary
 clearly serves the reader better than hiding it.
 :::
 
-## Exercises {.unnumbered}
+## Challenges {.unnumbered}
 
-1. Fit a Poisson GLM for `richness` including `hydro` and test whether it improves AIC
-   relative to `g1`.
-2. Compute the dispersion statistic for `g2`. Did the negative binomial fix it?
-3. Build the predicted-probability curve of @fig-logistic for all three regions,
-   holding `hydro` at `"permanent"`.
-4. Implement `DHARMa`-style quantile residuals: simulate 250 datasets from the fitted
-   model and compare each observation with its predictive distribution.
+1. Compute the dispersion statistic for `g2`. Did the negative binomial fix the
+   overdispersion? After 8.3, would you still choose it?
+2. Build the predicted-probability curve of @fig-logistic for each hydroperiod at three
+   temperatures (22, 24.5 and 27 °C). How much does temperature shift the curve?
+3. Implement `DHARMa`-style quantile residuals for `g1`: simulate 250 datasets from the
+   fitted model and, for each pond, compute the proportion of simulated values below
+   the observed one. If the model is right, these proportions are uniform. Are they?
+   Repeat for the model from 8.3.

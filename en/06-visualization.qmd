@@ -30,6 +30,24 @@ end
 nrow(ponds_c)
 ```
 
+::: {.callout-note .exercise}
+## Exercises in this chapter
+
+A figure cannot be checked automatically, so in most *Your turn* boxes you compare
+your plot with the one in the solution. Start each session by loading the packages and
+the data, with the book folder open in VS Code:
+
+```julia
+include("exercises/check.jl")
+using TidierData, TidierPlots, CairoMakie, AlgebraOfGraphics, CSV, DataFrames, Statistics
+ponds = CSV.read(joinpath("data", "ponds.csv"), DataFrame)
+ponds_c = @chain ponds begin
+    @drop_missing(canopy)
+    @mutate(log_area = log(area_m2))
+end
+```
+:::
+
 ## `TidierPlots.jl`: the ggplot grammar {#sec-tidierplots}
 
 ```{julia}
@@ -56,6 +74,37 @@ The translation is nearly character for character; the difference is the `@` in
 `@aes`.
 :::
 
+::: {.callout-note .exercise}
+## Your turn 6.1 — Richness and temperature
+
+Redo @fig-tidierplots-scatter with water temperature (`temp_c`) on the x axis and the
+points coloured by hydroperiod (`hydro`). Label both axes. Does richness change with
+temperature as clearly as with canopy?
+
+There is no checker for this one: compare your figure with the one in the solution.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Only the `@aes` mapping and the labels change.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-6-1
+ggplot(ponds_c, @aes(x = temp_c, y = richness, color = hydro)) +
+    geom_point(alpha = 0.7) +
+    labs(x = "Water temperature (°C)", y = "Species richness")
+```
+
+The cloud is much flatter than for canopy. The simulation does include a temperature
+effect (`scripts/make_data.jl`), but a small one: about 3% more species per degree,
+invisible next to the scatter between ponds.
+:::
+:::
+
 ## `AlgebraOfGraphics.jl`: an algebraic grammar {#sec-aog}
 
 AoG treats plots as an algebra: `*` combines layers, `+` superimposes them.
@@ -78,6 +127,40 @@ names `data` and `linear` collide with other loaded packages. In a script using 
 AoG, `data(...)` and `linear()` suffice.
 :::
 
+::: {.callout-note .exercise}
+## Your turn 6.2 — Body size, with fitted lines
+
+With AlgebraOfGraphics, plot `body_size` against `temp_c`, coloured by `hydro`, with a
+linear fit for each hydroperiod. Do permanent and temporary ponds differ?
+
+There is no checker for this one: compare your figure with the one in the solution.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Start from the block above and change the `mapping`. The fitted lines follow the
+colour grouping automatically.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-6-2
+plt = AlgebraOfGraphics.data(ponds_c) *
+      mapping(:temp_c => "Water temperature (°C)",
+              :body_size => "Body size (mm)",
+              color = :hydro => "Hydroperiod") *
+      (visual(Scatter, alpha = 0.6) + AlgebraOfGraphics.linear())
+
+draw(plt; figure = (size = (700, 450),))
+```
+
+The two lines almost coincide: in the simulation, body size depends on temperature and
+canopy but not on hydroperiod. We test this formally in @sec-linear-models.
+:::
+:::
+
 ## Facets {#sec-facets}
 
 ```{julia}
@@ -93,6 +176,43 @@ plt = AlgebraOfGraphics.data(ponds_c) *
 draw(plt; figure = (size = (800, 400),))
 ```
 
+::: {.callout-note .exercise}
+## Your turn 6.3 — Facets in the ggplot grammar
+
+Translate @fig-facets to `TidierPlots.jl`, using `facet_wrap` to split the panels by
+hydroperiod. Leave out the fitted lines (see the warning in the solution).
+
+There is no checker for this one: compare your figure with the one in the solution.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`facet_wrap(facets = :hydro)` is added with `+`, like any other layer.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-6-3
+ggplot(ponds_c, @aes(x = log_area, y = richness, color = region)) +
+    geom_point(alpha = 0.6) +
+    facet_wrap(facets = :hydro) +
+    labs(x = "log(area)", y = "Richness")
+```
+
+::: {.callout-warning}
+## A limit of TidierPlots
+
+In `TidierPlots.jl` 1.0.0 (checked in September 2026), adding
+`geom_smooth(method = "lm")` to a faceted plot fails with
+`column name :facet not found`. `geom_smooth` works without facets, and facets work
+without `geom_smooth`, but not together. When the ggplot grammar reaches a limit like
+this, AlgebraOfGraphics (@fig-facets) is the way out.
+:::
+:::
+:::
+
 ## Distributions {#sec-distributions}
 
 ```{julia}
@@ -107,6 +227,36 @@ plt = AlgebraOfGraphics.data(ponds_c) *
 
 draw(plt; figure = (size = (700, 420),))
 ```
+
+::: {.callout-note .exercise}
+## Your turn 6.4 — The shape of a distribution
+
+Boxplots hide the shape of a distribution. Show the distribution of `body_size` in each
+region as violins (`Violin`), with one colour per region.
+
+There is no checker for this one: compare your figure with the one in the solution.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Replace `BoxPlot` with `Violin` and map `region` to both the x axis and `color`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-6-4
+plt = AlgebraOfGraphics.data(ponds_c) *
+      mapping(:region => "Region",
+              :body_size => "Body size (mm)",
+              color = :region) *
+      visual(Violin)
+
+draw(plt; figure = (size = (700, 420),))
+```
+:::
+:::
 
 ## Plain `Makie.jl`: full control {#sec-makie}
 
@@ -135,6 +285,51 @@ fig
 Makie's layout system is grid-based (`fig[row, col]`), covering the role of
 `patchwork` and `cowplot` in R without an extra package.
 
+::: {.callout-note .exercise}
+## Your turn 6.5 — Two panels by hand
+
+Build a figure with `size = (800, 350)` and two panels: on the left, a boxplot of
+richness by region; on the right, a bar chart of the proportion of ponds with the focal
+species in each region (the numbers from 5.4). Store it in `fig_regions`.
+
+There is no checker for this one: compare your figure with the one in the solution.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Makie's `boxplot!` and `barplot!` want numbers on the x axis. Give each region a
+number with `[findfirst(==(r), regs) for r in ponds.region]`, where
+`regs = ["Amazon", "Atlantic", "Cerrado"]`, and put the names back with
+`xticks = (1:3, regs)` in each `Axis`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-6-5
+regs = ["Amazon", "Atlantic", "Cerrado"]
+idx = [findfirst(==(r), regs) for r in ponds.region]
+props = [mean(ponds.focal[ponds.region .== r]) for r in regs]
+
+fig_regions = Figure(size = (800, 350))
+
+ax1 = Axis(fig_regions[1, 1], xticks = (1:3, regs),
+           xlabel = "Region", ylabel = "Richness", title = "(a) Richness")
+boxplot!(ax1, idx, ponds.richness, color = (:steelblue, 0.6))
+
+ax2 = Axis(fig_regions[1, 2], xticks = (1:3, regs),
+           xlabel = "Region", ylabel = "Proportion of ponds", title = "(b) Focal species")
+barplot!(ax2, 1:3, props, color = (:darkorange, 0.8))
+
+fig_regions
+```
+
+The two panels tell different stories: richness differs sharply between regions,
+focal-species occurrence hardly at all.
+:::
+:::
+
 ## Saving figures {#sec-saving}
 
 ```{julia}
@@ -145,6 +340,33 @@ save("figure.pdf", fig)                    # vector, for publication
 save("figure.svg", fig)
 ```
 
+::: {.callout-note .exercise}
+## Your turn 6.6 — A figure for publication
+
+Save `fig_regions` from 6.5 as `focal-by-region.png`, at three pixels per unit, in the
+book folder. Then check the file: `check("6.6", "focal-by-region.png")`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+The block above shows the keyword that sets the resolution.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-6-6
+#| eval: false
+save("focal-by-region.png", fig_regions; px_per_unit = 3)
+check("6.6", "focal-by-region.png")
+```
+
+An 800 × 350 figure at three pixels per unit gives a 2400 × 1050 px image — enough
+for a two-column journal figure. For vector output, save as `.pdf` instead.
+:::
+:::
+
 ::: {.callout-tip}
 ## Choosing a backend
 
@@ -153,9 +375,13 @@ this book uses. `GLMakie` opens GPU-accelerated interactive windows — useful f
 exploring data, unsuitable for rendering a book.
 :::
 
-## Exercises {.unnumbered}
+## Challenges {.unnumbered}
 
-1. Redo @fig-tidierplots-scatter using `temp_c` on the x axis. Does the pattern hold?
-2. Build a two-panel figure: richness by region on the left, focal-species occurrence
-   proportion by region on the right.
-3. Translate @fig-facets to `TidierPlots.jl` using `facet_wrap`.
+1. In 6.1 you judged the temperature effect by eye. Add a linear fit per hydroperiod
+   with `geom_smooth(method = "lm")`. Does the line change your reading of the plot?
+   What would you need to know before trusting it?
+2. Panel (b) of 6.5 shows proportions without uncertainty. Add an error bar of
+   $\pm 2$ standard errors to each bar, with $\text{SE} = \sqrt{p(1-p)/n}$ and
+   `errorbars!`. Do the regions still look different?
+3. Redo @fig-makie-composite with one colour per region in every panel and a single
+   shared legend on the right (`Legend(fig[1, 4], ...)`).

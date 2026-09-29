@@ -43,6 +43,26 @@ describe(ponds, :eltype, :nmissing, :mean, :min, :max)
 | `focal` | focal species occurrence (0/1) |
 | `body_size` | mean body size (mm) |
 
+```{julia}
+#| label: checker-05
+#| include: false
+include(joinpath("..", "exercises", "check.jl"))
+```
+
+::: {.callout-note .exercise}
+## Exercises in this chapter
+
+The *Your turn* boxes work as in @sec-julia-basics. Here the answers are tables and
+numbers computed from the pond data, so start each session by loading the checker, the
+packages and the data, with the book folder open in VS Code:
+
+```julia
+include("exercises/check.jl")
+using TidierData, DataFrames, Statistics, CSV
+ponds = CSV.read(joinpath("data", "ponds.csv"), DataFrame)
+```
+:::
+
 ::: {.callout-note}
 Column names are in English in both versions of the book, so that the code is
 literally identical in English and Portuguese.
@@ -78,6 +98,44 @@ The correspondence is line for line. The only syntactic difference is the `@` an
 `begin ... end`.
 :::
 
+::: {.callout-note .exercise}
+## Your turn 5.1 — The largest ponds in the Cerrado
+
+Write a `@chain` that returns the three largest ponds (by `area_m2`) in the Cerrado,
+largest first. Store the result in `top3` and check it with `check("5.1", top3)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Three steps, one per line: keep the Cerrado rows, sort by area from largest to
+smallest, keep the first three. The block above does something very similar.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-5-1
+top3 = @chain ponds begin
+    @filter(region == "Cerrado")
+    @arrange(desc(area_m2))
+    first(3)
+end
+```
+
+```{julia}
+#| label: answer-5-1-check
+check("5.1", top3)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-5-1
+#| include: false
+Checks.verify("5.1", top3)
+```
+
 ## The five verbs {#sec-verbs}
 
 ### `@filter` — pick rows
@@ -91,6 +149,54 @@ end
 ```
 
 Note: inside `@filter`, use `&&` and `||`, not `&` and `|` as in `dplyr`.
+
+::: {.callout-note .exercise}
+## Your turn 5.2 — Several conditions at once
+
+How many temporary ponds have canopy cover above 60% **and** richness below the
+overall median richness? Check the number with `check("5.2", n)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Compute the median first, outside the chain: `med = median(ponds.richness)`. Inside a
+Tidier macro a bare name means a column, so to use the variable `med` write `!!med`.
+
+If you get `TypeError: non-boolean (Missing) used in boolean context`, some ponds have
+no canopy value, and `missing > 60` is neither true nor false. Remove those rows first
+with `@drop_missing(canopy)` (@sec-tidier-missing).
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-5-2
+med = median(ponds.richness)
+
+n = @chain ponds begin
+    @drop_missing(canopy)
+    @filter(hydro == "temporary" && canopy > 60 && richness < !!med)
+    nrow
+end
+```
+
+```{julia}
+#| label: answer-5-2-check
+check("5.2", n)
+```
+
+Dropping ponds without canopy is the right call here: we cannot know whether their
+canopy is above 60%. The median, though, is computed on all 180 ponds, before
+dropping anything.
+:::
+:::
+
+```{julia}
+#| label: verify-5-2
+#| include: false
+Checks.verify("5.2", n)
+```
 
 ### `@select` — pick columns
 
@@ -129,6 +235,39 @@ end
 end
 ```
 
+::: {.callout-note .exercise}
+## Your turn 5.3 — Richness per 100 m²
+
+Bigger ponds tend to hold more species. Add a column `rich_per_100m2` with the number
+of species per 100 m² of pond, keeping every row and column of `ponds`. Store the
+result in `ponds_d` and check it with `check("5.3", ponds_d)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`richness / area_m2` is species per m²; multiply by 100.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-5-3
+ponds_d = @chain ponds begin
+    @mutate(rich_per_100m2 = richness / area_m2 * 100)
+end
+
+check("5.3", ponds_d)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-5-3
+#| include: false
+Checks.verify("5.3", ponds_d)
+```
+
 ### `@group_by` + `@summarize` — aggregate
 
 ```{julia}
@@ -143,6 +282,42 @@ end
     )
     @arrange(region, hydro)
 end
+```
+
+::: {.callout-note .exercise}
+## Your turn 5.4 — Where is the focal species?
+
+Compute, for each region, the proportion of ponds where the focal species occurs, in a
+column called `prop_focal`, sorted from highest to lowest. Check it with
+`check("5.4", by_region)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`focal` is 0 or 1, so its mean is the proportion of ponds where it is 1. Sorting from
+highest to lowest is `@arrange(desc(...))`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-5-4
+by_region = @chain ponds begin
+    @group_by(region)
+    @summarize(prop_focal = mean(focal))
+    @arrange(desc(prop_focal))
+end
+
+check("5.4", by_region)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-5-4
+#| include: false
+Checks.verify("5.4", by_region)
 ```
 
 ### `@arrange` — sort
@@ -187,6 +362,45 @@ end
 `mean()` without `na.rm = TRUE`. Be explicit with `skipmissing`.
 :::
 
+::: {.callout-note .exercise}
+## Your turn 5.5 — Where are the gaps?
+
+Before dropping missing values, it is worth knowing where they are: if they
+concentrate in one region, dropping them changes that region more than the others.
+Count, per region, how many ponds have no canopy value, in a column called
+`n_missing`. Check it with `check("5.5", gaps)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`ismissing.(canopy)` gives `true` for each missing value, and `sum` counts the
+`true`s. Both work inside `@summarize`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-5-5
+gaps = @chain ponds begin
+    @group_by(region)
+    @summarize(n_missing = sum(ismissing.(canopy)))
+end
+
+check("5.5", gaps)
+```
+
+Seven missing values spread over three regions: no region is hit much harder than
+the others, so dropping them is unlikely to bias comparisons between regions.
+:::
+:::
+
+```{julia}
+#| label: verify-5-5
+#| include: false
+Checks.verify("5.5", gaps)
+```
+
 ## Long and wide formats {#sec-pivot}
 
 ```{julia}
@@ -225,6 +439,41 @@ regions = DataFrame(
 end
 ```
 
+::: {.callout-note .exercise}
+## Your turn 5.6 — Forest versus savanna
+
+Using the `regions` table above, compute the mean richness of forest and savanna ponds,
+in a column called `mean_rich`. Check it with `check("5.6", by_biome)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Join first, so every pond gets its `biome_type`; then group by `biome_type` and
+summarize.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-5-6
+by_biome = @chain ponds begin
+    @left_join(regions, region)
+    @group_by(biome_type)
+    @summarize(mean_rich = mean(richness))
+end
+
+check("5.6", by_biome)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-5-6
+#| include: false
+Checks.verify("5.6", by_biome)
+```
+
 ## `DataFrames.jl` underneath {#sec-native-dataframes}
 
 Tidier is a convenience layer. It is worth knowing the native form, which is what you
@@ -242,10 +491,49 @@ combine(
 Same result as the `@group_by`/`@summarize` above. Use Tidier to write, and recognize
 the native form to read.
 
-## Exercises {.unnumbered}
+::: {.callout-note .exercise}
+## Your turn 5.7 — The same, natively
 
-1. How many temporary ponds have canopy cover above 60% and richness below the overall
-   median?
-2. Compute, per region, the proportion of ponds where the focal species occurs, sorted
-   from highest to lowest.
-3. Rewrite exercise 2 using native `groupby`/`combine`.
+Rewrite your answer to 5.4 with `groupby`, `combine` and `sort` from `DataFrames.jl`,
+without Tidier macros. Check it with `check("5.7", by_region_native)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`sort(df, :col, rev = true)` sorts from highest to lowest.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-5-7
+by_region_native = sort(
+    combine(groupby(ponds, :region), :focal => mean => :prop_focal),
+    :prop_focal, rev = true)
+
+check("5.7", by_region_native)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-5-7
+#| include: false
+Checks.verify("5.7", by_region_native)
+```
+
+## Challenges {.unnumbered}
+
+These have no checker. They are about what the numbers do — and do not — tell you.
+
+1. In 5.4 the Cerrado comes first, but the three proportions only range from 0.42 to
+   0.48, each from 48 to 66 ponds. Open `scripts/make_data.jl`: does region affect the
+   focal species in the simulation? What does that tell you about reading a ranking
+   off a summary table?
+2. In 5.6 forest ponds are richer than savanna ponds. But "forest" here means Atlantic
+   plus Amazon. Compute mean richness per region and decide whether "forest" is a
+   useful grouping for this question.
+3. Use `@pivot_longer` to put `area_m2`, `canopy` and `temp_c` in one column, then
+   compute the mean of each variable per region in a single pipeline. How do you deal
+   with the missing canopy values?
