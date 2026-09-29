@@ -17,8 +17,9 @@ a capítulo, para que os dois possam ser lidos lado a lado.
 ## O que este livro cobre — e o que ainda não cobre
 
 Esta primeira edição vai **do básico da linguagem até modelos lineares generalizados**
-(capítulos 1–8), seguidos de dois capítulos de programação para ecologia: escrever as
-próprias funções e reamostragem e simulação (capítulos 9–10). Os capítulos de ecologia
+(capítulos 1–9), com um capítulo de análise exploratória de dados antes dos modelos,
+seguidos de dois capítulos de programação para ecologia: escrever as próprias funções e
+reamostragem e simulação (capítulos 10–11). Os capítulos de ecologia
 de comunidades do livro original — análises
 multidimensionais, rarefação, estimadores de riqueza, diversidade taxonômica,
 filogenética e funcional, e dados geoespaciais — **não estão incluídos**.
@@ -79,13 +80,13 @@ original provavelmente lhe será mais ainda.
 
 ## Relação com o *ecoR* {.unnumbered}
 
-Os capítulos 9 e 10 não vêm de *Análises Ecológicas no R*. Eles são **inspirados** nos
-módulos de programação e de reamostragem do **ecoR** [@oliveira_ecor], o wiki do curso
+Os capítulos 7, 10 e 11 não vêm de *Análises Ecológicas no R*. Eles são **inspirados**
+nos módulos de análise exploratória, de programação e de reamostragem do **ecoR** [@oliveira_ecor], o wiki do curso
 de R do Instituto de Biociências da Universidade de São Paulo, produzido e mantido por
 Alexandre Adalardo de Oliveira, e baseado em parte no material de João Luis Ferreira
 Batista e Paulo Inácio K. L. Prado. Como no caso do livro original, o texto, os
 exemplos e os exercícios daqui são escritos do zero; os autores do ecoR não revisaram
-este livro. Cada um dos dois capítulos começa com links para o material correspondente
+este livro. Cada um dos três capítulos começa com links para o material correspondente
 do ecoR.
 
 O ecoR está disponível gratuitamente em <https://ecor.ib.usp.br/> sob licença

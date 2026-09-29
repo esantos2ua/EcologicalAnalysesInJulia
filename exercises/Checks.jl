@@ -136,6 +136,7 @@ include("ch07.jl")
 include("ch08.jl")
 include("ch09.jl")
 include("ch10.jl")
+include("ch11.jl")
 
 function problem(id::AbstractString, answer)
     haskey(EXERCISES, id) || throw(ArgumentError(msg(

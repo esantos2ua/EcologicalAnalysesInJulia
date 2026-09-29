@@ -17,8 +17,9 @@ two can be read side by side.
 ## What this book covers — and what it doesn't yet
 
 This first edition runs **from language basics through generalized linear models**
-(chapters 1–8), followed by two chapters on programming for ecology: writing your own
-functions and resampling and simulation (chapters 9–10). The community-ecology chapters of the original book — multivariate
+(chapters 1–9), with a chapter on exploratory data analysis before the models, followed
+by two chapters on programming for ecology: writing your own functions and resampling
+and simulation (chapters 10–11). The community-ecology chapters of the original book — multivariate
 analysis, rarefaction, richness estimators, taxonomic, phylogenetic and functional
 diversity, and geospatial data — **are not included**.
 
@@ -78,13 +79,13 @@ more so.
 
 ## Relationship to *ecoR* {.unnumbered}
 
-Chapters 9 and 10 do not come from *Análises Ecológicas no R*. They are **inspired by**
-the programming and resampling modules of **ecoR** [@oliveira_ecor], the R course wiki
+Chapters 7, 10 and 11 do not come from *Análises Ecológicas no R*. They are **inspired
+by** the exploratory-analysis, programming and resampling modules of **ecoR** [@oliveira_ecor], the R course wiki
 of the Instituto de Biociências, Universidade de São Paulo, produced and maintained by
 Alexandre Adalardo de Oliveira, and based in part on material by João Luis Ferreira
 Batista and Paulo Inácio K. L. Prado. As with the original book, the text, examples and
 exercises here are written from scratch; the authors of ecoR have not reviewed this
-book. Each of the two chapters opens with links to the corresponding ecoR material.
+book. Each of the three chapters opens with links to the corresponding ecoR material.
 
 ecoR is freely available at <https://ecor.ib.usp.br/> under a CC BY-SA 4.0 licence,
 with exercises graded automatically in [notaR](http://notar.ib.usp.br).

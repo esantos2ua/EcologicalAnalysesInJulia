@@ -19,8 +19,9 @@ useful to you, theirs will probably be more so.
 
 ## Relationship to *ecoR*
 
-Chapters 9 (functions) and 10 (resampling and simulation) are **inspired by** the
-programming and resampling modules of *ecoR*, the R course wiki of the Instituto de
+Chapters 7 (exploratory data analysis), 10 (functions) and 11 (resampling and
+simulation) are **inspired by** the exploratory-analysis, programming and resampling
+modules of *ecoR*, the R course wiki of the Instituto de
 Biociências, Universidade de São Paulo, produced and maintained by Alexandre Adalardo
 de Oliveira (based in part on material by João Luis Ferreira Batista and Paulo Inácio
 K. L. Prado). The text, examples and exercises are written from scratch; ecoR's authors
@@ -28,8 +29,9 @@ have not reviewed them. ecoR is free at <https://ecor.ib.usp.br/> under CC BY-SA
 
 ## Scope
 
-This edition covers **chapters 1–10**: language basics, data wrangling, visualization,
-linear models and GLMs, then writing functions and resampling. The community-ecology chapters of the original (multivariate
+This edition covers **chapters 1–11**: language basics, data wrangling, visualization,
+exploratory data analysis, linear models and GLMs, then writing functions and
+resampling. The community-ecology chapters of the original (multivariate
 analysis, rarefaction, richness estimators, taxonomic/phylogenetic/functional
 diversity, geospatial data) are **out of scope for now** — Julia has no mature
 equivalents of `vegan`, `iNEXT`, `picante` or `FD`, and writing those chapters means
@@ -43,10 +45,11 @@ writing the packages first.
 | 4 | Julia basics | Base |
 | 5 | Data wrangling | `TidierData.jl`, `DataFrames.jl` |
 | 6 | Visualization | `TidierPlots.jl`, `AlgebraOfGraphics.jl`, `CairoMakie.jl` |
-| 7 | Linear models | `GLM.jl`, `HypothesisTests.jl`, `MixedModels.jl` |
-| 8 | GLMs | `GLM.jl`, `MixedModels.jl` |
-| 9 | Writing your own functions | Base, `Test` |
-| 10 | Resampling and simulation | `Random`, `StatsBase.jl`, `GLM.jl`, `HypothesisTests.jl` |
+| 7 | Exploratory data analysis | `TidierData.jl`, `CairoMakie.jl`, `StatsBase.jl` |
+| 8 | Linear models | `GLM.jl`, `HypothesisTests.jl`, `MixedModels.jl` |
+| 9 | GLMs | `GLM.jl`, `MixedModels.jl` |
+| 10 | Writing your own functions | Base, `Test` |
+| 11 | Resampling and simulation | `Random`, `StatsBase.jl`, `GLM.jl`, `HypothesisTests.jl` |
 
 ## Building
 
@@ -89,7 +92,7 @@ Manifest.toml        pinned package versions
 
 `data/ponds.csv` is a **simulated** anuran survey of 180 ponds across three regions.
 It is simulated deliberately: because the data-generating process is known
-(`scripts/make_data.jl`), every model fitted in chapters 7–8 can be checked against
+(`scripts/make_data.jl`), every model fitted in chapters 8–9 can be checked against
 the truth, which is shown explicitly in the text.
 
 ## Sourcing rules

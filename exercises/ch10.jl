@@ -1,140 +1,163 @@
-# Chapter 10 — resampling and simulation. Random answers differ from run to run
-# and between Julia versions (a minor release may change the random stream), so
-# they are accepted within Monte Carlo error of a long-run reference value,
-# computed once with 200 000 resamples or 10 000 simulations.
+# Chapter 10 — writing your own functions. Most answers are functions, which are
+# called on test inputs; 10.5 is a table computed from data/ponds.csv.
 
-# A number within `tol` of `want`, with traps as in `expect_number`.
-function expect_near(x, want, tol; traps = (), hint = ("", ""))
-    x isa AbstractVector && length(x) == 1 && (x = only(x))
-    x isa Number || return (
-        "Expected a single number, got $(show_value(x)).",
-        "Esperava um único número, recebi $(show_value(x)).")
-    abs(x - want) <= tol && return nothing
-    for (value, rtol, message) in traps
-        isapprox(x, value; rtol) && return message
+# Runs `f(args...; kwargs...)` and returns the exception it throws, or `nothing`.
+function thrown(f, args...; kwargs...)
+    try
+        f(args...; kwargs...)
+        return nothing
+    catch e
+        return e
     end
-    return ("Got $(round(x; sigdigits = 3)); expected about $(round(want; sigdigits = 3)) " *
-            "(± $(round(tol; sigdigits = 2)), since random answers vary)." * hint[1],
-            "Recebi $(round(x; sigdigits = 3)); esperava cerca de " *
-            "$(round(want; sigdigits = 3)) (± $(round(tol; sigdigits = 2)), já que " *
-            "respostas aleatórias variam)." * hint[2])
 end
 
-const MORE_RESAMPLES = (
-    " With few resamples the answer is noisy: use at least 9 999.",
-    " Com poucas reamostragens a resposta fica ruidosa: use pelo menos 9 999.")
+# The docstring text attached to function `f`, or `nothing`. Reads the module's
+# docs metadata directly, because `Base.Docs.doc` needs the REPL to be loaded.
+function docstring(f)
+    m = parentmodule(f)
+    b = Base.Docs.Binding(m, nameof(f))
+    meta = Base.Docs.meta(m)
+    haskey(meta, b) || return nothing
+    return join((join(string.(d.text)) for d in values(meta[b].docs)), "\n")
+end
 
-# Presence–absence matrix used in the chapter's null-model section (species × ponds).
-const COOCCURRENCE = [1 1 1 0 1 1 0 0 0 0 0 1;
-                      1 0 1 1 1 1 0 1 0 0 0 0;
-                      0 1 1 1 1 1 0 0 0 1 0 0;
-                      1 0 0 0 0 0 1 1 1 0 1 1;
-                      0 0 1 0 0 0 1 1 0 1 1 1;
-                      0 1 0 0 0 0 1 0 1 1 1 1]
+not_a_function(n) = (
+    "Pass the function itself, without parentheses: `check(\"$n\", name)`.",
+    "Passe a própria função, sem parênteses: `checar(\"$n\", nome)`.")
 
 merge!(EXERCISES, Dict{String, Function}(
 
-    # 10.3 — bootstrap distribution of the mean
-    "10.3" => function (f)
-        f isa Function || return not_a_function("10.3")
-        x = [34.6, 30.4, 34.4, 39.3, 36.1, 38.2, 33.0, 35.7, 41.2, 32.8,
-             37.5, 36.9, 31.1, 35.0, 38.8, 34.1, 36.3, 33.7, 40.1, 35.5]
-        B = 20_000
-        r = attempt(f, x, B)
-        r.ok || return r.value
-        v = r.value
-        v isa AbstractVector{<:Number} || return (
-            "boot_means(x, B) should return a vector of B means; got $(show_value(v)).",
-            "boot_means(x, B) deveria retornar um vetor com B médias; recebi $(show_value(v)).")
-        length(v) == B || return (
-            "boot_means(x, $B) returned $(length(v)) values; expected $B.",
-            "boot_means(x, $B) retornou $(length(v)) valores; esperava $B.")
-        se = std(x) / sqrt(length(x))
-        std(v) < 1e-8 && return (
-            "All bootstrap means are identical: you resampled without replacement, which " *
-            "only reorders the data. Use `sample(x, length(x))` (with replacement).",
-            "Todas as médias bootstrap são iguais: você reamostrou sem reposição, o que só " *
-            "reordena os dados. Use `sample(x, length(x))` (com reposição).")
-        abs(mean(v) - mean(x)) < 0.05 * se || return (
-            "The bootstrap means are centred on $(round(mean(v); digits = 2)), not on the " *
-            "sample mean $(round(mean(x); digits = 2)). Resample `x` itself, all of it.",
-            "As médias bootstrap estão centradas em $(round(mean(v); digits = 2)), e não na " *
-            "média amostral $(round(mean(x); digits = 2)). Reamostre o próprio `x`, inteiro.")
-        want = se * sqrt((length(x) - 1) / length(x))
-        abs(std(v) / want - 1) < 0.05 || return (
-            "The spread of the bootstrap means is $(round(std(v); digits = 3)); expected " *
-            "about $(round(want; digits = 3)). Is each resample the same size as `x`?",
-            "A dispersão das médias bootstrap é $(round(std(v); digits = 3)); esperava cerca " *
-            "de $(round(want; digits = 3)). Cada reamostra tem o mesmo tamanho de `x`?")
+    # 10.1 — variance-to-mean ratio
+    "10.1" => function (f)
+        f isa Function || return not_a_function("10.1")
+        for x in ([2, 4, 6], [0, 0, 10], [5, 5, 5], [1, 3, 2, 8, 0, 4])
+            r = attempt(f, x)
+            r.ok || return r.value
+            got, want = r.value, var(x) / mean(x)
+            close_to(got, want) && continue
+            close_to(got, var(x; corrected = false) / mean(x)) && return (
+                "vmr($(show_value(x))) returned $(show_value(got)), using the population " *
+                "variance. Use the sample variance, `var(x)`, which divides by n − 1.",
+                "vmr($(show_value(x))) retornou $(show_value(got)), usando a variância " *
+                "populacional. Use a variância amostral, `var(x)`, que divide por n − 1.")
+            want != 0 && close_to(got, 1 / want) && return (
+                "vmr($(show_value(x))) returned $(show_value(got)): mean over variance. " *
+                "The ratio is variance over mean.",
+                "vmr($(show_value(x))) retornou $(show_value(got)): média sobre variância. " *
+                "A razão é variância sobre média.")
+            return ("vmr($(show_value(x))) returned $(show_value(got)); expected $(show_value(want)).",
+                    "vmr($(show_value(x))) retornou $(show_value(got)); esperava $(show_value(want)).")
+        end
         nothing
     end,
 
-    # 10.1 — permutation test for a difference in means
-    "10.1" => x -> expect_near(x, 0.0367, 0.01; hint = MORE_RESAMPLES, traps = (
-        (0.03697255308114836, 1e-6, (
-            "That is Welch's t test. Here the p-value should come from your permutations.",
-            "Esse é o teste t de Welch. Aqui o valor-p deve vir das suas permutações.")),
-        (0.0184, 0.3, (
-            "That looks like a one-sided p-value. Compare absolute values, " *
-            "`abs(d) >= abs(observed)`, to get the two-sided one.",
-            "Isso parece um valor-p unilateral. Compare valores absolutos, " *
-            "`abs(d) >= abs(observado)`, para obter o bilateral.")),)),
-
-    # 10.2 — permutation test for a regression slope
-    "10.2" => x -> expect_near(x, 0.2608, 0.02; hint = MORE_RESAMPLES, traps = (
-        (0.1304, 0.15, (
-            "That looks like a one-sided p-value. Compare absolute slopes.",
-            "Isso parece um valor-p unilateral. Compare inclinações em valor absoluto.")),)),
-
-    # 10.4 — bootstrap percentile interval
-    "10.4" => function (x)
-        x isa AbstractVector{<:Number} && length(x) == 2 || return (
-            "Pass the interval as two numbers, `[lower, upper]`.",
-            "Passe o intervalo como dois números, `[inferior, superior]`.")
-        isapprox(x[1], 9.384117221613428; atol = 0.01) && return (
-            "That is the t interval, not the bootstrap one. Take the 2.5% and 97.5% " *
-            "quantiles of your bootstrap means.",
-            "Esse é o intervalo t, não o bootstrap. Tire os quantis de 2,5% e 97,5% das " *
-            "suas médias bootstrap.")
-        want = [9.5, 12.956521739130435]
-        all(abs.(x .- want) .<= 0.07) && return nothing
-        return ("Got $(show_value(round.(x; digits = 2))); expected about " *
-                "$(show_value(round.(want; digits = 2))) (± 0.07). Did you use the Amazon " *
-                "ponds with canopy recorded, and 9 999 or more resamples?",
-                "Recebi $(show_value(round.(x; digits = 2))); esperava cerca de " *
-                "$(show_value(round.(want; digits = 2))) (± 0,07). Você usou as lagoas da " *
-                "Amazônia com dossel medido, e 9 999 reamostragens ou mais?")
+    # 10.2 — keyword arguments with defaults
+    "10.2" => function (f)
+        f isa Function || return not_a_function("10.2")
+        x = [12.4, 8.1, 15.7, 9.3, 11.0]
+        cases = [
+            ((;), (x .- mean(x)) ./ std(x), "standardize(x)"),
+            ((; scale = false), x .- mean(x), "standardize(x; scale = false)"),
+            ((; center = false), x ./ std(x), "standardize(x; center = false)"),
+            ((; center = false, scale = false), x, "standardize(x; center = false, scale = false)"),
+        ]
+        for (kw, want, call) in cases
+            e = thrown(f, x; kw...)
+            if e isa MethodError
+                return ("$call failed: Julia found no method accepting those keywords. " *
+                        "Keyword arguments go after a semicolon: " *
+                        "`standardize(x; center = true, scale = true)`.",
+                        "$call falhou: Julia não achou um método que aceite essas palavras-" *
+                        "chave. Argumentos nomeados vêm depois de um ponto e vírgula: " *
+                        "`standardize(x; center = true, scale = true)`.")
+            elseif e !== nothing
+                return ("$call threw `$(nameof(typeof(e)))`.",
+                        "$call lançou `$(nameof(typeof(e)))`.")
+            end
+            got = f(x; kw...)
+            close_to(got, want) || return (
+                "$call returned $(show_value(round.(got; digits = 3))); expected " *
+                "$(show_value(round.(want; digits = 3))).",
+                "$call retornou $(show_value(round.(got; digits = 3))); esperava " *
+                "$(show_value(round.(want; digits = 3))).")
+        end
+        nothing
     end,
 
-    # 10.5 — power by simulation, with unbalanced sampling
-    "10.5" => x -> expect_near(x, 0.600, 0.05; traps = (
-        (0.400, 0.12, (
-            "That is the proportion of simulations *without* a significant result. Power " *
-            "is the proportion with p < 0.05.",
-            "Essa é a proporção de simulações *sem* resultado significativo. O poder é a " *
-            "proporção com p < 0,05.")),
-        (0.808, 0.06, (
-            "That is the power with half the ponds temporary. Set `p_temporary = 0.2`.",
-            "Esse é o poder com metade das lagoas temporárias. Use `p_temporary = 0.2`.")),),
-        hint = (" Use at least 1 000 simulations of 60 ponds each.",
-                " Use pelo menos 1 000 simulações de 60 lagoas cada.")),
+    # 10.3 — refusing bad input
+    "10.3" => function (f)
+        f isa Function || return not_a_function("10.3")
+        r = attempt(f, [2, 4, 6])
+        r.ok || return r.value
+        close_to(r.value, 1.0) || return (
+            "vmr([2, 4, 6]) should still return 1.0; got $(show_value(r.value)).",
+            "vmr([2, 4, 6]) ainda deveria retornar 1.0; recebi $(show_value(r.value)).")
+        for (x, why_en, why_pt) in (
+                ([3], "a single value (the variance needs at least two)",
+                      "um único valor (a variância precisa de pelo menos dois)"),
+                ([1, -2, 3], "a negative count", "uma contagem negativa"),
+                ([0, 0, 0], "all zeros (the mean is zero)", "só zeros (a média é zero)"))
+            e = thrown(f, x)
+            e === nothing && return (
+                "vmr($(show_value(x))) returned a value, but its input has $why_en. " *
+                "It should throw an error.",
+                "vmr($(show_value(x))) retornou um valor, mas a entrada tem $why_pt. " *
+                "A função deveria lançar um erro.")
+            e isa ArgumentError || return (
+                "vmr($(show_value(x))) threw `$(nameof(typeof(e)))`. Throw an " *
+                "`ArgumentError` instead: it tells the caller the problem is the input.",
+                "vmr($(show_value(x))) lançou `$(nameof(typeof(e)))`. Lance um " *
+                "`ArgumentError`: ele diz a quem chamou que o problema está na entrada.")
+        end
+        nothing
+    end,
 
-    # 10.6 — the C-score
+    # 10.4 — documenting a function
+    "10.4" => function (f)
+        f isa Function || return not_a_function("10.4")
+        doc = docstring(f)
+        doc === nothing && return (
+            "`$(nameof(f))` has no docstring yet. Put a string in triple quotes right " *
+            "above `function $(nameof(f))` and run the definition again.",
+            "`$(nameof(f))` ainda não tem docstring. Coloque um texto entre aspas triplas " *
+            "logo acima de `function $(nameof(f))` e rode a definição de novo.")
+        length(strip(doc)) < 40 && return (
+            "The docstring is very short. Say what the function computes, what it " *
+            "expects and what it returns.",
+            "A docstring está muito curta. Diga o que a função calcula, o que ela espera " *
+            "e o que retorna.")
+        nothing
+    end,
+
+    # 10.5 — your function inside a grouped summary
+    "10.5" => x -> (is_table(x) && column(x, :vmr) !== nothing && length(column(x, :vmr)) == 180) ? (
+        "Your table has one row per pond: Tidier applied `vmr` to each pond separately. " *
+        "Write `~vmr(richness)` inside `@summarize`.",
+        "Sua tabela tem uma linha por lagoa: o Tidier aplicou `vmr` a cada lagoa " *
+        "separadamente. Escreva `~vmr(richness)` dentro do `@summarize`.") :
+        expect_table(x, [:region => ["Amazon", "Atlantic", "Cerrado"],
+                                   :vmr => [3.150972017085146, 2.0820159151193636,
+                                            1.770593962999026]];
+                               sortby = :region),
+
+    # 10.6 — Morisita's index
     "10.6" => function (f)
         f isa Function || return not_a_function("10.6")
-        for (M, want) in (([1 0; 0 1], 1.0), ([1 1; 1 1], 0.0),
-                          ([1 1 0; 0 1 1; 1 0 1], 1.0), (COOCCURRENCE, 13.866666666666667))
-            r = attempt(f, M)
+        morisita_ref(x) = length(x) * sum(x .* (x .- 1)) / (sum(x) * (sum(x) - 1))
+        for x in ([1, 1, 1, 1], [4, 0, 0, 0], [2, 2, 0, 0], [3, 1, 0, 2, 5, 0])
+            r = attempt(f, x)
             r.ok || return r.value
-            close_to(r.value, want) && continue
-            M === COOCCURRENCE && close_to(r.value, 3.1515151515151514) && return (
-                "You treated columns as species. Here species are rows and ponds are " *
-                "columns: count occurrences with `sum(M, dims = 2)`.",
-                "Você tratou as colunas como espécies. Aqui as espécies são linhas e as " *
-                "lagoas, colunas: conte as ocorrências com `sum(M, dims = 2)`.")
-            return ("cscore($(show_value(M))) returned $(show_value(r.value)); expected " *
+            got, want = r.value, morisita_ref(x)
+            close_to(got, want) && continue
+            N = sum(x)
+            close_to(got, length(x) * sum(x .* (x .- 1)) / N^2) && return (
+                "morisita($(show_value(x))) returned $(show_value(got)). The denominator " *
+                "is N(N − 1), not N².",
+                "morisita($(show_value(x))) retornou $(show_value(got)). O denominador é " *
+                "N(N − 1), não N².")
+            return ("morisita($(show_value(x))) returned $(show_value(got)); expected " *
                     "$(show_value(want)).",
-                    "cscore($(show_value(M))) retornou $(show_value(r.value)); esperava " *
+                    "morisita($(show_value(x))) retornou $(show_value(got)); esperava " *
                     "$(show_value(want)).")
         end
         nothing

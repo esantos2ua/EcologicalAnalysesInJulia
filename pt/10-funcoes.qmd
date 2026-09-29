@@ -1,0 +1,580 @@
+# Escrevendo suas próprias funções {#sec-funcoes-proprias}
+
+Cedo ou tarde toda análise precisa de um cálculo que nenhum pacote oferece — um índice
+de um artigo, uma checagem de dados própria do seu protocolo de campo, um resumo que o
+seu laboratório sempre reporta. Este capítulo é sobre transformar esse cálculo em uma
+função fácil de chamar, difícil de usar errado, documentada e testada.
+
+A @sec-funcoes apresentou a sintaxe. Aqui o foco é no que torna uma função boa:
+argumentos sensatos, erros claros, uma docstring e testes que avisam quando você a
+quebra.
+
+::: {.callout-note}
+## De onde vem este capítulo
+
+Este capítulo e o @sec-reamostragem são **inspirados** nos módulos de programação e de
+reamostragem do **ecoR** [@oliveira_ecor], o wiki do curso de R do Instituto de
+Biociências da Universidade de São Paulo, produzido e mantido por Alexandre Adalardo de
+Oliveira. A ideia de construir índices ecológicos como funções, passo a passo, vem de
+lá. O texto, os exemplos e os exercícios daqui foram escritos do zero para Julia; os
+autores do ecoR não revisaram este livro.
+
+Se quiser ir além, o material original está disponível gratuitamente (CC BY-SA 4.0):
+
+- [9. Noções de Programação](https://ecor.ib.usp.br/doku.php?id=03_apostila:programar_ale)
+  — a apostila de programação;
+- [9. Criando Funções Básicas](https://ecor.ib.usp.br/doku.php?id=02_tutoriais:tutorial8:start)
+  — o tutorial passo a passo;
+- [exercícios de funções](https://ecor.ib.usp.br/doku.php?id=01_curso_atual:exercicios9),
+  corrigidos automaticamente no [notaR](http://notar.ib.usp.br), em R.
+:::
+
+```{julia}
+#| label: setup-09
+using TidierData
+using DataFrames, CSV
+using Statistics
+using Test
+
+ponds = CSV.read(joinpath("..", "data", "ponds.csv"), DataFrame)
+nrow(ponds)
+```
+
+```{julia}
+#| label: verificador-09
+#| include: false
+include(joinpath("..", "exercises", "checar.jl"))
+```
+
+::: {.callout-note .exercise}
+## Exercícios deste capítulo
+
+Como no @sec-julia-basico, a maioria das respostas aqui são funções que você escreve, e
+que `checar` chama com as próprias entradas de teste. Comece cada sessão com:
+
+```julia
+include("exercises/checar.jl")
+using TidierData, DataFrames, CSV, Statistics, Test
+ponds = CSV.read(joinpath("data", "ponds.csv"), DataFrame)
+```
+:::
+
+## De um cálculo a uma função {#sec-fn-calculo}
+
+Suponha que você queira saber quão variável é a riqueza entre as lagoas, em relação à
+média. O coeficiente de variação responde isso, e cabe em uma linha:
+
+```{julia}
+#| label: cv-inline
+std(ponds.richness) / mean(ponds.richness) * 100
+```
+
+No momento em que você o quer para uma segunda variável, ou por região, a linha vira
+uma função. Dê a ela um nome que diga o que calcula, e ao argumento um nome que diga o
+que ela espera:
+
+```{julia}
+#| label: cv-function
+cv(x) = std(x) / mean(x) * 100
+
+cv(ponds.richness), cv(ponds.body_size)
+```
+
+A riqueza varia muito mais, em relação à média, do que o tamanho corporal.
+
+Uma função pode retornar várias coisas ao mesmo tempo. A forma idiomática é uma **tupla
+nomeada**, cujos campos você lê pelo nome:
+
+```{julia}
+#| label: named-tuple
+resumo_contagem(x) = (n = length(x), media = mean(x), var = var(x))
+
+r = resumo_contagem(ponds.richness)
+r.media, r.var
+```
+
+::: {.callout-note .exercise}
+## Sua vez 10.1 — Razão variância/média
+
+Para contagens, a razão variância/média diz como os indivíduos — ou as espécies — se
+distribuem entre as unidades amostrais. Se as contagens seguem uma Poisson, a variância
+é igual à média e a razão fica perto de 1; acima de 1 as contagens são mais agregadas,
+abaixo de 1 mais regulares. Escreva `vmr(x)` e verifique com `checar("10.1", vmr)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Mesma forma que `cv`: uma linha, `var` sobre `mean`. `var` é a variância amostral, que
+divide por $n - 1$.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-10-1
+vmr(x) = var(x) / mean(x)
+
+vmr(ponds.richness)
+```
+
+```{julia}
+#| label: answer-10-1-check
+checar("10.1", vmr)
+```
+
+A riqueza das 180 lagoas tem razão de cerca de 3,3: muito mais variável que uma Poisson
+com média única. Isso ainda não quer dizer que o processo de contagem seja estranho — as
+lagoas diferem em área, dossel e região. A @sec-fn-grupos volta a isso.
+:::
+:::
+
+```{julia}
+#| label: verify-10-1
+#| include: false
+Checks.verify("10.1", vmr)
+```
+
+## Argumentos: valores padrão e palavras-chave {#sec-fn-argumentos}
+
+Uma função muitas vezes tem um padrão sensato que o usuário pode querer mudar. `cv`
+retorna uma porcentagem; alguém pode preferir uma proporção. Há duas formas de
+oferecer isso.
+
+Um **argumento posicional com valor padrão** vem depois dos outros e é definido pela
+posição:
+
+```{julia}
+#| label: positional-default
+cv_pos(x, percentual = true) = std(x) / mean(x) * (percentual ? 100 : 1)
+
+cv_pos(ponds.richness), cv_pos(ponds.richness, false)
+```
+
+Um **argumento nomeado** (*keyword*) vem depois de um ponto e vírgula e é sempre
+definido pelo nome:
+
+```{julia}
+#| label: keyword
+cv_kw(x; percentual = true) = std(x) / mean(x) * (percentual ? 100 : 1)
+
+cv_kw(ponds.richness; percentual = false)
+```
+
+Para opções como esta, argumentos nomeados são a melhor escolha:
+`cv_kw(x; percentual = false)` diz o que faz, enquanto `cv_pos(x, false)` obriga o
+leitor a procurar o que `false` significa.
+
+Uma função também pode recolher argumentos nomeados que não conhece e repassá-los com
+`kwargs...`. Aqui `cv_arredondado` trata `digits` e entrega todo o resto para `cv_kw`:
+
+```{julia}
+#| label: kwargs-forward
+cv_arredondado(x; digits = 1, kwargs...) = round(cv_kw(x; kwargs...); digits)
+
+cv_arredondado(ponds.richness), cv_arredondado(ponds.richness; percentual = false, digits = 3)
+```
+
+::: {.r-equivalent}
+**Em R**
+
+R tem um único tipo de argumento, que pode ser passado por posição ou por nome. Julia
+separa os dois: argumentos antes do `;` são posicionais, os depois dele são nomeados e
+precisam do nome. `kwargs...` cumpre o papel do `...` do R ao repassar opções para
+outra função.
+:::
+
+::: {.callout-note .exercise}
+## Sua vez 10.2 — Padronizando, com opções
+
+Escreva `standardize(x; center = true, scale = true)`. Por padrão ela retorna
+$(x - \bar x) / s$; `center = false` deixa de subtrair a média e `scale = false` deixa
+de dividir pelo desvio-padrão. Verifique com `checar("10.2", standardize)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Monte o resultado em dois passos, cada um dependendo da sua opção:
+`centrado = center ? x .- mean(x) : x`, depois divida `centrado` por `std(x)` só se
+`scale` for verdadeiro.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-10-2
+function standardize(x; center = true, scale = true)
+    centrado = center ? x .- mean(x) : x
+    return scale ? centrado ./ std(x) : centrado
+end
+
+checar("10.2", standardize)
+```
+
+`std(x)` é calculado sobre o `x` original, então é o mesmo com ou sem centralizar.
+:::
+:::
+
+```{julia}
+#| label: verify-10-2
+#| include: false
+Checks.verify("10.2", standardize)
+```
+
+## Recusando entradas ruins {#sec-fn-erros}
+
+Uma função que retorna bobagem em silêncio é pior que uma que para. `cv` tem dois
+pontos cegos:
+
+```{julia}
+#| label: cv-nonsense
+cv([0, 0, 0]), cv([-5, 5])
+```
+
+`NaN` para um levantamento vazio, e um coeficiente infinito para dados com um valor
+negativo, que contagens não podem ter. Checagens no início da função pegam os dois
+casos, e `throw(ArgumentError(...))` diz a quem chamou que o problema está na entrada,
+não na função:
+
+```{julia}
+#| label: cv-checked
+function cv_checked(x)
+    any(<(0), x) && throw(ArgumentError("os valores devem ser não negativos"))
+    mean(x) > 0 || throw(ArgumentError("a média é zero; o CV não está definido"))
+    return std(x) / mean(x) * 100
+end
+
+try
+    cv_checked([-5, 5])
+catch e
+    e
+end
+```
+
+A forma `condição && ação` se lê "se a condição, então a ação"; `condição || ação`,
+"a menos que a condição, a ação". As duas são idiomáticas para checagens como estas.
+
+::: {.callout-tip}
+## `@assert` é para os seus próprios erros
+
+`@assert condição` para quando algo que nunca deveria acontecer acontece. Use-o para
+conferir o seu próprio raciocínio dentro de uma função; use `ArgumentError` para
+entradas que um usuário poderia plausivelmente errar.
+:::
+
+::: {.callout-note .exercise}
+## Sua vez 10.3 — Um `vmr` mais seguro
+
+Reescreva `vmr` para que lance um `ArgumentError` quando receber menos de dois valores,
+algum valor negativo ou média zero, e continue retornando a razão nos outros casos.
+Verifique com `checar("10.3", vmr)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+Três checagens, uma por linha, antes do cálculo. As condições são `length(x) < 2`,
+`any(<(0), x)` e `mean(x) == 0`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-10-3
+function vmr(x)
+    length(x) < 2 && throw(ArgumentError("são necessários pelo menos dois valores"))
+    any(<(0), x) && throw(ArgumentError("contagens não podem ser negativas"))
+    mean(x) == 0 && throw(ArgumentError("a média é zero; a razão não está definida"))
+    return var(x) / mean(x)
+end
+
+checar("10.3", vmr)
+```
+
+Isso substitui o `vmr` de uma linha do 10.1: um método com os mesmos tipos de argumento
+sobrescreve o antigo.
+:::
+:::
+
+```{julia}
+#| label: verify-10-3
+#| include: false
+Checks.verify("10.3", vmr)
+```
+
+## Documentando uma função {#sec-fn-docs}
+
+Um texto colocado imediatamente antes de uma função vira a sua **docstring**, que é o
+que `?cv_documentado` mostra no REPL e o que o VS Code mostra quando você passa o mouse
+sobre o nome. A convenção é a assinatura com recuo de quatro espaços, depois uma ou duas
+frases sobre o que a função faz e retorna:
+
+```{julia}
+#| label: docstring
+"""
+    cv_documentado(x; percentual = true)
+
+Coeficiente de variação de `x`: o desvio-padrão dividido pela média, vezes 100 a menos
+que `percentual = false`. Lança um `ArgumentError` se a média for zero.
+"""
+function cv_documentado(x; percentual = true)
+    mean(x) > 0 || throw(ArgumentError("a média é zero; o CV não está definido"))
+    return std(x) / mean(x) * (percentual ? 100 : 1)
+end
+```
+
+::: {.r-equivalent}
+**Em R**
+
+Docstrings cumprem o papel dos comentários do `roxygen2`, com uma diferença: fazem parte
+da linguagem e ficam disponíveis assim que a função é definida, sem etapa de
+compilação da documentação.
+:::
+
+::: {.callout-note .exercise}
+## Sua vez 10.4 — Documente o `vmr`
+
+Adicione uma docstring ao seu `vmr` do 10.3: a assinatura, o que a razão significa e
+quais entradas ela recusa. Rode a definição de novo e experimente `?vmr` no REPL. Depois
+verifique com `checar("10.4", vmr)`.
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+A docstring vai logo acima de `function vmr(x)`, sem nada entre as duas — nem mesmo uma
+linha em branco.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-10-4
+"""
+    vmr(x)
+
+Razão variância/média das contagens `x`. Perto de 1 para contagens Poisson, acima de 1
+quando as contagens são agregadas, abaixo de 1 quando são mais regulares. Lança um
+`ArgumentError` para menos de dois valores, valores negativos ou média zero.
+"""
+function vmr(x)
+    length(x) < 2 && throw(ArgumentError("são necessários pelo menos dois valores"))
+    any(<(0), x) && throw(ArgumentError("contagens não podem ser negativas"))
+    mean(x) == 0 && throw(ArgumentError("a média é zero; a razão não está definida"))
+    return var(x) / mean(x)
+end
+
+checar("10.4", vmr)
+```
+:::
+:::
+
+```{julia}
+#| label: verify-10-4
+#| include: false
+Checks.verify("10.4", vmr)
+```
+
+## A sua função, por grupo {#sec-fn-grupos}
+
+Uma função sua funciona dentro de um pipeline do Tidier — com um porém. O Tidier sabe
+que `mean`, `std` ou `sum` resumem uma coluna inteira, mas não sabe disso sobre o seu
+`cv`. Por padrão, ele aplica funções desconhecidas **a cada valor separadamente**, o que
+aqui calcularia um coeficiente de variação para cada lagoa:
+
+```{julia}
+#| label: cv-per-region-wrong
+errado = @chain ponds begin
+    @group_by(region)
+    @summarize(cv_richness = cv(richness))
+end
+
+nrow(errado), first(errado.cv_richness, 3)
+```
+
+180 linhas de `NaN` em vez de três números, e nenhum erro. Um `~` na frente da função
+diz ao Tidier para passar a coluna inteira:
+
+```{julia}
+#| label: cv-per-region
+@chain ponds begin
+    @group_by(region)
+    @summarize(cv_richness = ~cv(richness), cv_body = ~cv(body_size))
+end
+```
+
+O mesmo com o `DataFrames.jl` diretamente (@sec-dataframes-nativo), onde a questão não
+aparece:
+
+```{julia}
+#| label: cv-per-region-native
+combine(groupby(ponds, :region), :richness => cv => :cv_richness)
+```
+
+::: {.callout-warning}
+## Confira o número de linhas
+
+Depois do `@summarize`, você deve ter uma linha por grupo. Se tiver uma linha por
+observação, o Tidier aplicou a sua função a cada valor: acrescente o `~`.
+:::
+
+::: {.callout-note .exercise}
+## Sua vez 10.5 — A riqueza é agregada dentro das regiões?
+
+Calcule a razão variância/média de `richness` para cada região, em uma coluna chamada
+`vmr`, usando a sua função. Verifique com `checar("10.5", por_regiao)`. As razões ficam
+mais perto de 1 do que o valor de todas as lagoas juntas?
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+O bloco com `~cv` desta seção, com `~vmr` no lugar de `~cv`. Sem o `~`, o seu `vmr` do
+10.3 recebe uma lagoa por vez e, com razão, a recusa: "são necessários pelo menos dois
+valores".
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-10-5
+por_regiao = @chain ponds begin
+    @group_by(region)
+    @summarize(vmr = ~vmr(richness))
+end
+
+checar("10.5", por_regiao)
+```
+
+As razões, de cerca de 1,8 a 3,2, são todas menores que a das lagoas juntas (3,3):
+parte da variação vinha das diferenças entre regiões. Elas continuam acima de 1, porque
+lagoas da mesma região diferem em área e dossel. Na @sec-sobredispersao, um modelo
+Poisson que levava esses preditores em conta não tinha mais sobredispersão. Uma razão
+acima de 1 em contagens brutas é motivo para procurar preditores, não prova de que as
+contagens não sejam Poisson.
+:::
+:::
+
+```{julia}
+#| label: verify-10-5
+#| include: false
+Checks.verify("10.5", por_regiao)
+```
+
+## Funções que recebem funções {#sec-fn-ordem-superior}
+
+Em Julia, funções são valores: podem ser guardadas em um vetor, passadas para outra
+função ou escritas sem nome. Isso facilita aplicar vários resumos de uma vez:
+
+```{julia}
+#| label: several-summaries
+[f(ponds.richness) for f in (mean, median, cv, vmr)]
+```
+
+Uma **função anônima** se escreve `x -> expressão`. `map` aplica uma função a cada
+elemento de uma coleção — aqui, a três colunas dos dados:
+
+```{julia}
+#| label: anonymous
+map(col -> round(cv(col); digits = 1), eachcol(ponds[:, [:area_m2, :temp_c, :body_size]]))
+```
+
+A área varia enormemente entre lagoas; a temperatura, muito pouco. O coeficiente de
+variação põe variáveis com unidades diferentes na mesma escala.
+
+::: {.callout-note .exercise}
+## Sua vez 10.6 — O índice de Morisita
+
+O índice de dispersão de Morisita compara a frequência com que dois indivíduos
+sorteados caem na mesma unidade amostral com o que uma distribuição aleatória daria:
+
+$$
+I_d = n \, \frac{\sum_i x_i (x_i - 1)}{N (N - 1)}
+$$
+
+onde $x_i$ é a contagem na unidade $i$, $n$ o número de unidades e $N = \sum_i x_i$.
+Ele fica perto de 1 para uma distribuição aleatória e acima de 1 para uma agregada.
+Escreva `morisita(x)`, verifique com `checar("10.6", morisita)` e aplique-o a estas
+contagens de agrupamentos de girinos em dez quadrats ao longo da margem de uma lagoa:
+
+```{julia}
+#| label: data-10-6
+quadrats = [0, 3, 0, 0, 7, 1, 0, 0, 5, 0]
+```
+
+::: {.callout-tip collapse="true"}
+## Dica
+
+`x .* (x .- 1)` dá $x_i(x_i - 1)$ para todas as unidades de uma vez; `sum` soma tudo.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solução
+
+```{julia}
+#| label: answer-10-6
+function morisita(x)
+    N = sum(x)
+    return length(x) * sum(x .* (x .- 1)) / (N * (N - 1))
+end
+
+morisita(quadrats)
+```
+
+```{julia}
+#| label: answer-10-6-check
+checar("10.6", morisita)
+```
+
+Cerca de 2,8: os agrupamentos estão fortemente agregados, em três dos dez quadrats.
+Uma versão para uso real recusaria `N < 2`, como no 10.3.
+:::
+:::
+
+```{julia}
+#| label: verify-10-6
+#| include: false
+Checks.verify("10.6", morisita)
+```
+
+## Testando suas funções {#sec-fn-testes}
+
+`checar` vem testando as suas funções com entradas de resposta conhecida. Você pode
+fazer o mesmo com as suas próprias funções usando a biblioteca padrão `Test`, e rodar os
+testes de novo toda vez que mudar o código:
+
+```{julia}
+#| label: testset
+@testset "cv_checked" begin
+    @test cv_checked([10, 10, 10]) == 0          # sem variação
+    @test cv_checked([1, 2, 3]) ≈ 50             # desvio 1, média 2
+    @test_throws ArgumentError cv_checked([0, 0])
+    @test_throws ArgumentError cv_checked([-1, 1])
+end;
+```
+
+Bons testes usam casos que você consegue calcular à mão e incluem as entradas que a
+função deve recusar. Digite `≈` como `\approx` seguido de `Tab`; ele compara números de
+ponto flutuante com uma tolerância, onde `==` falharia por arredondamento.
+
+::: {.callout-tip}
+## Onde suas funções devem morar
+
+Quando uma função passa a ser útil além de um script, mova-a para um arquivo próprio —
+digamos `funcoes.jl` na pasta do projeto — e carregue-a com `include("funcoes.jl")` no
+início de cada análise. Os testes podem morar em um segundo arquivo ao lado. Quando a
+coleção crescer, o próximo passo é um pacote, que o `Pkg` cria para você com
+`Pkg.generate`.
+:::
+
+## Desafios {.unnumbered}
+
+1. Escreva um `@testset` para o seu `morisita` com casos que você consegue calcular à
+   mão: todos os indivíduos em uma unidade, e exatamente um indivíduo por unidade. O
+   que cada um deve dar?
+2. Adicione a `vmr` um método para `Matrix` (@sec-despacho) que retorne uma razão por
+   coluna, tratando cada coluna como uma espécie contada ao longo dos quadrats (linhas).
+3. `cv` falha em uma coluna com valores faltantes, como `canopy`. Adicione um argumento
+   nomeado `skipmissing = false` que, quando verdadeiro, os ignore. Qual padrão é mais
+   seguro, e por quê?

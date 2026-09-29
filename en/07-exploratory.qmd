@@ -1,0 +1,670 @@
+# Exploratory data analysis {#sec-exploratory}
+
+Before any model, look at the data. Exploration has four jobs [@zuur2010protocol]: find
+**errors and outliers**, understand the **structure** of the data — what counts as a
+replicate —, see the **distributions** that models will have to describe, and detect
+**collinearity** between variables that a model will struggle to separate. Skipping it
+does not save time: the problems are still there, and they surface later as strange
+model results.
+
+The simulated ponds of the previous chapters are too clean for this. This chapter uses
+real data, with all the problems real data have.
+
+::: {.callout-note}
+## Where this chapter comes from
+
+Like @sec-own-functions and @sec-resampling, this chapter is **inspired by** **ecoR**
+[@oliveira_ecor], the R course wiki of the Instituto de Biociências, Universidade de
+São Paulo, produced and maintained by Alexandre Adalardo de Oliveira. Its sequence —
+checking the data frame, descriptive statistics, univariate graphs, relationships
+between variables, and the Anscombe quartet — follows ecoR's exploratory-analysis
+module. The text, data, examples and exercises here are written from scratch for Julia;
+the authors of ecoR have not reviewed this book.
+
+If you read Portuguese and want to go further, the original material is freely
+available (CC BY-SA 4.0):
+
+- [4. Análise Exploratória de Dados](https://ecor.ib.usp.br/doku.php?id=03_apostila:05-exploratoria)
+  — the course notes;
+- [4. Tutoriais de Análise Exploratória de Dados](https://ecor.ib.usp.br/doku.php?id=02_tutoriais:tutorial4:start)
+  — the step-by-step tutorial;
+- [exercises on exploratory analysis](https://ecor.ib.usp.br/doku.php?id=01_curso_atual:exercicios4),
+  automatically graded in [notaR](http://notar.ib.usp.br), in R.
+:::
+
+::: {.callout-note}
+## The data: ATLANTIC BIRD TRAITS
+
+**ATLANTIC BIRD TRAITS** [@rodrigues2019atlantic] compiles morphological measurements
+of birds from the Atlantic forests of South America: 72 483 records, gathered from
+museum collections, ringing projects and the literature between 1820 and 2018, by 179
+authors. Its data paper states that there are no copyright or proprietary restrictions
+on its use, and asks that it be cited when used in publications or teaching — as here.
+
+`data/atlantic_bird_traits.csv` keeps **all** records and 21 of the original 83
+columns, with their original names and codes. Nothing is cleaned: finding the problems
+is the point. `scripts/prepare_birds.jl` documents how the subset was made from the
+original file, which is in the paper's supporting information.
+:::
+
+```{julia}
+#| label: setup-07
+using TidierData
+using DataFrames, CSV
+using Statistics, StatsBase
+using GLM, RDatasets, Distributions
+using CairoMakie
+
+CairoMakie.activate!(type = "png")
+bird_file = joinpath("..", "data", "atlantic_bird_traits.csv")
+```
+
+```{julia}
+#| label: checker-07
+#| include: false
+include(joinpath("..", "exercises", "check.jl"))
+```
+
+::: {.callout-note .exercise}
+## Exercises in this chapter
+
+The answers are numbers computed from the bird data. Start each session with:
+
+```julia
+include("exercises/check.jl")
+using TidierData, DataFrames, CSV, Statistics, StatsBase, GLM, Distributions
+bird_file = joinpath("data", "atlantic_bird_traits.csv")
+```
+
+The first section shows how to read the file; the later exercises assume you have read
+it that way, into `birds`, with the columns renamed.
+:::
+
+## First contact: reading the file {#sec-eda-read}
+
+Read the file as it comes and look at the type of each column:
+
+```{julia}
+#| label: read-naive
+raw = CSV.read(bird_file, DataFrame)
+size(raw)
+```
+
+```{julia}
+#| label: types-naive
+first(describe(raw, :eltype, :nmissing), 8)
+```
+
+Body mass, wing length, tail length: all read as **text** (`String`), and not one value
+is missing. The reason is in the file itself — missing values are written as the two
+letters `NA`, which `CSV.jl` does not treat as missing by default. One non-number in a
+column makes the whole column text. Tell `CSV.read` which code means missing:
+
+```{julia}
+#| label: read-na
+birds = CSV.read(bird_file, DataFrame; missingstring = "NA")
+first(describe(birds, :eltype, :nmissing), 8)
+```
+
+::: {.r-equivalent}
+**In R**
+
+`read.csv` treats `"NA"` as missing by default, so in R this problem would pass
+unnoticed. Here it is visible: a numeric column that arrives as text is the first sign
+that the file uses a missing-value code you have not declared. Other common codes are
+`""`, `"-"`, `"."`, `-999` and `99999`; `missingstring` also accepts a vector of them.
+:::
+
+The column names mix units, dots and capitals, like `Body_mass.g.`. They are awkward to
+type and Tidier macros cannot use them directly. Rename them once, at the start:
+
+```{julia}
+#| label: rename
+rename!(birds,
+    "ID_ABT" => :id, "Order" => :order, "Family" => :family, "Binomial" => :species,
+    "Body_mass.g." => :mass_g, "Wing_length.mm." => :wing_mm,
+    "Tail_length.mm." => :tail_mm, "Tarsus_length.mm." => :tarsus_mm,
+    "Bill_length.mm." => :bill_mm, "Age" => :age, "Sex" => :sex, "Status" => :status,
+    "Recapture" => :recapture, "Ring" => :ring,
+    "Latitude_decimal_degrees" => :lat, "Longitude_decimal_degrees" => :lon,
+    "Altitude" => :altitude, "Year" => :year, "Main_researcher" => :source,
+    "Outside.range" => :outside_range, "Obs.spp" => :species_note)
+
+names(birds)
+```
+
+::: {.callout-note .exercise}
+## Your turn 7.1 — How many birds were weighed?
+
+How many records have a body mass? Pass the number to `check("7.1", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`count(!ismissing, v)` counts the non-missing values of a vector. It only means
+something once the file has been read with `missingstring = "NA"`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-7-1
+n_mass = count(!ismissing, birds.mass_g)
+```
+
+```{julia}
+#| label: answer-7-1-check
+check("7.1", n_mass)
+```
+
+60 819 of 72 483: body mass is the most commonly recorded trait, and still missing for
+one record in six.
+:::
+:::
+
+```{julia}
+#| label: verify-7-1
+#| include: false
+Checks.verify("7.1", n_mass)
+```
+
+## Missing, unknown, and inconsistent {#sec-eda-codes}
+
+Categorical columns deserve a table of their levels before anything else:
+
+```{julia}
+#| label: levels-age-sex
+(age = countmap(birds.age), sex = countmap(birds.sex))
+```
+
+There are **two kinds of missing** here. `missing` means the information was never
+recorded; `"Unknown"` means someone looked at the bird and could not tell. They are not
+the same thing: a study of sex ratios should count the unknowns, but not the unrecorded.
+
+Other columns disagree with themselves about spelling:
+
+```{julia}
+#| label: levels-case
+(recapture = countmap(birds.recapture), outside_range = countmap(birds.outside_range))
+```
+
+`"no"` and `"Yes"`: the capitalization differs between levels. Here it is harmless,
+because each level has only one spelling, but a single `"yes"` somewhere would create a
+third level that grouping would treat as different. Normalizing is cheap:
+
+```{julia}
+#| label: normalize
+birds.recapture     = passmissing(lowercase).(birds.recapture)
+birds.outside_range = lowercase.(birds.outside_range)
+unique(birds.recapture)
+```
+
+`passmissing(f)` applies `f` to values and leaves `missing` alone.
+
+::: {.callout-note .exercise}
+## Your turn 7.2 — How often can sex be told?
+
+Among records where sex was **recorded** (not `missing`), what proportion were sexed as
+`"Male"` or `"Female"`? Pass it to `check("7.2", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Keep the non-missing values with `collect(skipmissing(birds.sex))`, then take the mean
+of `in(("Male", "Female")).(...)`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-7-2
+sex_recorded = collect(skipmissing(birds.sex))
+p_sexed = mean(in(("Male", "Female")).(sex_recorded))
+```
+
+```{julia}
+#| label: answer-7-2-check
+check("7.2", p_sexed)
+```
+
+Less than half: many Atlantic forest passerines cannot be sexed in the hand. Any
+analysis by sex is an analysis of a non-random half of the data.
+:::
+:::
+
+```{julia}
+#| label: verify-7-2
+#| include: false
+Checks.verify("7.2", p_sexed)
+```
+
+## Structure: what is a replicate? {#sec-eda-structure}
+
+A row is a record, but records are not independent observations. They are grouped in
+several ways at once.
+
+**By species.** The records are very unequally spread:
+
+```{julia}
+#| label: per-species
+per_species = sort(combine(groupby(birds, :species), nrow => :n), :n, rev = true)
+
+(names = nrow(per_species),
+ top_five = first(per_species, 5),
+ with_one_record = count(==(1), per_species.n))
+```
+
+780 names — some identified only to genus, such as `Elaenia sp.` — while the data paper
+reports 711 species. Before counting species, decide what counts as one. The ten most
+recorded species hold a fifth of all records; 68 names appear once.
+
+**By individual.** A ringed bird caught again appears again:
+
+```{julia}
+#| label: rings
+ringed = dropmissing(birds[:, [:ring, :species]], :ring)
+per_ring = combine(groupby(ringed, :ring), :species => (s -> length(unique(s))) => :n_species,
+                   nrow => :n)
+first(sort(per_ring[per_ring.n_species .> 1, :], :n, rev = true), 6)
+```
+
+Some "rings" are shared by more than twenty species. They are not ring numbers but
+**colour-band codes** such as `BRD` or `BLUE RIGHT`, which many birds carry. A naive
+count of recaptures would take all those birds for one individual.
+
+**By source and method.** Each record comes from one of 65 main researchers, and from
+live birds or museum skins, over two centuries:
+
+```{julia}
+#| label: status-year
+combine(groupby(dropmissing(birds[:, [:status, :year]]), :status),
+        nrow => :n, :year => minimum => :first, :year => median => :median,
+        :year => maximum => :last)
+```
+
+Each of these groupings can make records from the same group more alike than records
+from different groups — the dependence that the mixed models of @sec-mixed-models
+account for. Exploring the structure tells you which grouping terms a model needs.
+
+::: {.callout-note .exercise}
+## Your turn 7.3 — How many birds were caught twice?
+
+Count the individuals recorded more than once: rings that appear in more than one
+record **of the same species**, ignoring ring codes made only of letters (colour-band
+codes). Pass the number to `check("7.3", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+Drop the letter-only codes with `occursin(r"^[A-Za-z]+$", ring)`, which is `true` for
+them. Then group by `ring` **and** `species`, count rows, and count the groups with more
+than one.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-7-3
+real_rings = ringed[.!occursin.(r"^[A-Za-z]+$", ringed.ring), :]
+per_bird = combine(groupby(real_rings, [:ring, :species]), nrow => :n)
+n_recaptured = count(>(1), per_bird.n)
+```
+
+```{julia}
+#| label: answer-7-3-check
+check("7.3", n_recaptured)
+```
+
+About 4 500 birds contribute two records or more, one of them up to 43. Treating their
+records as independent would overstate the sample size — and the colour codes would
+have added 27 false "individuals" to the count.
+:::
+:::
+
+```{julia}
+#| label: verify-7-3
+#| include: false
+Checks.verify("7.3", n_recaptured)
+```
+
+## Distributions {#sec-eda-distributions}
+
+Body mass across all birds spans three orders of magnitude, from hummingbirds to large
+seabirds. On a linear scale almost everything piles up at the left; on a log scale the
+shape becomes visible:
+
+```{julia}
+#| label: fig-mass-scales
+#| fig-cap: "Body mass of all weighed birds, on a linear (a) and a logarithmic (b) scale."
+masses = collect(skipmissing(birds.mass_g))
+
+fig = Figure(size = (860, 340))
+ax1 = Axis(fig[1, 1], xlabel = "Body mass (g)", ylabel = "Records", title = "(a) Linear")
+hist!(ax1, masses, bins = 60, color = (:steelblue, 0.7))
+ax2 = Axis(fig[1, 2], xlabel = "Body mass (g, log scale)", title = "(b) Logarithmic",
+           xscale = log10)
+hist!(ax2, masses, bins = 10 .^ range(0, 3.6, length = 60), color = (:steelblue, 0.7))
+fig
+```
+
+Sizes, areas and concentrations are bounded at zero and grow multiplicatively, so they
+are usually right-skewed and closer to symmetric on a log scale. That is why models of
+such variables so often use their logarithm.
+
+Within one species the picture is different. For the white-necked thrush (*Turdus
+albicollis*), one of the most recorded species, compare the distribution with a normal
+curve of the same mean and standard deviation:
+
+```{julia}
+#| label: fig-thrush
+#| fig-cap: "Body mass of *Turdus albicollis*: histogram with a normal curve of the same mean and standard deviation (a), and a QQ plot against the normal (b)."
+thrush = collect(skipmissing(birds.mass_g[birds.species .== "Turdus albicollis"]))
+μ, σ = mean(thrush), std(thrush)
+
+fig = Figure(size = (860, 340))
+ax1 = Axis(fig[1, 1], xlabel = "Body mass (g)", ylabel = "Density", title = "(a) Histogram")
+hist!(ax1, thrush, bins = 40, normalization = :pdf, color = (:seagreen, 0.6))
+xs = range(minimum(thrush), maximum(thrush), length = 200)
+lines!(ax1, xs, @.(exp(-(xs - μ)^2 / (2σ^2)) / (σ * sqrt(2π))), color = :black)
+
+ax2 = Axis(fig[1, 2], xlabel = "Normal quantiles", ylabel = "Body mass (g)",
+           title = "(b) QQ plot")
+n = length(thrush)
+z = quantile.(Normal(), ((1:n) .- 0.5) ./ n)
+scatter!(ax2, z, sort(thrush), color = (:seagreen, 0.5), markersize = 5)
+ablines!(ax2, μ, σ, color = :black, linestyle = :dash)
+fig
+```
+
+Close to normal in the middle, with a few birds far lighter or heavier than the rest —
+visible as the points that leave the line at both ends of the QQ plot. Those tails are
+the subject of the next section.
+
+::: {.callout-note .exercise}
+## Your turn 7.4 — Mean or median?
+
+Compute the median and the mean body mass of *Turdus albicollis* and pass them, in that
+order, as a vector to `check("7.4", ...)`. Which is less affected by the extreme birds?
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`thrush` above already holds the masses. `[median(x), mean(x)]` builds the vector.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-7-4
+thrush_centre = [median(thrush), mean(thrush)]
+```
+
+```{julia}
+#| label: answer-7-4-check
+check("7.4", thrush_centre)
+```
+
+66 and 66.7 g: nearly equal, as expected for a roughly symmetric distribution. The
+median ignores how extreme the tails are; the mean is pulled by them. With a few
+records at 26 g or 114 g, the mean moves slightly; with the gross errors of the next
+section, it would move much more.
+:::
+:::
+
+```{julia}
+#| label: verify-7-4
+#| include: false
+Checks.verify("7.4", thrush_centre)
+```
+
+## Errors and outliers {#sec-eda-outliers}
+
+An overall histogram cannot show an error in a 14 g bird recorded as 1 240 g: 1 240 g
+is a perfectly ordinary mass for a large bird. Outliers in trait data are outliers
+**relative to the species**. A simple, robust flag compares each mass with the median
+of its species:
+
+```{julia}
+#| label: mass-ratio
+weighed = dropmissing(birds[:, [:species, :mass_g, :age, :status, :source]], :mass_g)
+weighed = transform(groupby(weighed, :species),
+                    :mass_g => median => :species_median, nrow => :n_species)
+weighed.ratio = weighed.mass_g ./ weighed.species_median
+
+suspicious = sort(weighed[(weighed.n_species .>= 10) .& (weighed.ratio .> 3), :],
+                  :ratio, rev = true)
+first(suspicious[:, [:species, :mass_g, :species_median, :ratio, :age, :status]], 8)
+```
+
+The top of the list shows several kinds of problem:
+
+- *Thlypopsis sordida*, a 14 g tanager, recorded at more than 1 kg: almost certainly a
+  data-entry error, perhaps a misplaced decimal separator or a wrong unit.
+- Several masses about **ten times** the species median — 102 g for a 9 g flycatcher,
+  50 g for a 4.5 g hummingbird: the signature of a shifted decimal point.
+- Heavy juvenile *Tityra cayana* in a museum collection: possibly errors, possibly a
+  mislabelled specimen. Only the source can tell.
+
+Now the other tail:
+
+```{julia}
+#| label: mass-ratio-low
+first(sort(weighed[(weighed.n_species .>= 10) .& (weighed.ratio .< 1/3), :], :ratio)[:,
+      [:species, :mass_g, :species_median, :ratio, :age, :status]], 6)
+```
+
+Here some of the "outliers" are real. A 24 g slaty-breasted wood-rail (*Aramides
+saracura*, median 346 g) marked as juvenile is plausibly a chick. Deleting it would
+remove a real bird; keeping it in an analysis of adult size would distort it.
+
+::: {.callout-important}
+## Flag, don't delete
+
+A statistical rule can only say that a value is unusual, never that it is wrong. Flag
+suspicious values, look at them one by one, go back to the source where you can, and
+decide — and write down what you decided and why, in code, so that the decision can be
+reviewed. For many analyses the right choice is to restrict the data to what the
+question is about (adults, say) rather than to remove individual points.
+:::
+
+The data also carry a quieter problem, **precision**. Most masses are whole numbers:
+
+```{julia}
+#| label: precision
+mean(weighed.mass_g .== round.(weighed.mass_g))
+```
+
+72% of masses are integers, which means many were weighed to the nearest gram. For a
+3 g hummingbird, rounding to the gram is an error of up to 17%; for a thrush, under 1%.
+Precision that varies with the size of the animal is easy to miss and worth knowing
+before you compare small species.
+
+::: {.callout-note .exercise}
+## Your turn 7.5 — How many suspicious masses?
+
+Count the records whose mass is more than 3 times, or less than a third of, the median
+of their species, among species with at least 10 weighed records. Pass the number to
+`check("7.5", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`weighed` already has `ratio` and `n_species`. Combine the conditions with `.&` and
+`.|`, and count the `true`s with `count`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-7-5
+n_suspicious = count((weighed.n_species .>= 10) .&
+                     ((weighed.ratio .> 3) .| (weighed.ratio .< 1/3)))
+```
+
+```{julia}
+#| label: answer-7-5-check
+check("7.5", n_suspicious)
+```
+
+291 of about 60 000 weighed records, 0.5%: few, but enough to wreck a species mean.
+The threshold of 3 is a choice, not a rule; with 2 you would flag more than twice as
+many.
+:::
+:::
+
+```{julia}
+#| label: verify-7-5
+#| include: false
+Checks.verify("7.5", n_suspicious)
+```
+
+## Relationships and collinearity {#sec-eda-collinearity}
+
+Morphological traits go together: big birds have long wings, long tails, long legs and
+long bills. To see how strongly, summarize each species by the median of each trait —
+the median, because of the outliers above — and compare species:
+
+```{julia}
+#| label: species-traits
+traits = [:mass_g, :wing_mm, :tail_mm, :tarsus_mm, :bill_mm]
+median_or_missing(x) = (v = collect(skipmissing(x)); isempty(v) ? missing : median(v))
+
+by_species = dropmissing(combine(groupby(birds, :species),
+                                 [t => median_or_missing => t for t in traits]...))
+log_traits = DataFrame(log.(Matrix(by_species[:, traits])), traits)
+
+nrow(by_species)
+```
+
+```{julia}
+#| label: correlation-matrix
+round.(cor(Matrix(log_traits)); digits = 2)
+```
+
+```{julia}
+#| label: fig-pairs
+#| fig-cap: "Species medians of five traits, on log scales, one point per species. Off the diagonal, each panel shows one pair of traits; on the diagonal, the distribution of each trait."
+labels = ["log mass", "log wing", "log tail", "log tarsus", "log bill"]
+fig = Figure(size = (820, 820))
+for i in 1:5, j in 1:5
+    ax = Axis(fig[i, j], xlabel = i == 5 ? labels[j] : "", ylabel = j == 1 ? labels[i] : "",
+              xticklabelsvisible = i == 5, yticklabelsvisible = j == 1 && i != 1)
+    if i == j                  # diagonal: the distribution of each trait (counts)
+        hist!(ax, log_traits[:, i], bins = 25, color = (:grey60, 0.8))
+    else
+        scatter!(ax, log_traits[:, j], log_traits[:, i], markersize = 3,
+                 color = (:steelblue, 0.5))
+    end
+end
+fig
+```
+
+Mass and wing length are almost a single variable across species. If both entered a
+model as predictors, the model could not tell their effects apart: the estimates would
+be unstable and their standard errors large. The **variance inflation factor** measures
+this. For each predictor, regress it on all the others; with $R^2$ from that
+regression, $\text{VIF} = 1 / (1 - R^2)$:
+
+```{julia}
+#| label: vif
+function vif(df, col)
+    others = setdiff(propertynames(df), [col])
+    f = Term(col) ~ sum(Term.(others))
+    return 1 / (1 - r2(lm(f, df)))
+end
+
+DataFrame(trait = traits, vif = round.([vif(log_traits, t) for t in traits]; digits = 1))
+```
+
+@zuur2010protocol use a cut-off of 3; other authors use 5 or 10. Mass and wing length
+are above all of them. The usual responses are
+to keep only one of each collinear group, to combine them (a size index), or to ask a
+question that does not need them separately.
+
+::: {.callout-note .exercise}
+## Your turn 7.6 — Mass and wing
+
+What is the correlation between log body mass and log wing length across species, using
+the species medians above? Pass it to `check("7.6", ...)`.
+
+::: {.callout-tip collapse="true"}
+## Hint
+
+`cor(x, y)` on two columns of `log_traits`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{julia}
+#| label: answer-7-6
+r_mass_wing = cor(log_traits.mass_g, log_traits.wing_mm)
+```
+
+```{julia}
+#| label: answer-7-6-check
+check("7.6", r_mass_wing)
+```
+
+About 0.93. Across species, these two traits carry almost the same information.
+Within a species it is much weaker — about 0.25 among individual *Turdus albicollis* —
+because individuals of one species vary little in size: collinearity depends on the
+scale of the question.
+:::
+:::
+
+```{julia}
+#| label: verify-7-6
+#| include: false
+Checks.verify("7.6", r_mass_wing)
+```
+
+## Why the plots: the Anscombe quartet {#sec-anscombe}
+
+Summaries are not a substitute for looking. @anscombe1973graphs built four small data
+sets with the same means, variances, correlations and regression lines:
+
+```{julia}
+#| label: anscombe-stats
+anscombe = dataset("datasets", "anscombe")
+DataFrame(set = 1:4,
+          mean_x = [mean(anscombe[:, "X$i"]) for i in 1:4],
+          mean_y = [round(mean(anscombe[:, "Y$i"]); digits = 2) for i in 1:4],
+          cor_xy = [round(cor(anscombe[:, "X$i"], anscombe[:, "Y$i"]); digits = 3) for i in 1:4])
+```
+
+```{julia}
+#| label: fig-anscombe
+#| fig-cap: "The Anscombe quartet: four data sets with the same summary statistics and the same least-squares line."
+fig = Figure(size = (760, 560))
+for i in 1:4
+    x, y = anscombe[:, "X$i"], anscombe[:, "Y$i"]
+    ax = Axis(fig[(i - 1) ÷ 2 + 1, (i - 1) % 2 + 1], title = "Set $i",
+              limits = (3, 20, 3, 14))
+    scatter!(ax, x, y, color = :steelblue)
+    b = coef(lm(@formula(y ~ x), DataFrame(; x, y)))
+    ablines!(ax, b[1], b[2], color = :darkorange)
+end
+fig
+```
+
+The first looks like what a linear model assumes. The second is a curve. In the third
+one point pulls the line away from an otherwise perfect relationship. In the fourth the
+whole slope depends on a single observation. Only the plots show it.
+
+## Challenges {.unnumbered}
+
+1. Plot the coordinates of all records (`lon`, `lat`) and colour them by
+   `outside_range`. Are the records flagged as outside the species' range where you
+   would expect? Are there points outside the Atlantic forest region altogether?
+2. Male and female *Chiroxiphia caudata* (blue manakin) differ strikingly in plumage.
+   Do they differ in mass? Compare the distributions, not only the medians, and decide
+   what to do with records of `"Unknown"` sex.
+3. Repeat the outlier rule of @sec-eda-outliers for wing length. Are the species with
+   suspicious wings the same as those with suspicious masses? What would that tell you
+   about the source of the errors?

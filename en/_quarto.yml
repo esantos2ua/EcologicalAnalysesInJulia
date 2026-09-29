@@ -29,16 +29,17 @@ book:
         - 02-questions.qmd
         - 03-prerequisites.qmd
         - 04-julia-basics.qmd
-    - part: "Wrangling and visualization"
+    - part: "Wrangling and exploring data"
       chapters:
         - 05-tidier.qmd
         - 06-visualization.qmd
+        - 07-exploratory.qmd
     - part: "Modelling"
       chapters:
-        - 07-linear-models.qmd
-        - 08-glm.qmd
+        - 08-linear-models.qmd
+        - 09-glm.qmd
     - part: "Programming for ecology"
       chapters:
-        - 09-functions.qmd
-        - 10-resampling.qmd
+        - 10-functions.qmd
+        - 11-resampling.qmd
     - 99-references.qmd

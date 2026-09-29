@@ -29,16 +29,17 @@ book:
         - 02-perguntas.qmd
         - 03-pre-requisitos.qmd
         - 04-introducao-julia.qmd
-    - part: "Manipulação e visualização"
+    - part: "Manipulação e exploração de dados"
       chapters:
         - 05-tidier.qmd
         - 06-visualizacao.qmd
+        - 07-analise-exploratoria.qmd
     - part: "Modelagem"
       chapters:
-        - 07-modelos-lineares.qmd
-        - 08-glm.qmd
+        - 08-modelos-lineares.qmd
+        - 09-glm.qmd
     - part: "Programação para ecologia"
       chapters:
-        - 09-funcoes.qmd
-        - 10-reamostragem.qmd
+        - 10-funcoes.qmd
+        - 11-reamostragem.qmd
     - 99-referencias.qmd

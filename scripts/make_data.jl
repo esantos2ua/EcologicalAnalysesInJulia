@@ -1,6 +1,6 @@
 # Generates the book's example dataset: a SIMULATED anuran survey of 180 ponds
 # across three regions. Simulated on purpose — the data-generating process is known,
-# so every model fitted in chapters 7 and 8 can be checked against the truth.
+# so every model fitted in chapters 8 and 9 can be checked against the truth.
 #
 # Run: julia --project=. scripts/make_data.jl
 using DataFrames, CSV, Random, Distributions

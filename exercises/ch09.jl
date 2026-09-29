@@ -1,165 +1,70 @@
-# Chapter 9 — writing your own functions. Most answers are functions, which are
-# called on test inputs; 9.5 is a table computed from data/ponds.csv.
-
-# Runs `f(args...; kwargs...)` and returns the exception it throws, or `nothing`.
-function thrown(f, args...; kwargs...)
-    try
-        f(args...; kwargs...)
-        return nothing
-    catch e
-        return e
-    end
-end
-
-# The docstring text attached to function `f`, or `nothing`. Reads the module's
-# docs metadata directly, because `Base.Docs.doc` needs the REPL to be loaded.
-function docstring(f)
-    m = parentmodule(f)
-    b = Base.Docs.Binding(m, nameof(f))
-    meta = Base.Docs.meta(m)
-    haskey(meta, b) || return nothing
-    return join((join(string.(d.text)) for d in values(meta[b].docs)), "\n")
-end
-
-not_a_function(n) = (
-    "Pass the function itself, without parentheses: `check(\"$n\", name)`.",
-    "Passe a própria função, sem parênteses: `checar(\"$n\", nome)`.")
+# Chapter 9 — GLMs. Answers are numbers extracted from fitted models, on the
+# ponds with canopy recorded.
 
 merge!(EXERCISES, Dict{String, Function}(
 
-    # 9.1 — variance-to-mean ratio
-    "9.1" => function (f)
-        f isa Function || return not_a_function("9.1")
-        for x in ([2, 4, 6], [0, 0, 10], [5, 5, 5], [1, 3, 2, 8, 0, 4])
-            r = attempt(f, x)
-            r.ok || return r.value
-            got, want = r.value, var(x) / mean(x)
-            close_to(got, want) && continue
-            close_to(got, var(x; corrected = false) / mean(x)) && return (
-                "vmr($(show_value(x))) returned $(show_value(got)), using the population " *
-                "variance. Use the sample variance, `var(x)`, which divides by n − 1.",
-                "vmr($(show_value(x))) retornou $(show_value(got)), usando a variância " *
-                "populacional. Use a variância amostral, `var(x)`, que divide por n − 1.")
-            want != 0 && close_to(got, 1 / want) && return (
-                "vmr($(show_value(x))) returned $(show_value(got)): mean over variance. " *
-                "The ratio is variance over mean.",
-                "vmr($(show_value(x))) retornou $(show_value(got)): média sobre variância. " *
-                "A razão é variância sobre média.")
-            return ("vmr($(show_value(x))) returned $(show_value(got)); expected $(show_value(want)).",
-                    "vmr($(show_value(x))) retornou $(show_value(got)); esperava $(show_value(want)).")
-        end
-        nothing
+    # 9.1 — Poisson GLM with a categorical predictor
+    "9.1" => function (x)
+        wants_numbers(x) || return (
+            "Pass the coefficients: `coef(g)`.",
+            "Passe os coeficientes: `coef(g)`.")
+        x isa AbstractVector && length(x) == 4 && return (
+            "4 coefficients: that is `g1`. Add `hydro` at the end of the formula.",
+            "4 coeficientes: esse é o `g1`. Inclua `hydro` no fim da fórmula.")
+        expect_vector(x, [-0.2955819444424689, 0.3308987450570613, -0.011543093000739657,
+                          0.04752717672780732, -0.1895805246826413])
     end,
 
-    # 9.2 — keyword arguments with defaults
-    "9.2" => function (f)
-        f isa Function || return not_a_function("9.2")
-        x = [12.4, 8.1, 15.7, 9.3, 11.0]
-        cases = [
-            ((;), (x .- mean(x)) ./ std(x), "standardize(x)"),
-            ((; scale = false), x .- mean(x), "standardize(x; scale = false)"),
-            ((; center = false), x ./ std(x), "standardize(x; center = false)"),
-            ((; center = false, scale = false), x, "standardize(x; center = false, scale = false)"),
-        ]
-        for (kw, want, call) in cases
-            e = thrown(f, x; kw...)
-            if e isa MethodError
-                return ("$call failed: Julia found no method accepting those keywords. " *
-                        "Keyword arguments go after a semicolon: " *
-                        "`standardize(x; center = true, scale = true)`.",
-                        "$call falhou: Julia não achou um método que aceite essas palavras-" *
-                        "chave. Argumentos nomeados vêm depois de um ponto e vírgula: " *
-                        "`standardize(x; center = true, scale = true)`.")
-            elseif e !== nothing
-                return ("$call threw `$(nameof(typeof(e)))`.",
-                        "$call lançou `$(nameof(typeof(e)))`.")
-            end
-            got = f(x; kw...)
-            close_to(got, want) || return (
-                "$call returned $(show_value(round.(got; digits = 3))); expected " *
-                "$(show_value(round.(want; digits = 3))).",
-                "$call retornou $(show_value(round.(got; digits = 3))); esperava " *
-                "$(show_value(round.(want; digits = 3))).")
-        end
-        nothing
+    # 9.2 — interpreting a coefficient on the log scale
+    "9.2" => x -> expect_number(x, 0.8273060956543652; traps = (
+        (-0.1895805246826413, (
+            "That is the coefficient itself, on the log scale. Exponentiate it: `exp(...)`.",
+            "Esse é o próprio coeficiente, na escala log. Exponencie-o: `exp(...)`.")),
+        (-17.26939043456348, (
+            "That is the percentage change. The exercise asks for the multiplicative " *
+            "factor, `exp(β)`.",
+            "Essa é a variação percentual. O exercício pede o fator multiplicativo, " *
+            "`exp(β)`.")),)),
+
+    # 9.3 — dispersion once the missing predictor is in
+    "9.3" => x -> expect_number(x, 0.9410041742922786; rtol = 1e-4, traps = (
+        (1.8998072869627196, (
+            "That is the dispersion of the model from 9.1, without `region`. Add `region`.",
+            "Essa é a dispersão do modelo do 9.1, sem `region`. Inclua `region`.")),
+        (1.952703419456855, (
+            "That is the dispersion of `g1`. Fit the model with `hydro` and `region`.",
+            "Essa é a dispersão do `g1`. Ajuste o modelo com `hydro` e `region`.")),)),
+
+    # 9.4 — odds ratio for a 10-point change
+    "9.4" => x -> expect_number(x, 1.1881878414800107; traps = (
+        (1.0173924499128006, (
+            "That is the odds ratio for 1 percentage point. The exercise asks for 10.",
+            "Essa é a razão de chances para 1 ponto percentual. O exercício pede 10.")),
+        (10.173924499128006, (
+            "`10 * exp(β)` is not the same as `exp(10 * β)`. Multiply before exponentiating.",
+            "`10 * exp(β)` não é o mesmo que `exp(10 * β)`. Multiplique antes de " *
+            "exponenciar.")),
+        (0.17242932416539436, (
+            "That is on the log-odds scale. Exponentiate it.",
+            "Isso está na escala de log-chances. Exponencie.")),)),
+
+    # 9.5 — predicted probability for a new pond
+    "9.5" => function (x)
+        x isa AbstractVector && length(x) == 1 && (x = only(x))
+        expect_number(x, 0.5246412509540388; traps = (
+            (0.09864491738025813, (
+                "That is on the logit (link) scale. `predict(g4, new)` returns the " *
+                "probability directly.",
+                "Isso está na escala logit (de ligação). `predict(g4, nova)` retorna a " *
+                "probabilidade diretamente.")),))
     end,
 
-    # 9.3 — refusing bad input
-    "9.3" => function (f)
-        f isa Function || return not_a_function("9.3")
-        r = attempt(f, [2, 4, 6])
-        r.ok || return r.value
-        close_to(r.value, 1.0) || return (
-            "vmr([2, 4, 6]) should still return 1.0; got $(show_value(r.value)).",
-            "vmr([2, 4, 6]) ainda deveria retornar 1.0; recebi $(show_value(r.value)).")
-        for (x, why_en, why_pt) in (
-                ([3], "a single value (the variance needs at least two)",
-                      "um único valor (a variância precisa de pelo menos dois)"),
-                ([1, -2, 3], "a negative count", "uma contagem negativa"),
-                ([0, 0, 0], "all zeros (the mean is zero)", "só zeros (a média é zero)"))
-            e = thrown(f, x)
-            e === nothing && return (
-                "vmr($(show_value(x))) returned a value, but its input has $why_en. " *
-                "It should throw an error.",
-                "vmr($(show_value(x))) retornou um valor, mas a entrada tem $why_pt. " *
-                "A função deveria lançar um erro.")
-            e isa ArgumentError || return (
-                "vmr($(show_value(x))) threw `$(nameof(typeof(e)))`. Throw an " *
-                "`ArgumentError` instead: it tells the caller the problem is the input.",
-                "vmr($(show_value(x))) lançou `$(nameof(typeof(e)))`. Lance um " *
-                "`ArgumentError`: ele diz a quem chamou que o problema está na entrada.")
-        end
-        nothing
-    end,
-
-    # 9.4 — documenting a function
-    "9.4" => function (f)
-        f isa Function || return not_a_function("9.4")
-        doc = docstring(f)
-        doc === nothing && return (
-            "`$(nameof(f))` has no docstring yet. Put a string in triple quotes right " *
-            "above `function $(nameof(f))` and run the definition again.",
-            "`$(nameof(f))` ainda não tem docstring. Coloque um texto entre aspas triplas " *
-            "logo acima de `function $(nameof(f))` e rode a definição de novo.")
-        length(strip(doc)) < 40 && return (
-            "The docstring is very short. Say what the function computes, what it " *
-            "expects and what it returns.",
-            "A docstring está muito curta. Diga o que a função calcula, o que ela espera " *
-            "e o que retorna.")
-        nothing
-    end,
-
-    # 9.5 — your function inside a grouped summary
-    "9.5" => x -> (is_table(x) && column(x, :vmr) !== nothing && length(column(x, :vmr)) == 180) ? (
-        "Your table has one row per pond: Tidier applied `vmr` to each pond separately. " *
-        "Write `~vmr(richness)` inside `@summarize`.",
-        "Sua tabela tem uma linha por lagoa: o Tidier aplicou `vmr` a cada lagoa " *
-        "separadamente. Escreva `~vmr(richness)` dentro do `@summarize`.") :
-        expect_table(x, [:region => ["Amazon", "Atlantic", "Cerrado"],
-                                   :vmr => [3.150972017085146, 2.0820159151193636,
-                                            1.770593962999026]];
-                               sortby = :region),
-
-    # 9.6 — Morisita's index
-    "9.6" => function (f)
-        f isa Function || return not_a_function("9.6")
-        morisita_ref(x) = length(x) * sum(x .* (x .- 1)) / (sum(x) * (sum(x) - 1))
-        for x in ([1, 1, 1, 1], [4, 0, 0, 0], [2, 2, 0, 0], [3, 1, 0, 2, 5, 0])
-            r = attempt(f, x)
-            r.ok || return r.value
-            got, want = r.value, morisita_ref(x)
-            close_to(got, want) && continue
-            N = sum(x)
-            close_to(got, length(x) * sum(x .* (x .- 1)) / N^2) && return (
-                "morisita($(show_value(x))) returned $(show_value(got)). The denominator " *
-                "is N(N − 1), not N².",
-                "morisita($(show_value(x))) retornou $(show_value(got)). O denominador é " *
-                "N(N − 1), não N².")
-            return ("morisita($(show_value(x))) returned $(show_value(got)); expected " *
-                    "$(show_value(want)).",
-                    "morisita($(show_value(x))) retornou $(show_value(got)); esperava " *
-                    "$(show_value(want)).")
-        end
-        nothing
+    # 9.6 — GLMM
+    "9.6" => function (x)
+        wants_numbers(x) || return (
+            "Pass the fixed effects: `fixef(gm)`.",
+            "Passe os efeitos fixos: `fixef(gm)`.")
+        expect_vector(x, [0.6004949810030696, 0.3694782152614212, -0.010471183105793884,
+                          -0.15990712087588418]; rtol = 1e-3)
     end,
 ))

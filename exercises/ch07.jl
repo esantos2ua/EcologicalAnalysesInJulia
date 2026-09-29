@@ -1,90 +1,56 @@
-# Chapter 7 — linear models. Answers are numbers extracted from fitted models
-# (p-values, coefficients, intervals), on the ponds with canopy recorded.
-
-const NOT_A_NUMBER_MODEL = (
-    "Pass a number extracted from the model (with `coef`, `pvalue`, …), not the model.",
-    "Passe um número extraído do modelo (com `coef`, `pvalue`, …), não o modelo.")
-
-wants_numbers(x) = x isa Number || x isa AbstractArray || x isa AbstractString
+# Chapter 7 — exploratory data analysis, on data/atlantic_bird_traits.csv (a subset of
+# ATLANTIC BIRD TRAITS, Rodrigues et al. 2019). Answers are numbers computed from it.
 
 merge!(EXERCISES, Dict{String, Function}(
 
-    # 7.1 — Welch t test
-    "7.1" => function (x)
-        wants_numbers(x) || return (
-            "That is the test itself. Pass its p-value: `pvalue(test)`.",
-            "Esse é o próprio teste. Passe o valor-p dele: `pvalue(teste)`.")
-        expect_number(x, 0.10269215805061108; traps = (
-            (0.10286026670632867, (
-                "That is the equal-variance test. R's default, and the one asked for, " *
-                "is Welch's: `UnequalVarianceTTest`.",
-                "Esse é o teste com variâncias iguais. O padrão do R, e o pedido, é o de " *
-                "Welch: `UnequalVarianceTTest`.")),))
-    end,
+    # 7.1 — reading missing-value codes
+    "7.1" => x -> expect_number(x, 60819; traps = (
+        (72483, ("That is every record. The file writes missing values as the text \"NA\": " *
+                 "read it with `missingstring = \"NA\"` and count the non-missing masses.",
+                 "Esse é o total de registros. O arquivo escreve valores faltantes como o " *
+                 "texto \"NA\": leia com `missingstring = \"NA\"` e conte as massas não faltantes.")),
+        (11664, ("That is the number of records *without* a body mass.",
+                 "Esse é o número de registros *sem* massa corporal.")),)),
 
-    # 7.2 — simple regression
-    "7.2" => function (x)
-        wants_numbers(x) || return NOT_A_NUMBER_MODEL
-        x isa Number && isapprox(x, -0.04966562886720355; rtol = 1e-6) && return (
-            "That is the slope. Pass both coefficients: `coef(m)`.",
-            "Essa é a inclinação. Passe os dois coeficientes: `coef(m)`.")
-        expect_vector(x, [38.134435320100685, -0.04966562886720355]; traps = (
-            ([116.2727523510521, -1.8807366059918855], (
-                "The formula is reversed: the response goes on the left of `~`, " *
-                "`body_size ~ canopy`.",
-                "A fórmula está invertida: a resposta fica à esquerda do `~`, " *
-                "`body_size ~ canopy`.")),))
-    end,
+    # 7.2 — two kinds of missing
+    "7.2" => x -> expect_number(x, 0.47551540822059907; traps = (
+        (0.45536194693928234, (
+            "Your denominator includes records where sex was never recorded (`missing`). " *
+            "Divide by the records where it was recorded, \"Unknown\" included.",
+            "O seu denominador inclui registros em que o sexo nunca foi anotado (`missing`). " *
+            "Divida pelos registros em que ele foi anotado, incluindo \"Unknown\".")),
+        (0.5244845917794009, (
+            "That is the share *not* determined. The exercise asks for Male or Female.",
+            "Essa é a fração *não* determinada. O exercício pede Male ou Female.")),)),
 
-    # 7.3 — confidence interval, compared with the true value
-    "7.3" => function (x)
-        wants_numbers(x) || return NOT_A_NUMBER_MODEL
-        x isa AbstractMatrix && return (
-            "That is the table of all intervals. Pass only the `temp_c` row: " *
-            "`confint(m)[2, :]`.",
-            "Essa é a tabela com todos os intervalos. Passe só a linha de `temp_c`: " *
-            "`confint(m)[2, :]`.")
-        expect_vector(x, [0.7785892869884607, 1.0167713699307568]; traps = (
-            ([0.7833747897981913, 1.0195263197723599], (
-                "That interval comes from a model without `hydro`. Add it to the formula.",
-                "Esse intervalo vem de um modelo sem `hydro`. Inclua-o na fórmula.")),
-            ([0.7979047326189066, 0.9974559243003109], (
-                "That is a 90% interval. The default, `confint(m)`, gives 95%.",
-                "Esse é um intervalo de 90%. O padrão, `confint(m)`, dá 95%.")),))
-    end,
+    # 7.3 — what is an individual?
+    "7.3" => x -> expect_number(x, 4503; traps = (
+        (4530, ("Close: some \"rings\" are colour-band codes made only of letters, such as " *
+                "\"BRD\", shared by many birds. Drop the codes without digits.",
+                "Quase: alguns \"anéis\" são códigos de anilhas coloridas feitos só de letras, " *
+                "como \"BRD\", compartilhados por muitas aves. Descarte os códigos sem dígitos.")),
+        (12899, ("That is the number of *records* of recaptured birds. Count the rings.",
+                 "Esse é o número de *registros* de aves recapturadas. Conte os anéis.")),)),
 
-    # 7.4 — choosing the reference level
-    "7.4" => function (x)
-        want = ["(Intercept)", "temp_c", "region: Amazon", "region: Cerrado"]
-        x isa AbstractVector{<:AbstractString} || return (
-            "Pass the coefficient names: `coefnames(m)`.",
-            "Passe os nomes dos coeficientes: `coefnames(m)`.")
-        x == want && return nothing
-        "region: Atlantic" in x && return (
-            "Atlantic still appears as a coefficient, so it is not the reference. " *
-            "Use `DummyCoding(base = \"Atlantic\")`.",
-            "Atlantic ainda aparece como coeficiente, então não é a referência. " *
-            "Use `DummyCoding(base = \"Atlantic\")`.")
-        return ("Expected $(show_value(want)), got $(show_value(x)). Is the formula " *
-                "`body_size ~ temp_c + region`?",
-                "Esperava $(show_value(want)), recebi $(show_value(x)). A fórmula é " *
-                "`body_size ~ temp_c + region`?")
-    end,
+    # 7.4 — mean and median
+    "7.4" => x -> expect_vector(x, [66.0, 66.74542818610924]; traps = (
+        ([66.74542818610924, 66.0], (
+            "Right numbers, wrong order: median first, then mean.",
+            "Números certos, ordem errada: primeiro a mediana, depois a média.")),)),
 
-    # 7.5 — diagnostics: share of large residuals
-    "7.5" => x -> expect_number(x, 0.057803468208092484; traps = (
-        (10, ("That is how many residuals are large. Divide by the number of residuals " *
-              "to get the proportion.",
-              "Esse é o número de resíduos grandes. Divida pelo total de resíduos para " *
-              "obter a proporção.")),
-        (5.7803468208092484, ("That is a percentage. Give the proportion, between 0 and 1.",
-                              "Isso é uma porcentagem. Dê a proporção, entre 0 e 1.")),)),
+    # 7.5 — flagging outliers relative to the species
+    "7.5" => x -> expect_number(x, 291; traps = (
+        (308, ("Keep only species with at least 10 mass records: with fewer, the median " *
+               "itself is unreliable.",
+               "Fique só com espécies com pelo menos 10 registros de massa: com menos, a " *
+               "própria mediana não é confiável.")),
+        (90, ("You counted only masses above 3× the median. Count those below 1/3 too.",
+              "Você contou só as massas acima de 3× a mediana. Conte também as abaixo de 1/3.")),
+        (670, ("That is the count for 2× and 1/2. The exercise asks for 3× and 1/3.",
+               "Essa é a contagem para 2× e 1/2. O exercício pede 3× e 1/3.")),)),
 
-    # 7.6 — random intercept
-    "7.6" => function (x)
-        wants_numbers(x) || return (
-            "Pass the fixed effects: `fixef(mm)`.",
-            "Passe os efeitos fixos: `fixef(mm)`.")
-        expect_vector(x, [13.183682687070387, 0.9217361109462527]; rtol = 1e-3)
-    end,
+    # 7.6 — collinearity between traits
+    # Species medians of all 780 names; dropping the 8 "Genus sp." names gives
+    # 0.93225, also accepted.
+    "7.6" => x -> expect_number(x, 0.9326447165263585; rtol = 1e-3),
 ))
