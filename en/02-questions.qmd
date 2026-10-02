@@ -3,8 +3,8 @@
 ::: {.callout-important}
 ## Status of this chapter
 
-This chapter is not yet written. What follows is a **plan**, together with the
-references it will be built on.
+This chapter is not yet fully written. What follows is a **plan**, with its
+references. There is still a lot to develop here.
 
 The plan is my own, not a summary of any other work. It does not reproduce the content
 of the corresponding chapter in @silva2022analises, which I did not consult while
@@ -14,8 +14,9 @@ writing it.
 ## Why a chapter about questions in a book about code {#sec-why-questions}
 
 No amount of statistical sophistication rescues a badly posed question. The right
-order is: question → design → data → model → inference. Tools like Julia act on the
-last two steps, and are useless if the first two fail.
+order is: question → design → data → model → inference (one could write a whole book
+about that process). Tools like Julia act on the last two steps, and are of little use
+if the first two (question and sampling design) are not worked out with care.
 
 This chapter exists to join the book's two halves: the question you ask determines the
 model structure that appears in @sec-linear-models and @sec-glm.

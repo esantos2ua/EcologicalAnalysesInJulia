@@ -3,22 +3,16 @@
 ::: {.callout-important}
 ## Status deste capítulo
 
-Este capítulo ainda não foi escrito. O que segue é um **plano**, com as referências
-sobre as quais ele será construído.
+Este capítulo ainda não foi totalmente escrito. O que segue é um **plano**, com as referências. Ainda preciso elaborar muita coisa aqui.
 
-O plano é meu, não um resumo de nenhuma outra obra. Ele não reproduz o conteúdo do
-capítulo correspondente de @silva2022analises, que não consultei ao escrevê-lo.
+O plano é meu, não um resumo de nenhuma outra obra. Ele não reproduz o conteúdo do capítulo correspondente de @silva2022analises, que não consultei ao escrevê-lo.
 :::
 
 ## Por que um capítulo sobre perguntas em um livro de código {#sec-por-que-perguntas}
 
-Nenhuma quantidade de sofisticação estatística resgata uma pergunta mal formulada.
-A ordem correta é: pergunta → desenho amostral → dados → modelo → inferência.
-Ferramentas como Julia atuam nos dois últimos passos, e são inúteis se os dois
-primeiros falharem.
+Nenhuma quantidade de sofisticação estatística resgata uma pergunta mal formulada. A ordem correta é: pergunta → desenho amostral → dados → modelo → inferência (poderia escrever um livro inteiro sobre esse processo todo). Ferramentas como Julia atuam nos dois últimos passos, e são pouco úteis se os dois primeiros (pergunta e desenho amostral) não forem elaborados com carinho.
 
-Este capítulo existe para ligar as duas metades do livro: a pergunta que você faz
-determina a estrutura do modelo que aparece no @sec-modelos-lineares e no @sec-glm.
+Este capítulo existe para ligar as duas metades do livro: a pergunta que você faz determina a estrutura do modelo que aparece no @sec-modelos-lineares e no @sec-glm.
 
 ## Hipóteses múltiplas de trabalho {#sec-hipoteses}
 

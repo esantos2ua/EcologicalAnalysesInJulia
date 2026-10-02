@@ -21,7 +21,8 @@ practical reasons:
 
 ## The honest cost {#sec-limits}
 
-None of this is free, and this book will not pretend otherwise.
+These benefits are not free, and this book will not pretend otherwise. Let me lay out
+some of the gains and the costs.
 
 | What you gain | What you give up |
 |---|---|
@@ -37,7 +38,8 @@ None of this is free, and this book will not pretend otherwise.
 The right-hand column is an assessment of the Julia ecosystem as of **August 2026**,
 made by checking the public package registries. Ecosystems change. Before concluding
 that something does not exist, check — and if you find a package that fills one of
-these gaps, this chapter is wrong and should be corrected.
+these gaps, this chapter is wrong and should be corrected. I will try to update it
+regularly, but I certainly won't manage to keep everything current.
 :::
 
 ::: {.callout-note}
@@ -51,7 +53,7 @@ recommendation holds without caveats.
 ## Compilation latency {#sec-latency}
 
 Julia compiles each method the first time it is called with a given set of types.
-That is what makes the second call fast, and the first one slow.
+That is what makes the second (third, fourth, ...) call fast, and the first one slow.
 
 ```{julia}
 #| label: latency-demo
@@ -73,8 +75,9 @@ v = randn(1_000_000)
 ```
 
 The difference between the two is compilation time. In a real analysis session you pay
-it once; in a short script that runs and exits, it dominates. Worth knowing about
-before concluding that "Julia is slow".
+that cost once. In a short script that runs a single time and exits, the compilation
+cost can have a noticeable impact. It is worth understanding the phenomenon a little
+before concluding that "Julia is a slow language".
 
 ## Structure of the book {#sec-structure}
 

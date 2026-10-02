@@ -26,7 +26,8 @@ English edition. Both are written from scratch for Julia and follow the same cha
 ## Relationship to *Análises Ecológicas no R*
 
 This project is **inspired by** *Análises Ecológicas no R* and follows its chapter
-sequence so the two can be read side by side. It does **not** reproduce that book's
+sequence so the two can be read side by side, if the reader wishes. This project does
+**not** reproduce that book's
 content: the text, examples, dataset and exercises here are written from scratch for
 Julia. The original's authors have no involvement in this project, have not reviewed
 it, and do not endorse it.
@@ -36,7 +37,7 @@ it, and do not endorse it.
 > ISBN 978-85-7917-564-0. <https://analises-ecologicas.com/>
 
 The original is free online under CC BY-NC 4.0 and available in print. If this book is
-useful to you, theirs will probably be more so.
+useful to you, *Análises Ecológicas no R* will probably be even more so.
 
 ## Relationship to *ecoR*
 
@@ -52,11 +53,11 @@ have not reviewed them. ecoR is free at <https://ecor.ib.usp.br/> under CC BY-SA
 
 This edition covers **chapters 1–11**: language basics, data wrangling, visualization,
 exploratory data analysis, linear models and GLMs, then writing functions and
-resampling. The community-ecology chapters of the original (multivariate
+resampling. The community-ecology chapters of *Análises Ecológicas no R* (multivariate
 analysis, rarefaction, richness estimators, taxonomic/phylogenetic/functional
 diversity, geospatial data) are **out of scope for now** — Julia has no mature
 equivalents of `vegan`, `iNEXT`, `picante` or `FD`, and writing those chapters means
-writing the packages first.
+writing the packages first (something well outside my scope).
 
 | # | Chapter | Primary stack |
 |---|---|---|
@@ -119,18 +120,19 @@ the truth, which is shown explicitly in the text.
 
 ## Sourcing rules
 
-Two rules this repository is held to:
+Some rules I am trying to follow:
 
-1. **No claim without a source.** Comparative and performance claims either cite a
-   verifiable reference or are removed. `_shared/references.bib` contains only entries
-   checked against a primary or publisher source — never added from memory.
+1. **Claims need sources.** Comparative or performance claims (between R and Julia) cite
+   verifiable references.
 2. **Ecosystem assessments are dated.** Statements about what Julia lacks are stamped
    with the month they were checked, because they expire.
 
 ## How to cite
 
 Each version of the book is archived on Zenodo with its own DOI. The DOI below always
-resolves to the latest version. Citation metadata live in [`CITATION.cff`](CITATION.cff),
+resolves to the latest version. This matters because this is a living, evolving
+project: it ensures that new references and citations are taken into account and that
+authors receive credit. Citation metadata live in [`CITATION.cff`](CITATION.cff),
 which powers GitHub's "Cite this repository" button. Each release includes PDFs of both
 editions.
 

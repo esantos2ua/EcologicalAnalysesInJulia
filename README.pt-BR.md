@@ -27,7 +27,7 @@ mesmos capítulos.
 ## Relação com *Análises Ecológicas no R*
 
 Este projeto é **inspirado em** *Análises Ecológicas no R* e segue a sequência de
-capítulos daquele livro, para que os dois possam ser lidos lado a lado. Ele **não**
+capítulos daquele livro, para que os dois possam ser lidos lado a lado, se assim o leitor quiser. Este projeto **não**
 reproduz o conteúdo do original: o texto, os exemplos, os dados e os exercícios foram
 escritos do zero para Julia. Os autores do original não participam deste projeto, não
 o revisaram e não o endossam.
@@ -37,7 +37,7 @@ o revisaram e não o endossam.
 > ISBN 978-85-7917-564-0. <https://analises-ecologicas.com/>
 
 O original é gratuito online sob CC BY-NC 4.0 e também existe impresso. Se este livro
-for útil para você, aquele provavelmente será ainda mais.
+for útil para você, o *Análises ecológicas no R* provavelmente será ainda mais.
 
 ## Relação com o *ecoR*
 
@@ -51,13 +51,8 @@ gratuito em <https://ecor.ib.usp.br/> sob CC BY-SA 4.0.
 
 ## Escopo
 
-Esta edição cobre os **capítulos 1 a 11**: noções básicas da linguagem, manipulação de
-dados, visualização, análise exploratória, modelos lineares e GLMs, e depois escrita de
-funções e reamostragem. Os capítulos de ecologia de comunidades do original (análise
-multivariada, rarefação, estimadores de riqueza, diversidade taxonômica, filogenética e
-funcional, dados geoespaciais) estão **fora do escopo por enquanto**: Julia ainda não
-tem equivalentes maduros de `vegan`, `iNEXT`, `picante` ou `FD`, e escrever esses
-capítulos significaria escrever os pacotes primeiro.
+Esta edição cobre os **capítulos 1 a 11**: noções básicas da linguagem, manipulação de dados, visualização, análise exploratória, modelos lineares e GLMs, e depois escrita de funções e reamostragem. Os capítulos de ecologia de comunidades do *Análises ecológicas no R* (análise multivariada, rarefação, estimadores de riqueza, diversidade taxonômica, filogenética e
+funcional, dados geoespaciais) estão **fora do escopo por enquanto**: Julia ainda não tem equivalentes maduros de `vegan`, `iNEXT`, `picante` ou `FD`, e escrever esses capítulos significaria escrever os pacotes primeiro (algo completamente fora do meu escopo).
 
 | # | Capítulo | Pacotes principais |
 |---|---|---|
@@ -113,26 +108,18 @@ Manifest.toml        versões fixas dos pacotes
 
 ## Dados de exemplo
 
-`data/ponds.csv` é um levantamento **simulado** de anuros em 180 lagoas de três
-regiões. A simulação é proposital: como o processo que gerou os dados é conhecido
-(`scripts/make_data.jl`), cada modelo ajustado nos capítulos 8 e 9 pode ser comparado
-com a verdade, e o texto mostra essa comparação.
+`data/ponds.csv` é um levantamento **simulado** de anuros em 180 lagoas de três regiões. A simulação é proposital: como o processo que gerou os dados é conhecido (`scripts/make_data.jl`), cada modelo ajustado nos capítulos 8 e 9 pode ser comparado com a verdade, e o texto mostra essa comparação.
 
 ## Regras de fontes
 
-Duas regras que este repositório segue:
+Algumsas regras que estou tentando seguir:
 
-1. **Nenhuma afirmação sem fonte.** Afirmações comparativas ou sobre desempenho citam
-   uma referência verificável ou são removidas. O `_shared/references.bib` só tem
-   entradas conferidas na fonte primária ou na editora, nunca adicionadas de memória.
-2. **Avaliações do ecossistema têm data.** Afirmações sobre o que falta em Julia
-   indicam o mês em que foram verificadas, porque ficam desatualizadas.
+1. **Afirmações precisam de fontes.** Afirmações comparativas ou sobre desempenho (entre o R e Julia) citam referências verificáveis.
+2. **Avaliações do ecossistema têm data.** Afirmações sobre o que falta em Julia indicam o mês em que foram verificadas, porque ficam desatualizadas.
 
 ## Como citar
 
-Cada versão do livro é arquivada no Zenodo com um DOI próprio. O DOI abaixo sempre
-aponta para a versão mais recente. Os metadados de citação estão em
-[`CITATION.cff`](CITATION.cff), que alimenta o botão "Cite this repository" do GitHub.
+Cada versão do livro é arquivada no Zenodo com um DOI próprio. O DOI abaixo sempre aponta para a versão mais recente. Isso é importante, pois como se trata de um projeto vivo e dinâmico, conseguimos garantir que novas referências e citações serão consideradas e autores receberão os créditos. Os metadados de citação estão em [`CITATION.cff`](CITATION.cff), que alimenta o botão "Cite this repository" do GitHub.
 Cada release traz os PDFs das duas edições.
 
 > Santos E. 2026. *Ecological Analyses in Julia* (v1.0.0). Zenodo.

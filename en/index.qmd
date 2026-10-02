@@ -5,7 +5,7 @@ This book is an introduction to ecological data analysis using the
 *how much of the ecologist's toolkit already exists in Julia today, and how much still
 has to be built?*
 
-The obvious reference point is [**Análises Ecológicas no R**](https://analises-ecologicas.com/)
+The idea for this book was inspired by the wonderful project [**Análises Ecológicas no R**](https://analises-ecologicas.com/)
 [@silva2022analises] by Silva, Gonçalves-Souza, Paterno, Provete and Vancine — an open,
 Portuguese-language book that became the entry point for a generation of Brazilian
 ecologists. This volume deliberately follows its structure, chapter by chapter, so the
@@ -19,13 +19,14 @@ two can be read side by side.
 This first edition runs **from language basics through generalized linear models**
 (chapters 1–9), with a chapter on exploratory data analysis before the models, followed
 by two chapters on programming for ecology: writing your own functions and resampling
-and simulation (chapters 10–11). The community-ecology chapters of the original book — multivariate
+and simulation (chapters 10–11). The community-ecology chapters of the original book (*Análises Ecológicas no R*) — multivariate
 analysis, rarefaction, richness estimators, taxonomic, phylogenetic and functional
 diversity, and geospatial data — **are not included**.
 
-That is not an oversight. In R those chapters rest on `vegan`, `iNEXT`, `picante` and
-`FD`. Julia has no mature equivalents today. Writing those chapters honestly means
-writing the packages first, and that is a separate project. See @sec-limits for a
+That is not an oversight. In R those chapters use packages such as `vegan`, `iNEXT`,
+`picante` and `FD`. Julia has no mature equivalents today. Writing those chapters
+honestly means writing the packages first, and that is a separate project (and not one
+for me). See @sec-limits for a
 detailed assessment.
 :::
 
@@ -33,7 +34,7 @@ This is not a small slice. They cover what most of an ecological analysis
 actually consumes: importing and cleaning data, visualizing it, fitting linear and
 generalized linear models, and handling hierarchical structure through mixed models.
 At every one of those points the Julia ecosystem is solid: the packages exist, they
-are maintained, and they do the work. Where this book compares Julia to R, the
+are maintained, and they do the job very well. Where this book compares Julia to R, the
 comparisons are limited to what can be checked — syntax, feature coverage, behaviour
 demonstrable in the code — and not to performance claims I do not measure here.
 
@@ -94,7 +95,8 @@ with exercises graded automatically in [notaR](http://notar.ib.usp.br).
 
 This book exists in English and Portuguese, built from the same repository. The
 Portuguese version is at [`/pt`](../pt/). The chapters are translations of one
-another, and the code is identical in both.
+another, and the code is identical in both. I write mostly in Portuguese and use AI
+tools to translate the content into English, which I then review.
 
 ## License {.unnumbered}
 

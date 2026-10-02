@@ -5,38 +5,22 @@ Este livro é uma introdução à análise de dados ecológicos usando a linguag
 *o que da caixa de ferramentas do ecólogo já existe em Julia hoje, e o que ainda
 precisa ser construído?*
 
-A referência óbvia é [**Análises Ecológicas no R**](https://analises-ecologicas.com/)
-[@silva2022analises], de Silva, Gonçalves-Souza, Paterno, Provete e Vancine — um livro
-aberto, em português, que se tornou porta de entrada para uma geração de ecólogos
-brasileiros. A estrutura deste volume segue deliberadamente a daquele livro, capítulo
-a capítulo, para que os dois possam ser lidos lado a lado.
+A ideia deste livro é inspirada no projeto super legal [**Análises Ecológicas no R**](https://analises-ecologicas.com/)
+[@silva2022analises], de Silva, Gonçalves-Souza, Paterno, Provete e Vancine — um livro aberto, em português, que se tornou porta de entrada para uma geração de ecólogos brasileiros. A estrutura deste volume segue deliberadamente a daquele livro, capítulo a capítulo, para que os dois possam ser lidos lado a lado.
 
 ## Escopo desta edição {.unnumbered}
 
 ::: {.callout-important}
 ## O que este livro cobre — e o que ainda não cobre
 
-Esta primeira edição vai **do básico da linguagem até modelos lineares generalizados**
-(capítulos 1–9), com um capítulo de análise exploratória de dados antes dos modelos,
-seguidos de dois capítulos de programação para ecologia: escrever as próprias funções e
-reamostragem e simulação (capítulos 10–11). Os capítulos de ecologia
-de comunidades do livro original — análises
-multidimensionais, rarefação, estimadores de riqueza, diversidade taxonômica,
-filogenética e funcional, e dados geoespaciais — **não estão incluídos**.
+Esta primeira edição vai **do básico da linguagem até modelos lineares generalizados** (capítulos 1–9), com um capítulo de análise exploratória de dados antes dos modelos, seguidos de dois capítulos de programação para ecologia: escrever as próprias funções e reamostragem e simulação (capítulos 10–11). Os capítulos de ecologia de comunidades do livro original (*Análises ecológicas no R*) — análises multidimensionais, rarefação, estimadores de riqueza, diversidade taxonômica, filogenética e funcional, e dados geoespaciais — **não estão incluídos**.
 
-Isso não é um descuido. Em R, esses capítulos se apoiam em `vegan`, `iNEXT`, `picante`
-e `FD`. Julia hoje não tem equivalentes maduros desses pacotes. Escrever aqueles
-capítulos honestamente exige escrever os pacotes primeiro, e esse é um projeto separado.
+Isso não é um descuido. Em R, esses capítulos utilizam pacotes como `vegan`, `iNEXT`, `picante` e `FD`. Julia hoje não tem equivalentes maduros desses pacotes. Escrever aqueles capítulos honestamente exige escrever os pacotes primeiro, e esse é um projeto separado (que não é para mim).
 Veja o @sec-limites para uma avaliação detalhada.
 :::
 
-Esse recorte não é pequeno. Ele cobre tudo o que a maior parte de uma análise
-ecológica realmente consome: importar e limpar dados, visualizá-los, ajustar modelos
-lineares e generalizados, e lidar com estrutura hierárquica via modelos mistos. Em
-todos esses pontos, o ecossistema Julia é sólido: os pacotes existem, são mantidos, e
-fazem o trabalho. Onde este livro faz comparações com R, elas se limitam ao que pode
-ser verificado — sintaxe, cobertura de funcionalidade, comportamento demonstrável no
-código — e não a afirmações de desempenho que eu não meça aqui.
+Esse recorte não é pequeno. Ele cobre tudo o que a maior parte de uma análise ecológica realmente consome: importar e limpar dados, visualizá-los, ajustar modelos lineares e generalizados, e lidar com estrutura hierárquica via modelos mistos. Em todos esses pontos, o ecossistema Julia é sólido: os pacotes existem, são mantidos, e fazem muito bem o trabalho. Onde este livro faz comparações com R, elas se limitam ao que pode
+ser verificado — sintaxe, cobertura de funcionalidade, comportamento demonstrável no código — e não a afirmações de desempenho que eu não meça aqui.
 
 ## Como usar este livro {.unnumbered}
 
@@ -95,9 +79,7 @@ CC BY-SA 4.0, com exercícios corrigidos automaticamente no
 
 ## Versão bilíngue {.unnumbered}
 
-Este livro existe em português e inglês, a partir do mesmo repositório. A versão em
-inglês está em [`/en`](../en/). Os capítulos são traduções um do outro, e o código é
-idêntico nas duas versões.
+Este livro existe em português e inglês, a partir do mesmo repositório. A versão em inglês está em [`/en`](../en/). Os capítulos são traduções um do outro, e o código é idêntico nas duas versões. Eu estou escrevendo predominantemente em português e usando ferramentas de IA para traduzir o conteúdo para inglês (com revisões minhas).
 
 ## Licença {.unnumbered}
 
