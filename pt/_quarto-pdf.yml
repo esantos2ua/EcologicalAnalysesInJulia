@@ -1,0 +1,22 @@
+# PDF edition, used only by the release workflow (.github/workflows/pdf.yml):
+#   quarto render pt --profile pdf --to pdf
+# The normal build (scripts/build.sh) does not activate this profile.
+book:
+  output-file: "analises-ecologicas-em-julia-pt"
+
+format:
+  pdf:
+    documentclass: scrreprt
+    papersize: a4
+    pdf-engine: lualatex
+    # DejaVu covers the Greek letters and symbols used in code (σ, μ, ≈, ✓)
+    mainfont: "DejaVu Serif"
+    sansfont: "DejaVu Sans"
+    monofont: "DejaVu Sans Mono"
+    fontsize: 10pt
+    code-block-bg: "#f6f8fa"
+    fig-format: png
+    fig-dpi: 300
+    toc: true
+    number-sections: true
+    colorlinks: true

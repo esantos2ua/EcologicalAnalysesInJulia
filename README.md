@@ -82,7 +82,8 @@ _shared/common.yml   shared config (Julia engine, format, execute options)
 _shared/             bibliography, SCSS themes, HTML header
 data/ponds.csv       simulated example dataset (regenerate with scripts/make_data.jl)
 exercises/           exercise checker: check.jl (en) / checar.jl (pt) load Checks.jl
-scripts/             environment setup, data generation, build
+scripts/             environment setup, data generation, build, zenodo.py
+pdf/                 book PDFs, built by the "Build PDFs for release" workflow
 Project.toml         the book's Julia environment
 Manifest.toml        pinned package versions
 .github/workflows/   renders and deploys to GitHub Pages on push to main
@@ -105,7 +106,25 @@ Two rules this repository is held to:
 2. **Ecosystem assessments are dated.** Statements about what Julia lacks are stamped
    with the month they were checked, because they expire.
 
+## Como citar / How to cite
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+
+Cada versão do livro é arquivada no Zenodo com um DOI. O DOI acima sempre aponta
+para a versão mais recente. Os metadados de citação estão em
+[`CITATION.cff`](CITATION.cff) (o GitHub mostra o botão "Cite this repository").
+O PDF de cada edição fica anexado a cada
+[release](https://github.com/esantos2ua/EcologicalAnalysesInJulia/releases).
+
+Each version of the book is archived on Zenodo with a DOI. The DOI above always
+resolves to the latest version. Citation metadata: [`CITATION.cff`](CITATION.cff).
+
+> Santos E. 2026. *Ecological Analyses in Julia* (v1.0.0). Zenodo.
+> <https://doi.org/10.5281/zenodo.XXXXXXX>
+
+Release process: [RELEASE.md](RELEASE.md).
+
 ## License
 
-Text: [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
-Code: [MIT](https://opensource.org/licenses/MIT).
+Text: [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) ([LICENSE-TEXT](LICENSE-TEXT)).
+Code: [MIT](https://opensource.org/licenses/MIT) ([LICENSE](LICENSE)).

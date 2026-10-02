@@ -21,3 +21,9 @@ en/.quarto/
 .DS_Store
 .vscode/
 *.swp
+
+# PDF edition (built in CI by .github/workflows/pdf.yml): its execution cache
+# and LaTeX figures are not committed; the PDFs themselves live in pdf/.
+*/_freeze/*/execute-results/tex.json
+*/_freeze/*/figure-latex/
+*/*_files/figure-latex/

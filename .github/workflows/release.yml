@@ -1,0 +1,43 @@
+name: Attach PDFs to release
+
+# When a release is published, checks that the tag matches the version in
+# CITATION.cff and .zenodo.json, then attaches the PDFs in pdf/ to the release.
+# The PDFs must already be on main (run "Build PDFs for release" first).
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  attach:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check versions
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          cff=$(grep -E '^version:' CITATION.cff | awk '{print $2}' | tr -d '"')
+          zen=$(python3 -c 'import json; print(json.load(open(".zenodo.json"))["version"])')
+          echo "tag=$TAG  CITATION.cff=$cff  .zenodo.json=$zen"
+          if [ "$TAG" != "v$cff" ] || [ "$cff" != "$zen" ]; then
+            echo "::error::Tag, CITATION.cff and .zenodo.json versions differ. See RELEASE.md."
+            exit 1
+          fi
+
+      - name: Attach PDFs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          ls pdf/*.pdf
+          mkdir -p out
+          for f in pdf/*.pdf; do
+            b=$(basename "$f" .pdf)
+            cp "$f" "out/${b}-${TAG}.pdf"
+          done
+          gh release upload "$TAG" out/*.pdf --clobber

@@ -1,0 +1,80 @@
+{
+  "creators": [
+    {
+      "affiliation": "University of Alberta",
+      "name": "Santos, Eduardo",
+      "orcid": "0000-0002-0434-3655"
+    }
+  ],
+  "description": "An open, bilingual (Brazilian Portuguese and English) book on ecological data analysis in Julia: language basics, data wrangling, visualization, exploratory data analysis, linear models and GLMs, writing functions, and resampling and simulation. The Portuguese edition is titled \"Análises Ecológicas em Julia\". Text licensed CC BY-NC-SA 4.0; code licensed MIT.",
+  "keywords": [
+    "ecology",
+    "Julia",
+    "data analysis",
+    "statistics",
+    "open educational resource",
+    "book"
+  ],
+  "license": {
+    "id": "cc-by-nc-sa-4.0"
+  },
+  "publication_date": "2026-10-02",
+  "title": "Ecological Analyses in Julia",
+  "version": "1.0.0",
+  "upload_type": "publication",
+  "publication_type": "book",
+  "related_identifiers": [
+    {
+      "identifier": "10.1137/141000671",
+      "relation": "cites"
+    },
+    {
+      "identifier": "10.18637/jss.v067.i01",
+      "relation": "cites"
+    },
+    {
+      "identifier": "10.21105/joss.03349",
+      "relation": "cites"
+    },
+    {
+      "identifier": "10.1007/978-0-387-87458-6",
+      "relation": "cites"
+    },
+    {
+      "identifier": "10.1126/science.ns-15.366.92",
+      "relation": "cites"
+    },
+    {
+      "identifier": "10.2307/1942661",
+      "relation": "cites"
+    },
+    {
+      "identifier": "10.1007/BF00317345",
+      "relation": "cites"
+    },
+    {
+      "identifier": "10.1890/0012-9658(2000)081[2606:NMAOSC]2.0.CO;2",
+      "relation": "cites"
+    },
+    {
+      "identifier": "10.2202/1544-6115.1585",
+      "relation": "cites"
+    },
+    {
+      "identifier": "10.1214/aos/1176344552",
+      "relation": "cites"
+    },
+    {
+      "identifier": "10.1002/ecy.2647",
+      "relation": "cites"
+    },
+    {
+      "identifier": "10.1111/j.2041-210X.2009.00001.x",
+      "relation": "cites"
+    },
+    {
+      "identifier": "10.1080/00031305.1973.10478966",
+      "relation": "cites"
+    }
+  ]
+}

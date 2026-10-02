@@ -1,0 +1,68 @@
+name: Build PDFs for release
+
+# Run by hand (Actions tab > "Build PDFs for release" > Run workflow) before
+# creating a release. Renders both editions to PDF and commits them to pdf/ on
+# main, so the PDFs are inside the source archive that Zenodo stores.
+# Zenodo only archives the repository source, not files attached to a release.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pdf
+  cancel-in-progress: false
+
+jobs:
+  pdf:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1.12'
+
+      - uses: julia-actions/cache@v2
+
+      - name: Instantiate Julia environment
+        run: julia --project=. -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
+
+      - uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: '1.9.37'
+          tinytex: true
+
+      - name: Install fonts
+        run: sudo apt-get update && sudo apt-get install -y fonts-dejavu
+
+      - name: Regenerate example dataset
+        run: julia --project=. scripts/make_data.jl
+
+      - name: Render PDFs
+        run: |
+          quarto render pt --profile pdf --to pdf
+          quarto render en --profile pdf --to pdf
+          mkdir -p pdf
+          cp pt/_book/analises-ecologicas-em-julia-pt.pdf pdf/
+          cp en/_book/ecological-analyses-in-julia-en.pdf pdf/
+
+      - name: Commit PDFs to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pdf/
+          if git diff --cached --quiet; then
+            echo "PDFs unchanged; nothing to commit."
+          else
+            git commit -m "Update book PDFs"
+            git push
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: book-pdfs
+          path: pdf/*.pdf

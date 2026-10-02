@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this book, please cite it as below."
+type: software
+title: "Ecological Analyses in Julia"
+abstract: >-
+  An open, bilingual (Brazilian Portuguese and English) book on ecological
+  data analysis in Julia: language basics, data wrangling, visualization,
+  exploratory data analysis, linear models and GLMs, writing functions, and
+  resampling and simulation. The Portuguese edition is titled
+  "Análises Ecológicas em Julia". Text licensed CC BY-NC-SA 4.0; code
+  licensed MIT.
+authors:
+  - given-names: Eduardo
+    family-names: Santos
+    affiliation: University of Alberta
+    orcid: "https://orcid.org/0000-0002-0434-3655"
+version: 1.0.0
+date-released: "2026-10-02"
+license:
+  - CC-BY-NC-SA-4.0
+  - MIT
+repository-code: "https://github.com/esantos2ua/EcologicalAnalysesInJulia"
+url: "https://esantos2ua.github.io/EcologicalAnalysesInJulia/"
+keywords:
+  - ecology
+  - Julia
+  - data analysis
+  - statistics
+  - open educational resource
+  - book
