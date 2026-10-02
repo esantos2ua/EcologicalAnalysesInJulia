@@ -23,8 +23,9 @@ recebem DOI.
 ## Passo a passo
 
 1. **Atualize o `CITATION.cff`.** Mude `version` (sem o `v`, por exemplo `1.1.0`)
-   e `date-released` (a data de hoje, `AAAA-MM-DD`). Se entrou alguém novo como
-   autor, acrescente com o ORCID.
+   e `date-released` (a data de hoje, `AAAA-MM-DD`). Em `preferred-citation` (a
+   citação como livro que o GitHub mostra), mude também `version` e `year`. Se
+   entrou alguém novo como autor, acrescente nos dois lugares, com o ORCID.
 
 2. **Gere o `.zenodo.json`.**
 
@@ -65,9 +66,12 @@ O Zenodo cria dois DOIs:
 - um **DOI conceitual**, que aponta sempre para a versão mais recente;
 - um **DOI da versão**, para cada release.
 
-Coloque o DOI conceitual no `README.md` (seção "Como citar", troque
-`XXXXXXX`) e no `CITATION.cff` (campo `doi:`). Depois rode `python3 scripts/zenodo.py`
-de novo e faça commit.
+Coloque o DOI conceitual:
+
+- nos dois READMEs (`README.md` e `README.pt-BR.md`): troque `XXXXXXX`;
+- no `CITATION.cff`: campo `doi:` no topo e em `preferred-citation`.
+
+Depois rode `python3 scripts/zenodo.py` de novo e faça commit.
 
 ## Se algo der errado
 

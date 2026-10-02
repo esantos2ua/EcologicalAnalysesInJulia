@@ -61,6 +61,18 @@ def bib_dois():
     return with_doi, without
 
 
+def check_preferred_citation(version):
+    """Warns if preferred-citation (the book citation GitHub shows) lags behind."""
+    text = CFF.read_text(encoding="utf-8")
+    m = re.search(r"^preferred-citation:\n((?:[ #].*\n?)*)", text, re.M)
+    if not m:
+        return
+    pv = re.search(r"^  version:\s*\"?([^\s\"]+)", m.group(1), re.M)
+    if pv and pv.group(1) != version:
+        print(f"warning: preferred-citation version is {pv.group(1)} but version is "
+              f"{version}; update both in CITATION.cff")
+
+
 def main():
     meta = cffconvert()
 
@@ -83,6 +95,7 @@ def main():
 
     print(f"wrote {OUT.relative_to(ROOT)}: version {meta.get('version')}, "
           f"{len(related)} cited DOIs")
+    check_preferred_citation(str(meta.get("version")))
     if without:
         print(f"\nwarning: {len(without)} reference(s) in {BIB.relative_to(ROOT)} have no DOI "
               "(not included in .zenodo.json):")

@@ -20,9 +20,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Use the exact Julia version that Manifest.toml was resolved with;
+      # QuartoNotebookRunner refuses to run notebooks on a different patch version.
+      - name: Read Julia version from Manifest.toml
+        id: julia
+        run: echo "version=$(grep -m1 '^julia_version' Manifest.toml | cut -d'"' -f2)" >> "$GITHUB_OUTPUT"
+
       - uses: julia-actions/setup-julia@v2
         with:
-          version: '1.12'
+          version: ${{ steps.julia.outputs.version }}
 
       - uses: julia-actions/cache@v2
 

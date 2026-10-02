@@ -1,6 +1,27 @@
-# Ecological Analyses in Julia / Análises Ecológicas em Julia
+<div align="center">
 
-An open, bilingual (pt-BR + English) book on ecological data analysis in Julia.
+# Ecological Analyses in Julia
+
+**An open, bilingual introduction to ecological data analysis in Julia**
+
+**English** · [Português](README.pt-BR.md)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+[![Read online](https://img.shields.io/badge/read-online-9558b2)](https://esantos2ua.github.io/EcologicalAnalysesInJulia/en/)
+[![Julia 1.12](https://img.shields.io/badge/Julia-1.12-9558b2?logo=julia&logoColor=white)](https://julialang.org)
+[![Text: CC BY-NC-SA 4.0](https://img.shields.io/badge/text-CC%20BY--NC--SA%204.0-lightgrey)](LICENSE-TEXT)
+[![Code: MIT](https://img.shields.io/badge/code-MIT-lightgrey)](LICENSE)
+
+[**Read online**](https://esantos2ua.github.io/EcologicalAnalysesInJulia/en/) ·
+[**Download PDF**](https://github.com/esantos2ua/EcologicalAnalysesInJulia/releases/latest) ·
+[**How to cite**](#how-to-cite)
+
+</div>
+
+---
+
+The book has a Brazilian Portuguese edition, *Análises Ecológicas em Julia*, and an
+English edition. Both are written from scratch for Julia and follow the same chapters.
 
 ## Relationship to *Análises Ecológicas no R*
 
@@ -86,7 +107,7 @@ scripts/             environment setup, data generation, build, zenodo.py
 pdf/                 book PDFs, built by the "Build PDFs for release" workflow
 Project.toml         the book's Julia environment
 Manifest.toml        pinned package versions
-.github/workflows/   renders and deploys to GitHub Pages on push to main
+.github/workflows/   deploys to GitHub Pages on push to main; builds PDFs for releases
 ```
 
 ## Example data
@@ -106,23 +127,17 @@ Two rules this repository is held to:
 2. **Ecosystem assessments are dated.** Statements about what Julia lacks are stamped
    with the month they were checked, because they expire.
 
-## Como citar / How to cite
+## How to cite
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
-
-Cada versão do livro é arquivada no Zenodo com um DOI. O DOI acima sempre aponta
-para a versão mais recente. Os metadados de citação estão em
-[`CITATION.cff`](CITATION.cff) (o GitHub mostra o botão "Cite this repository").
-O PDF de cada edição fica anexado a cada
-[release](https://github.com/esantos2ua/EcologicalAnalysesInJulia/releases).
-
-Each version of the book is archived on Zenodo with a DOI. The DOI above always
-resolves to the latest version. Citation metadata: [`CITATION.cff`](CITATION.cff).
+Each version of the book is archived on Zenodo with its own DOI. The DOI below always
+resolves to the latest version. Citation metadata live in [`CITATION.cff`](CITATION.cff),
+which powers GitHub's "Cite this repository" button. Each release includes PDFs of both
+editions.
 
 > Santos E. 2026. *Ecological Analyses in Julia* (v1.0.0). Zenodo.
 > <https://doi.org/10.5281/zenodo.XXXXXXX>
 
-Release process: [RELEASE.md](RELEASE.md).
+Release process (in Portuguese): [RELEASE.md](RELEASE.md).
 
 ## License
 

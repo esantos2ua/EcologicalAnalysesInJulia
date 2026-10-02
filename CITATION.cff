@@ -28,3 +28,21 @@ keywords:
   - statistics
   - open educational resource
   - book
+# What GitHub's "Cite this repository" button shows. CFF's top-level `type`
+# only allows software/dataset; this makes the suggested citation a book.
+# After the first Zenodo release, add `doi:` (the concept DOI) here too.
+preferred-citation:
+  type: book
+  title: "Ecological Analyses in Julia"
+  authors:
+    - given-names: Eduardo
+      family-names: Santos
+      affiliation: University of Alberta
+      orcid: "https://orcid.org/0000-0002-0434-3655"
+  year: 2026
+  version: 1.0.0
+  publisher:
+    name: Zenodo
+  url: "https://esantos2ua.github.io/EcologicalAnalysesInJulia/"
+  repository-code: "https://github.com/esantos2ua/EcologicalAnalysesInJulia"
+  license: CC-BY-NC-SA-4.0
