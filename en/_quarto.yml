@@ -20,11 +20,12 @@ book:
   search:
     location: sidebar
   # Sidebar buttons: GitHub repo, PDF download, other edition. repo-actions add
-  # "edit this page" / "report an issue" links under each page's table of contents.
+  # "report an issue" / "view source" links under each page's table of contents
+  # (no "edit this page": readers are asked to open issues, not pull requests).
   repo-url: https://github.com/esantos2ua/EcologicalAnalysesInJulia
   repo-subdir: en
   repo-branch: main
-  repo-actions: [edit, issue, source]
+  repo-actions: [issue, source]
   sidebar:
     style: docked
     tools:

@@ -31,6 +31,9 @@ recebem DOI.
    `en/changelog.qmd`. Acrescente a versão nova no topo, com a data e o que mudou.
    O mesmo texto serve para a descrição do release no passo 5.
 
+   No prefácio (`pt/index.qmd` e `en/index.qmd`, seção "Como citar" / "How to
+   cite"), mude a versão na citação e no BibTeX (e o ano, se mudou).
+
 2. **Gere o `.zenodo.json`.**
 
    ```bash

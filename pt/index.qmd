@@ -81,6 +81,33 @@ CC BY-SA 4.0, com exercícios corrigidos automaticamente no
 
 Este livro existe em português e inglês, a partir do mesmo repositório. A versão em inglês está em [`/en`](../en/). Os capítulos são traduções um do outro, e o código é idêntico nas duas versões. Eu estou escrevendo predominantemente em português e usando ferramentas de IA para traduzir o conteúdo para inglês (com revisões minhas).
 
+## Como citar {.unnumbered}
+
+Cada versão do livro é arquivada no [Zenodo](https://doi.org/10.5281/zenodo.23126524)
+com um DOI. Se você usar este livro, cite assim:
+
+> Santos, E. (2026). *Ecological Analyses in Julia* (versão 1.0.0). Zenodo.
+> <https://doi.org/10.5281/zenodo.23126524>
+
+O título do registro é o da edição em inglês. As duas edições, em português e em
+inglês, fazem parte do mesmo registro. O DOI acima aponta sempre para a versão mais
+recente. Para citar exatamente a versão que você leu, use o DOI dessa versão, listado
+na página do Zenodo, e veja o [Histórico de versões](historico.qmd).
+
+Em BibTeX:
+
+```bibtex
+@book{santos2026ecological,
+  author    = {Santos, Eduardo},
+  title     = {Ecological Analyses in Julia},
+  year      = {2026},
+  version   = {1.0.0},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.23126524},
+  url       = {https://doi.org/10.5281/zenodo.23126524}
+}
+```
+
 ## Licença {.unnumbered}
 
 Texto sob [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/);

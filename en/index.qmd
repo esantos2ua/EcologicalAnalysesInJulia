@@ -98,6 +98,32 @@ Portuguese version is at [`/pt`](../pt/). The chapters are translations of one
 another, and the code is identical in both. I write mostly in Portuguese and use AI
 tools to translate the content into English, which I then review.
 
+## How to cite {.unnumbered}
+
+Each version of the book is archived on [Zenodo](https://doi.org/10.5281/zenodo.23126524)
+with a DOI. If you use this book, please cite it as:
+
+> Santos, E. (2026). *Ecological Analyses in Julia* (version 1.0.0). Zenodo.
+> <https://doi.org/10.5281/zenodo.23126524>
+
+Both editions, English and Portuguese, are part of the same record. The DOI above
+always resolves to the latest version. To cite exactly the version you read, use that
+version's DOI, listed on the Zenodo page, and see the [Change log](changelog.qmd).
+
+In BibTeX:
+
+```bibtex
+@book{santos2026ecological,
+  author    = {Santos, Eduardo},
+  title     = {Ecological Analyses in Julia},
+  year      = {2026},
+  version   = {1.0.0},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.23126524},
+  url       = {https://doi.org/10.5281/zenodo.23126524}
+}
+```
+
 ## License {.unnumbered}
 
 Text under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/);
