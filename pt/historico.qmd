@@ -5,7 +5,7 @@ Cada versão do livro é arquivada no Zenodo com um DOI próprio (veja "Como cit
 seguem o versionamento semântico: a mudança no primeiro número indica uma reorganização
 grande, no segundo, conteúdo novo, e no terceiro, correções.
 
-## v1.0.0 (2026-10-02) {.unnumbered}
+## v1.0.0 (2026-10-03) {.unnumbered}
 
 Primeira versão citável.
 

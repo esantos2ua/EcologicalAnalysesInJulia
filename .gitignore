@@ -22,11 +22,9 @@ en/.quarto/
 .vscode/
 *.swp
 
-# PDF edition (built in CI by .github/workflows/pdf.yml): its execution cache
-# and LaTeX figures are not committed; the PDFs themselves live in pdf/.
-*/_freeze/*/execute-results/tex.json
-*/_freeze/*/execute-results/pdf.json
+# PDF edition (built in CI by .github/workflows/pdf.yml): the PDFs live in
+# pdf/ and their execution cache (_freeze/*/execute-results/tex.json and
+# _freeze/*/figure-pdf/) is committed by CI. Intermediate figure folders are not.
 */_freeze/*/figure-latex/
-*/_freeze/*/figure-pdf/
 */*_files/figure-latex/
 */*_files/figure-pdf/

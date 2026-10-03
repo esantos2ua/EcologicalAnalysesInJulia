@@ -5,7 +5,7 @@ the [README](https://github.com/esantos2ua/EcologicalAnalysesInJulia#readme)). V
 numbers follow semantic versioning: a change in the first number means a major
 reorganization, in the second, new content, and in the third, corrections.
 
-## v1.0.0 (2026-10-02) {.unnumbered}
+## v1.0.0 (2026-10-03) {.unnumbered}
 
 First citable version.
 
