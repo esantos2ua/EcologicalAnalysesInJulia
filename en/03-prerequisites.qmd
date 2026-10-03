@@ -25,7 +25,7 @@ You do not need git, R or Quarto.
 ## Step 1: open a terminal {#sec-terminal}
 
 A terminal is a window where you type commands instead of clicking. You need it only
-for installing Julia; after that, everything happens inside VS Code.
+for installing Julia. After that, everything we do in this book happens inside VS Code.
 
 ::: {.panel-tabset}
 ## Windows
@@ -139,11 +139,11 @@ pane, a debugger and line-by-line evaluation — the functional equivalent of RS
    `Cmd+Shift+X` on macOS), search for *Julia* and install the extension published
    by *julialang*. It finds the Julia installed by `juliaup` on its own.
 
-If you prefer a fully open-source build, [VSCodium](https://vscodium.com) is VS Code
+If you prefer an open-source build, [VSCodium](https://vscodium.com) is VS Code
 compiled from the same MIT-licensed source without Microsoft's telemetry, and installs
 the same Julia extension from the [Open VSX](https://open-vsx.org) registry.
 [Antigravity](https://antigravity.google), another editor derived from VS Code, also
-runs the same extension. Everything in this book applies to all three. Other options are **Pluto.jl** (reactive notebooks,
+runs the same extension. Everything in this book applies to all three (at least as far as I have tested). Other options are **Pluto.jl** (reactive notebooks,
 excellent for teaching) and any editor with LSP support through `LanguageServer.jl`.
 
 ## Step 5: open the book folder {#sec-vscode-setup}
@@ -188,6 +188,18 @@ depending on your computer and connection. Plotting and modelling packages are l
 and Julia compiles them ahead of time so they run fast later. Progress lines keep
 appearing while it works; let it finish and do not close VS Code. You only do this
 once per computer.
+:::
+
+::: {.callout-note}
+## What does compiling mean?
+
+**Compiling** means translating human-readable code directly into machine code — the
+instructions the computer's processor executes natively.
+
+While languages such as R and Python interpret code line by line as it runs, Julia does
+this translation ahead of time (in what is called *precompilation*). That takes some
+patience when you first install the packages, but it is what makes your analyses and
+plots run at full speed afterwards (see more on compilation latency in @sec-latency).
 :::
 
 ## Step 7: check that everything works {#sec-setup-check}

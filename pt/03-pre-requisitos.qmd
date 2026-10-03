@@ -1,14 +1,8 @@
 # Pré-requisitos {#sec-pre-requisitos}
 
-Este capítulo prepara o seu computador para o resto do livro. Ao final, você terá
-instalado Julia e um editor, baixado os dados e os exercícios do livro e rodado um
-primeiro script que desenha um gráfico.
+Este capítulo prepara o seu computador para o resto do livro. Ao final, você terá instalado Julia e um editor, baixado os dados e os exercícios do livro e rodado um primeiro script que desenha um gráfico.
 
-Siga os passos na ordem. Onde eles mudam de um sistema operacional para outro,
-escolha a aba do seu sistema. Reserve cerca de uma hora na primeira vez — a maior
-parte é espera enquanto os pacotes são instalados — e mantenha a conexão com a
-internet até concluir a @sec-instanciar. Se algum passo não se comportar como
-descrito, veja a @sec-problemas.
+Siga os passos na ordem. Onde eles mudam de um sistema operacional para outro, escolha a aba do seu sistema. Reserve cerca de uma hora na primeira vez — a maior parte é espera enquanto os pacotes são instalados — e mantenha a conexão com a internet até concluir a @sec-instanciar. Se algum passo não se comportar como descrito, veja a @sec-problemas.
 
 ::: {.callout-note}
 ## O que você vai instalar
@@ -25,14 +19,12 @@ Você não precisa de git, R nem Quarto.
 
 ## Passo 1: abra um terminal {#sec-terminal}
 
-Um terminal é uma janela onde você digita comandos em vez de clicar. Você só precisa
-dele para instalar Julia; depois disso, tudo acontece dentro do VS Code.
+Um terminal é uma janela onde você digita comandos em vez de clicar. Você só precisa dele para instalar Julia. Depois disso, tudo o que vamos fazer aqui neste livro acontece dentro do VS Code.
 
 ::: {.panel-tabset}
 ## Windows
 
-Abra o menu Iniciar, digite **PowerShell** e abra o *Windows PowerShell* (ou o
-*Terminal*, no Windows 11).
+Abra o menu Iniciar, digite **PowerShell** e abra o *Windows PowerShell* (ou o *Terminal*, no Windows 11).
 
 ## macOS
 
@@ -40,18 +32,14 @@ Pressione `Cmd+Espaço`, digite **Terminal** e pressione `Return`.
 
 ## Linux
 
-Pressione `Ctrl+Alt+T` na maioria das distribuições, ou procure *Terminal* no menu de
-aplicativos.
+Pressione `Ctrl+Alt+T` na maioria das distribuições, ou procure *Terminal* no menu de aplicativos.
 :::
 
-Para rodar um comando, cole-o no terminal e pressione `Enter`. Colar é `Ctrl+V` no
-Windows, `Cmd+V` no macOS e `Ctrl+Shift+V` na maioria dos terminais Linux.
+Para rodar um comando, cole-o no terminal e pressione `Enter`. Colar é `Ctrl+V` no Windows, `Cmd+V` no macOS e `Ctrl+Shift+V` na maioria dos terminais Linux.
 
 ## Passo 2: instale Julia {#sec-instalando}
 
-Use o **`juliaup`**, o instalador e gerenciador oficial de versões. Não instale Julia
-pelo gerenciador de pacotes do sistema (`apt`, `brew`), que tende a distribuir
-versões desatualizadas.
+Use o **`juliaup`**, o instalador e gerenciador oficial de versões. Não instale Julia pelo gerenciador de pacotes do sistema (`apt`, `brew`), que tende a distribuir versões desatualizadas.
 
 ::: {.panel-tabset}
 ## Windows
@@ -69,29 +57,22 @@ pressione `Enter`.
 curl -fsSL https://install.julialang.org | sh
 ```
 
-O instalador pergunta se deve seguir com as configurações padrão. Pressione `Enter`
-para aceitá-las.
+O instalador pergunta se deve seguir com as configurações padrão. Pressione `Enter` para aceitá-las.
 :::
 
-Quando terminar, **feche o terminal e abra um novo** — o comando `julia` só fica
-disponível em terminais novos. Depois, confira a instalação:
+Quando terminar, **feche o terminal e abra um novo** — o comando `julia` só fica disponível em terminais novos. Depois, confira a instalação:
 
 ```bash
 julia --version
 ```
 
-Deve aparecer algo como `julia version 1.12.6`. Qualquer versão a partir da 1.10
-funciona com este livro. Agora digite `julia` e pressione `Enter` para abrir o Julia
-propriamente dito. O prompt muda para `julia>`; digite `1 + 1`, pressione `Enter`, e
-Julia responde `2`. Saia com `exit()`.
+Deve aparecer algo como `julia version 1.12.6`. Qualquer versão a partir da 1.10 funciona com este livro. Agora digite `julia` e pressione `Enter` para abrir o Julia propriamente dito. O prompt muda para `julia>`; digite `1 + 1`, pressione `Enter`, e Julia responde `2`. Saia com `exit()`.
 
-Mais tarde, `juliaup update` atualiza o Julia e `juliaup status` lista as versões
-instaladas.
+Mais tarde, `juliaup update` atualiza o Julia e `juliaup status` lista as versões instaladas.
 
 ## Passo 3: baixe a pasta do livro {#sec-baixar}
 
-O livro vem com uma pasta que contém os dados de exemplo, o verificador de exercícios
-e a lista de pacotes de que o livro precisa.
+O livro vem com uma pasta que contém os dados de exemplo, o verificador de exercícios e a lista de pacotes de que o livro precisa.
 
 1. Acesse <https://github.com/esantos2ua/EcologicalAnalysesInJulia>.
 2. Clique no botão verde **Code** e depois em **Download ZIP**.
@@ -115,8 +96,7 @@ e a lista de pacotes de que o livro precisa.
    :::
 
 4. Mova a pasta extraída, `EcologicalAnalysesInJulia-main`, para um lugar
-   permanente, como a pasta *Documentos*. Você pode renomeá-la, mas evite deixá-la
-   em *Downloads*, que alguns sistemas limpam automaticamente.
+   permanente, como a pasta *Documentos*. Você pode renomeá-la, mas evite deixá-la em *Downloads*, que alguns sistemas limpam automaticamente.
 
 Dentro dela você deve ver, entre outras coisas, as pastas `data` e `exercises` e os
 arquivos `Project.toml` e `Manifest.toml`.
@@ -124,8 +104,7 @@ arquivos `Project.toml` e `Manifest.toml`.
 ::: {.callout-tip}
 ## Se você já usa git
 
-Clone o repositório em vez de baixar o ZIP; depois, `git pull` traz as atualizações
-do livro:
+Clone o repositório em vez de baixar o ZIP; depois, `git pull` traz as atualizações do livro:
 
 ```bash
 git clone https://github.com/esantos2ua/EcologicalAnalysesInJulia.git
@@ -134,45 +113,25 @@ git clone https://github.com/esantos2ua/EcologicalAnalysesInJulia.git
 
 ## Passo 4: instale o VS Code {#sec-editor}
 
-O **VS Code** com a extensão oficial de Julia é o editor padrão para Julia: oferece
-REPL integrado (o console onde o código roda), navegador de variáveis, painel de
-gráficos, depurador e avaliação linha a linha — o equivalente funcional do RStudio.
+O **VS Code** com a extensão oficial de Julia é o editor padrão para Julia: oferece REPL integrado (o console onde o código roda), navegador de variáveis, painel de gráficos, depurador e avaliação linha a linha — o equivalente funcional do RStudio.
 
 1. **Instale o VS Code** a partir de <https://code.visualstudio.com> e abra-o.
 2. **Instale a extensão de Julia.** Abra o painel de extensões (`Ctrl+Shift+X`;
    `Cmd+Shift+X` no macOS), procure por *Julia* e instale a extensão publicada por
    *julialang*. Ela encontra sozinha o Julia instalado pelo `juliaup`.
 
-Se você prefere uma versão totalmente de código aberto, o
-[VSCodium](https://vscodium.com) é o VS Code compilado a partir do mesmo código-fonte
-sob licença MIT, sem a telemetria da Microsoft, e instala a mesma extensão de Julia
-pelo registro [Open VSX](https://open-vsx.org). O
-[Antigravity](https://antigravity.google), outro editor derivado do VS Code, também
-roda a mesma extensão. Tudo neste livro vale para os três.
-Outras opções são o **Pluto.jl** (notebooks reativos, excelentes para ensino) e
-qualquer editor com suporte a LSP via `LanguageServer.jl`.
+Se você prefere uma versão de código aberto, o [VSCodium](https://vscodium.com) é o VS Code compilado a partir do mesmo código-fonte sob licença MIT, sem a telemetria da Microsoft, e instala a mesma extensão de Julia pelo registro [Open VSX](https://open-vsx.org). O [Antigravity](https://antigravity.google), outro editor derivado do VS Code, também roda a mesma extensão. Tudo neste livro vale para os três (pelo menos até onde eu testei). Outras opções são o **Pluto.jl** (notebooks reativos, excelentes para ensino) e qualquer editor com suporte a LSP via `LanguageServer.jl`.
 
 ## Passo 5: abra a pasta do livro {#sec-vscode-config}
 
-1. **Abra uma pasta, não um arquivo.** No VS Code, use *File → Open Folder…* e
-   escolha a pasta do livro da @sec-baixar. Se o VS Code perguntar se você confia nos
-   autores dos arquivos, responda que sim. A pasta aberta determina tanto onde Julia
-   procura arquivos quanto quais pacotes ela usa.
-2. **Confira o ambiente.** A barra de status, na parte de baixo da janela, deve
-   mostrar `Julia env:` seguido do nome da pasta do livro. Se aparecer algo como
-   `Julia env: v1.12`, clique nessa entrada e escolha a pasta do livro.
-3. **Inicie o REPL.** Abra a paleta de comandos (`Ctrl+Shift+P`; `Cmd+Shift+P` no
-   macOS) e rode *Julia: Start REPL*, ou pressione `Alt+J` e depois `Alt+O`. Um painel
-   se abre embaixo com o prompt `julia>`, já dentro da pasta do livro e do seu
-   ambiente.
+1. **Abra uma pasta, não um arquivo.** No VS Code, use *File → Open Folder…* e escolha a pasta do livro da @sec-baixar. Se o VS Code perguntar se você confia nos autores dos arquivos, responda que sim. A pasta aberta determina tanto onde Julia procura arquivos quanto quais pacotes ela usa.
+2. **Confira o ambiente.** A barra de status, na parte de baixo da janela, deve mostrar `Julia env:` seguido do nome da pasta do livro. Se aparecer algo como `Julia env: v1.12`, clique nessa entrada e escolha a pasta do livro.
+3. **Inicie o REPL.** Abra a paleta de comandos (`Ctrl+Shift+P`; `Cmd+Shift+P` no macOS) e rode *Julia: Start REPL*, ou pressione `Alt+J` e depois `Alt+O`. Um painel se abre embaixo com o prompt `julia>`, já dentro da pasta do livro e do seu ambiente.
 
 ::: {.r-equivalent}
 **Em R**
 
-Abrir uma pasta no VS Code cumpre o papel de abrir um `.Rproj` no RStudio: define o
-diretório de trabalho. Diferente do RStudio, também seleciona o ambiente de pacotes
-(@sec-ambientes), de modo que as versões certas dos pacotes vêm junto
-automaticamente.
+Abrir uma pasta no VS Code cumpre o papel de abrir um `.Rproj` no RStudio: define o diretório de trabalho. Diferente do RStudio, também seleciona o ambiente de pacotes (@sec-ambientes), de modo que as versões certas dos pacotes vêm junto automaticamente.
 :::
 
 ## Passo 6: instale os pacotes do livro {#sec-instanciar}
@@ -184,23 +143,26 @@ using Pkg
 Pkg.instantiate()
 ```
 
-Isso lê o `Manifest.toml`, baixa cada pacote que o livro usa na versão exata listada
-ali e os compila.
+Isso lê o `Manifest.toml`, baixa cada pacote que o livro usa na versão exata listada ali e os compila.
 
 ::: {.callout-warning}
 ## Isso demora
 
-Na primeira vez, `Pkg.instantiate()` pode levar de vários minutos a meia hora,
-dependendo do seu computador e da sua conexão. Os pacotes de gráficos e de modelos
-são grandes, e Julia os compila antecipadamente para que rodem rápido depois. Linhas
-de progresso continuam aparecendo enquanto ele trabalha; deixe terminar e não feche
+Na primeira vez, `Pkg.instantiate()` pode levar de vários minutos a meia hora, dependendo do seu computador e da sua conexão. Os pacotes de gráficos e de modelos são grandes, e Julia os compila antecipadamente para que rodem rápido depois. Linhas de progresso continuam aparecendo enquanto ele trabalha; deixe terminar e não feche
 o VS Code. Você só faz isso uma vez por computador.
+:::
+
+::: {.callout-note}
+## O que significa compilar?
+
+**Compilar** significa traduzir o código legível por humanos diretamente para linguagem de máquina — as instruções que o processador do computador executa nativamente.
+
+Enquanto linguagens como R e Python interpretam o código linha por linha durante a execução, Julia faz essa tradução com antecedência (na chamada *pré-compilação*). Isso exige paciência inicial ao instalar os pacotes, mas é o que garante que suas análises e gráficos rodem depois com velocidade máxima (veja mais sobre a latência de compilação na @sec-latencia).
 :::
 
 ## Passo 7: confira se tudo funciona {#sec-conferir-instalacao}
 
-A pasta do livro inclui um verificador, que você também vai usar nos exercícios a
-partir do @sec-julia-basico. Carregue-o e peça que ele confira a sua instalação:
+A pasta do livro inclui um verificador, que você também vai usar nos exercícios a partir do @sec-julia-basico. Carregue-o e peça que ele confira a sua instalação:
 
 ```julia
 include("exercises/checar.jl")
@@ -218,8 +180,7 @@ Se estiver tudo certo, você verá:
 Tudo pronto. Siga para o primeiro script.
 ```
 
-Uma linha com ✗ diz o que está errado e como corrigir; a @sec-problemas tem mais
-detalhes.
+Uma linha com ✗ diz o que está errado e como corrigir; a @sec-problemas tem mais detalhes.
 
 ## Passo 8: um primeiro script {#sec-primeiro-script}
 
