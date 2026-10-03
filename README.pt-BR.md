@@ -6,7 +6,7 @@
 
 [English](README.md) · **Português**
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23126524.svg)](https://doi.org/10.5281/zenodo.23126524)
 [![Ler online](https://img.shields.io/badge/ler-online-9558b2)](https://esantos2ua.github.io/EcologicalAnalysesInJulia/pt/)
 [![Julia 1.12](https://img.shields.io/badge/Julia-1.12-9558b2?logo=julia&logoColor=white)](https://julialang.org)
 [![Texto: CC BY-NC-SA 4.0](https://img.shields.io/badge/texto-CC%20BY--NC--SA%204.0-lightgrey)](LICENSE-TEXT)
@@ -123,7 +123,7 @@ Cada versão do livro é arquivada no Zenodo com um DOI próprio. O DOI abaixo s
 Cada release traz os PDFs das duas edições.
 
 > Santos E. 2026. *Ecological Analyses in Julia* (v1.0.0). Zenodo.
-> <https://doi.org/10.5281/zenodo.XXXXXXX>
+> <https://doi.org/10.5281/zenodo.23126524>
 
 Processo de lançamento de versões: [RELEASE.md](RELEASE.md).
 

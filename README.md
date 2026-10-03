@@ -6,7 +6,7 @@
 
 **English** · [Português](README.pt-BR.md)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23126524.svg)](https://doi.org/10.5281/zenodo.23126524)
 [![Read online](https://img.shields.io/badge/read-online-9558b2)](https://esantos2ua.github.io/EcologicalAnalysesInJulia/en/)
 [![Julia 1.12](https://img.shields.io/badge/Julia-1.12-9558b2?logo=julia&logoColor=white)](https://julialang.org)
 [![Text: CC BY-NC-SA 4.0](https://img.shields.io/badge/text-CC%20BY--NC--SA%204.0-lightgrey)](LICENSE-TEXT)
@@ -137,7 +137,7 @@ which powers GitHub's "Cite this repository" button. Each release includes PDFs 
 editions.
 
 > Santos E. 2026. *Ecological Analyses in Julia* (v1.0.0). Zenodo.
-> <https://doi.org/10.5281/zenodo.XXXXXXX>
+> <https://doi.org/10.5281/zenodo.23126524>
 
 Release process (in Portuguese): [RELEASE.md](RELEASE.md).
 

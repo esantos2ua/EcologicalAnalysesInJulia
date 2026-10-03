@@ -15,6 +15,7 @@ authors:
     affiliation: University of Alberta
     orcid: "https://orcid.org/0000-0002-0434-3655"
 version: 1.0.0
+doi: 10.5281/zenodo.23126524
 date-released: "2026-10-03"
 license:
   - CC-BY-NC-SA-4.0
@@ -30,7 +31,7 @@ keywords:
   - book
 # What GitHub's "Cite this repository" button shows. CFF's top-level `type`
 # only allows software/dataset; this makes the suggested citation a book.
-# After the first Zenodo release, add `doi:` (the concept DOI) here too.
+# `doi` here and at the top is the Zenodo concept DOI (always the latest version).
 preferred-citation:
   type: book
   title: "Ecological Analyses in Julia"
@@ -41,6 +42,7 @@ preferred-citation:
       orcid: "https://orcid.org/0000-0002-0434-3655"
   year: 2026
   version: 1.0.0
+  doi: 10.5281/zenodo.23126524
   publisher:
     name: Zenodo
   url: "https://esantos2ua.github.io/EcologicalAnalysesInJulia/"
