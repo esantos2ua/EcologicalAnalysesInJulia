@@ -21,10 +21,11 @@ format:
     number-sections: true
     colorlinks: true
     filters:
-      - ../_shared/pdf-fit-figures.lua
+      - ../_shared/pdf-fit.lua
     include-in-header:
       text: |
         % wrap long code lines and console output instead of running off the page
+        \usepackage{adjustbox}
         \usepackage{fvextra}
         \RecustomVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,breakanywhere,commandchars=\\\{\}}
         \RecustomVerbatimEnvironment{verbatim}{Verbatim}{breaklines,breakanywhere}

@@ -1,0 +1,16 @@
+# Histórico de versões {.unnumbered}
+
+Cada versão do livro é arquivada no Zenodo com um DOI próprio (veja "Como citar" no
+[README](https://github.com/esantos2ua/EcologicalAnalysesInJulia#readme)). Os números
+seguem o versionamento semântico: a mudança no primeiro número indica uma reorganização
+grande, no segundo, conteúdo novo, e no terceiro, correções.
+
+## v1.0.0 (2026-10-02) {.unnumbered}
+
+Primeira versão citável.
+
+- Capítulos 1 a 11, em português e inglês: introdução, da pergunta ao modelo (só o
+  plano), pré-requisitos, noções básicas de Julia, manipulação de dados, visualização,
+  análise exploratória, modelos lineares, GLMs, funções, e reamostragem e simulação.
+- Exercícios com correção automática (`checar`).
+- PDFs das duas edições.

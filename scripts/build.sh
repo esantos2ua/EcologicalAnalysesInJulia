@@ -19,6 +19,9 @@ rm -rf _book
 mkdir -p _book
 cp -R pt/_book _book/pt
 cp -R en/_book _book/en
+# book PDFs (built by .github/workflows/pdf.yml) behind each edition's download button
+[ -f pdf/analises-ecologicas-em-julia-pt.pdf ] && cp pdf/analises-ecologicas-em-julia-pt.pdf _book/pt/
+[ -f pdf/ecological-analyses-in-julia-en.pdf ] && cp pdf/ecological-analyses-in-julia-en.pdf _book/en/
 
 cat > _book/index.html <<'HTML'
 <!doctype html>

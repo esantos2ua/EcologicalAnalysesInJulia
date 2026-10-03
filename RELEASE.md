@@ -27,6 +27,10 @@ recebem DOI.
    citação como livro que o GitHub mostra), mude também `version` e `year`. Se
    entrou alguém novo como autor, acrescente nos dois lugares, com o ORCID.
 
+   Atualize também o histórico de versões no fim do livro: `pt/historico.qmd` e
+   `en/changelog.qmd`. Acrescente a versão nova no topo, com a data e o que mudou.
+   O mesmo texto serve para a descrição do release no passo 5.
+
 2. **Gere o `.zenodo.json`.**
 
    ```bash
