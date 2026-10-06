@@ -88,9 +88,10 @@ juliaup default 1.12
 ```
 
 and check again with `julia --version`, which should print something like
-`julia version 1.12.6`. A newer version also works, but then `Pkg.instantiate()` in
-Step 6 warns that `Manifest.toml` was resolved with a different Julia version, and some
-package versions may not be exactly the book's.
+`julia version 1.12.6`. Use 1.12 even if you already have a newer version: with another
+version, `Pkg.instantiate()` in Step 6 warns that `Manifest.toml` was resolved with a
+different Julia version, some package versions may not be exactly the book's, and
+`check("setup")` in Step 7 flags the problem.
 
 Now type `julia` and press `Enter` to start Julia itself. The
 prompt changes to `julia>`; type `1 + 1`, press `Enter`, and Julia answers `2`. Leave

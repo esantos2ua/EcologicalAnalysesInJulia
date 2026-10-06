@@ -178,11 +178,13 @@ function check(id::AbstractString)
     deps = collect(keys(get(TOML.parsefile(project), "deps", Dict())))
     missing_pkgs = filter(p -> Base.find_package(p) === nothing, sort(deps))
     items = [
-        (VERSION >= v"1.10",
+        # The book is pinned to Julia 1.12, the version Manifest.toml was resolved with.
+        ((VERSION.major, VERSION.minor) == (1, 12),
          ("Julia $VERSION", "Julia $VERSION"),
-         ("Julia $VERSION is too old; the book needs 1.10 or newer. Run `juliaup update`.",
-          "Julia $VERSION é antigo demais; o livro precisa da 1.10 ou mais nova. " *
-          "Rode `juliaup update`.")),
+         ("Julia $VERSION, but the book uses Julia 1.12. Run `juliaup add 1.12` and " *
+          "`juliaup default 1.12` in a terminal, then restart the REPL.",
+          "Julia $VERSION, mas o livro usa o Julia 1.12. Rode `juliaup add 1.12` e " *
+          "`juliaup default 1.12` num terminal, e reinicie o REPL.")),
         (samefile(pwd(), book),
          ("Working folder is the book folder", "A pasta de trabalho é a pasta do livro"),
          ("Working folder is $(pwd()), not the book folder. Use File → Open Folder… " *
