@@ -73,19 +73,37 @@ writing the packages first (something well outside my scope).
 | 10 | Writing your own functions | Base, `Test` |
 | 11 | Resampling and simulation | `Random`, `StatsBase.jl`, `GLM.jl`, `HypothesisTests.jl` |
 
+## Before you start
+
+- **To follow the book**, you only need Julia and VS Code. Chapter 3
+  ([online](https://esantos2ua.github.io/EcologicalAnalysesInJulia/en/03-prerequisites.html))
+  walks through the installation step by step, on Windows, macOS and Linux.
+- **Exercises** are checked from the book folder with `include("exercises/check.jl")`
+  (or `include("exercises/checar.jl")` in Portuguese), then `check("4.1")` and so on.
+- **To render the book yourself**, you also need:
+  - Julia, installed with [juliaup](https://julialang.org/install/). The book is
+    built with Julia 1.12 (`juliaup add 1.12`, then `juliaup default 1.12`);
+  - [Quarto](https://quarto.org/docs/get-started/) 1.5 or later;
+  - bash for `scripts/build.sh` (on Windows, Git Bash or WSL; or run the two
+    `quarto render` commands below instead).
+
 ## Building
 
 ```bash
-julia --project=. scripts/setup.jl     # install dependencies (first time only)
-julia --project=. scripts/make_data.jl # generate the example dataset
+julia --project=. scripts/setup.jl     # install the pinned package versions (first time only)
 ./scripts/build.sh                     # render both editions into _book/
 ```
 
-To render a single edition:
+To render a single edition (this also works in Windows PowerShell):
 
 ```bash
 quarto render pt   # or: quarto render en
 ```
+
+`data/ponds.csv` is committed, and it is the file the text and the exercise checker
+quote numbers from. Regenerate it with `julia --project=. scripts/make_data.jl` only if
+you change the simulation: random streams can change between package or Julia versions,
+so a rebuilt file may not match the numbers in the book.
 
 Live preview while writing:
 
@@ -102,9 +120,10 @@ en/_quarto.yml       English book config  -> en/_book (copied to _book/en)
 pt/_freeze en/_freeze  committed execution cache (only changed chapters re-run)
 _shared/common.yml   shared config (Julia engine, format, execute options)
 _shared/             bibliography, SCSS themes, HTML header
-data/ponds.csv       simulated example dataset (regenerate with scripts/make_data.jl)
+data/ponds.csv       simulated example dataset (made by scripts/make_data.jl)
+data/atlantic_bird_traits.csv  bird traits for chapter 7 (made by scripts/prepare_birds.jl)
 exercises/           exercise checker: check.jl (en) / checar.jl (pt) load Checks.jl
-scripts/             environment setup, data generation, build, zenodo.py
+scripts/             environment setup, data preparation, build, zenodo.py
 pdf/                 book PDFs, built by the "Build PDFs for release" workflow
 Project.toml         the book's Julia environment
 Manifest.toml        pinned package versions

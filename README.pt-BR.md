@@ -68,19 +68,39 @@ funcional, dados geoespaciais) estão **fora do escopo por enquanto**: Julia ain
 | 10 | Escrevendo suas próprias funções | Base, `Test` |
 | 11 | Reamostragem e simulação | `Random`, `StatsBase.jl`, `GLM.jl`, `HypothesisTests.jl` |
 
+## Antes de começar
+
+- **Para acompanhar o livro**, você só precisa de Julia e do VS Code. O capítulo 3
+  ([online](https://esantos2ua.github.io/EcologicalAnalysesInJulia/pt/03-pre-requisitos.html))
+  mostra a instalação passo a passo, no Windows, no macOS e no Linux.
+- **Os exercícios** são conferidos a partir da pasta do livro com
+  `include("exercises/checar.jl")` (ou `include("exercises/check.jl")` em inglês), e
+  depois `checar("4.1")` e assim por diante.
+- **Para gerar o livro você mesmo**, também precisa de:
+  - Julia, instalado com o [juliaup](https://julialang.org/install/). O livro é gerado
+    com o Julia 1.12 (`juliaup add 1.12` e depois `juliaup default 1.12`);
+  - [Quarto](https://quarto.org/docs/get-started/) 1.5 ou mais recente;
+  - bash para o `scripts/build.sh` (no Windows, Git Bash ou WSL; ou rode os dois
+    comandos `quarto render` abaixo).
+
 ## Como gerar o livro
 
 ```bash
-julia --project=. scripts/setup.jl     # instala as dependências (só na primeira vez)
-julia --project=. scripts/make_data.jl # gera os dados de exemplo
+julia --project=. scripts/setup.jl     # instala as versões fixas dos pacotes (só na primeira vez)
 ./scripts/build.sh                     # gera as duas edições em _book/
 ```
 
-Para gerar só uma edição:
+Para gerar só uma edição (isso também funciona no PowerShell do Windows):
 
 ```bash
 quarto render pt   # ou: quarto render en
 ```
+
+O `data/ponds.csv` já está no repositório, e é dele que vêm os números citados no texto
+e usados pelo verificador de exercícios. Gere-o de novo com
+`julia --project=. scripts/make_data.jl` só se mudar a simulação: os geradores
+aleatórios podem mudar entre versões de pacotes ou de Julia, e um arquivo novo pode não
+bater com os números do livro.
 
 Pré-visualização ao vivo enquanto escreve:
 
@@ -97,9 +117,10 @@ en/_quarto.yml       configuração da edição em inglês -> en/_book (copiado 
 pt/_freeze en/_freeze  cache de execução versionado (só capítulos alterados rodam de novo)
 _shared/common.yml   configuração comum (motor Julia, formato, opções de execução)
 _shared/             bibliografia, temas SCSS, cabeçalho HTML
-data/ponds.csv       dados de exemplo simulados (gere de novo com scripts/make_data.jl)
+data/ponds.csv       dados de exemplo simulados (gerados por scripts/make_data.jl)
+data/atlantic_bird_traits.csv  atributos de aves do capítulo 7 (gerados por scripts/prepare_birds.jl)
 exercises/           corretor de exercícios: check.jl (en) / checar.jl (pt) carregam Checks.jl
-scripts/             instalação do ambiente, geração de dados, build, zenodo.py
+scripts/             instalação do ambiente, preparação dos dados, build, zenodo.py
 pdf/                 PDFs do livro, gerados pelo workflow "Build PDFs for release"
 Project.toml         ambiente Julia do livro
 Manifest.toml        versões fixas dos pacotes
@@ -112,7 +133,7 @@ Manifest.toml        versões fixas dos pacotes
 
 ## Regras de fontes
 
-Algumsas regras que estou tentando seguir:
+Algumas regras que estou tentando seguir:
 
 1. **Afirmações precisam de fontes.** Afirmações comparativas ou sobre desempenho (entre o R e Julia) citam referências verificáveis.
 2. **Avaliações do ecossistema têm data.** Afirmações sobre o que falta em Julia indicam o mês em que foram verificadas, porque ficam desatualizadas.
