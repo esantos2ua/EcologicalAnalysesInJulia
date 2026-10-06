@@ -3,6 +3,7 @@ name: Render and publish book
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -10,8 +11,9 @@ permissions:
   pages: write
   id-token: write
 
+# Pull requests get their own group, so a PR check never cancels a deploy from main.
 concurrency:
-  group: pages
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.ref) || 'pages' }}
   cancel-in-progress: true
 
 jobs:
@@ -19,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history, to see which files this push or PR changed
 
       # Use the exact Julia version that Manifest.toml was resolved with;
       # QuartoNotebookRunner refuses to run notebooks on a different patch version.
@@ -42,14 +46,32 @@ jobs:
       - name: Regenerate example dataset
         run: julia --project=. scripts/make_data.jl
 
+      # freeze: auto only re-runs chapters whose .qmd changed. When the environment,
+      # the data or the exercise checker changes, drop the cache so every chapter runs
+      # again (this also re-checks every exercise solution, via Checks.verify).
+      - name: Drop the execution cache if the environment, data or checker changed
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "No base commit to compare with; keeping the cache."
+          elif git diff --name-only "$BASE" HEAD | grep -qE '^(Project\.toml|Manifest\.toml|data/|exercises/)'; then
+            echo "Environment, data or checker changed; re-running every chapter."
+            rm -rf pt/_freeze en/_freeze
+          else
+            echo "Only chapter sources changed; using the cache."
+          fi
+
       - name: Render both editions
         run: ./scripts/build.sh
 
       - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
         with:
           path: _book
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:
