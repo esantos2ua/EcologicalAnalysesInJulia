@@ -3,12 +3,17 @@
 # they are accepted within Monte Carlo error of a long-run reference value,
 # computed once with 200 000 resamples or 10 000 simulations.
 
-# A number within `tol` of `want`, with traps as in `expect_number`.
-function expect_near(x, want, tol; traps = (), hint = ("", ""))
+# A number within `tol` of `want`, with traps as in `expect_number`. `exact` traps
+# are checked before the tolerance, for wrong answers that fall inside it (they
+# need a tight `rtol`, so a correct random answer never matches them by chance).
+function expect_near(x, want, tol; traps = (), exact = (), hint = ("", ""))
     x isa AbstractVector && length(x) == 1 && (x = only(x))
     x isa Number || return (
         "Expected a single number, got $(show_value(x)).",
         "Esperava um único número, recebi $(show_value(x)).")
+    for (value, rtol, message) in exact
+        isapprox(x, value; rtol) && return message
+    end
     abs(x - want) <= tol && return nothing
     for (value, rtol, message) in traps
         isapprox(x, value; rtol) && return message
@@ -70,10 +75,12 @@ merge!(EXERCISES, Dict{String, Function}(
     end,
 
     # 11.1 — permutation test for a difference in means
-    "11.1" => x -> expect_near(x, 0.0367, 0.01; hint = MORE_RESAMPLES, traps = (
+    # The Welch p-value (0.0370) lies inside the tolerance, so it is an `exact` trap.
+    "11.1" => x -> expect_near(x, 0.0367, 0.01; hint = MORE_RESAMPLES, exact = (
         (0.03697255308114836, 1e-6, (
             "That is Welch's t test. Here the p-value should come from your permutations.",
-            "Esse é o teste t de Welch. Aqui o valor-p deve vir das suas permutações.")),
+            "Esse é o teste t de Welch. Aqui o valor-p deve vir das suas permutações.")),),
+        traps = (
         (0.0184, 0.3, (
             "That looks like a one-sided p-value. Compare absolute values, " *
             "`abs(d) >= abs(observed)`, to get the two-sided one.",
@@ -96,13 +103,15 @@ merge!(EXERCISES, Dict{String, Function}(
             "quantiles of your bootstrap means.",
             "Esse é o intervalo t, não o bootstrap. Tire os quantis de 2,5% e 97,5% das " *
             "suas médias bootstrap.")
+        # The ends sit on a 1/46 grid; with 9 999 resamples the upper one can drift
+        # 3 or 4 steps, so ± 0.1. The t interval (9.384) is caught above.
         want = [9.5, 12.956521739130435]
-        all(abs.(x .- want) .<= 0.07) && return nothing
+        all(abs.(x .- want) .<= 0.1) && return nothing
         return ("Got $(show_value(round.(x; digits = 2))); expected about " *
-                "$(show_value(round.(want; digits = 2))) (± 0.07). Did you use the Amazon " *
+                "$(show_value(round.(want; digits = 2))) (± 0.1). Did you use the Amazon " *
                 "ponds with canopy recorded, and 9 999 or more resamples?",
                 "Recebi $(show_value(round.(x; digits = 2))); esperava cerca de " *
-                "$(show_value(round.(want; digits = 2))) (± 0,07). Você usou as lagoas da " *
+                "$(show_value(round.(want; digits = 2))) (± 0,1). Você usou as lagoas da " *
                 "Amazônia com dossel medido, e 9 999 reamostragens ou mais?")
     end,
 
