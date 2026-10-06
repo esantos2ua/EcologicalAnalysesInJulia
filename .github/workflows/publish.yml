@@ -43,9 +43,6 @@ jobs:
         with:
           version: '1.9.37'
 
-      - name: Regenerate example dataset
-        run: julia --project=. scripts/make_data.jl
-
       # freeze: auto only re-runs chapters whose .qmd changed. When the environment,
       # the data or the exercise checker changes, drop the cache so every chapter runs
       # again (this also re-checks every exercise solution, via Checks.verify).
