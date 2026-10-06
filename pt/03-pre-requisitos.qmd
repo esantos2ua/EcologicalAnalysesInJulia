@@ -66,7 +66,16 @@ Quando terminar, **feche o terminal e abra um novo** — o comando `julia` só f
 julia --version
 ```
 
-Deve aparecer algo como `julia version 1.12.6`. Qualquer versão a partir da 1.10 funciona com este livro. Agora digite `julia` e pressione `Enter` para abrir o Julia propriamente dito. O prompt muda para `julia>`; digite `1 + 1`, pressione `Enter`, e Julia responde `2`. Saia com `exit()`.
+O livro foi gerado com o Julia 1.12, mas o `juliaup` instala a versão estável mais recente, que pode ser mais nova (em outubro de 2026, a 1.13). Para usar a mesma versão do livro, rode:
+
+```bash
+juliaup add 1.12
+juliaup default 1.12
+```
+
+e confira de novo com `julia --version`, que deve mostrar algo como `julia version 1.12.6`. Uma versão mais nova também funciona, mas aí o `Pkg.instantiate()` do Passo 6 avisa que o `Manifest.toml` foi resolvido com outra versão de Julia, e algumas versões de pacotes podem não ser exatamente as do livro.
+
+Agora digite `julia` e pressione `Enter` para abrir o Julia propriamente dito. O prompt muda para `julia>`; digite `1 + 1`, pressione `Enter`, e Julia responde `2`. Saia com `exit()`.
 
 Mais tarde, `juliaup update` atualiza o Julia e `juliaup status` lista as versões instaladas.
 
@@ -221,6 +230,8 @@ primeira célula e pressione `Alt+Enter` para rodá-la; depois siga célula por 
 - **`describe` é a sua primeira checagem dos dados.** Ele mostra que `canopy` tem 7
   valores ausentes e que `area_m2` é fortemente assimétrica à direita (mediana perto
   de 149 m², máximo perto de 2000 m²) — por isso o gráfico usa escala logarítmica.
+- **`xlabel = ...` e `xscale = log10` são argumentos nomeados**, passados pelo nome
+  e não pela posição, como em R. A @sec-fn-argumentos explica os detalhes.
 
 Os atalhos que você vai usar o tempo todo:
 

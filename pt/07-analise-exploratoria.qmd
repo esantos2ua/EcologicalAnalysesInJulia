@@ -185,6 +185,9 @@ Colunas categóricas merecem, antes de tudo, uma tabela dos seus níveis:
 (idade = countmap(birds.age), sexo = countmap(birds.sex))
 ```
 
+Os parênteses com nomes formam uma **tupla nomeada** (*named tuple*): uma tupla
+(@sec-vetores) em que cada valor tem um nome. Ela volta na @sec-fn-calculo.
+
 Há **dois tipos de faltante** aqui. `missing` quer dizer que a informação nunca foi
 anotada; `"Unknown"` quer dizer que alguém olhou a ave e não conseguiu determinar. Não é
 a mesma coisa: um estudo de razão sexual deve contar os desconhecidos, mas não os não

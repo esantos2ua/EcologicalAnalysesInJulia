@@ -151,7 +151,9 @@ cv_pos(x, percent = true) = std(x) / mean(x) * (percent ? 100 : 1)
 cv_pos(ponds.richness), cv_pos(ponds.richness, false)
 ```
 
-A **keyword argument** goes after a semicolon and is always set by name:
+A **keyword argument** goes after a semicolon and is always set by name. The semicolon
+is required when you define the function; when you call it, a comma also works, as in
+`sort(df, :col, rev = true)` in @sec-tidier:
 
 ```{julia}
 #| label: keyword
@@ -179,8 +181,8 @@ rounded_cv(ponds.richness), rounded_cv(ponds.richness; percent = false, digits =
 **In R**
 
 R has one kind of argument, which can be given by position or by name. Julia separates
-them: arguments before the `;` are positional, those after are keywords and must be
-named. `kwargs...` plays the role of R's `...` when forwarding options to another
+them: in a definition, arguments before the `;` are positional, those after are keywords
+and must be named. `kwargs...` plays the role of R's `...` when forwarding options to another
 function.
 :::
 
@@ -212,7 +214,7 @@ end
 check("10.2", standardize)
 ```
 
-`std(x)` is computed on the original `x`, so it is the same whether or not you center.
+`std(x)` is computed on the original `x`, so it is the same whether or not you centre.
 :::
 :::
 

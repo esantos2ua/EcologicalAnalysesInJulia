@@ -48,7 +48,10 @@ alturas = [12.4, 8.1, 15.7, 9.3, 11.0]
 length(alturas), first(alturas), last(alturas)
 ```
 
-Duas diferenças imediatas em relação ao R:
+Separar valores por vírgulas cria uma **tupla**: um grupo fixo de valores, mostrado
+entre parênteses. É assim que Julia devolve vários resultados de uma vez.
+
+Duas coisas funcionam como em R, e uma não:
 
 ```{julia}
 #| label: indexacao
@@ -58,7 +61,8 @@ alturas[2:4]      # intervalos são inclusivos nas duas pontas
 
 ```{julia}
 #| label: sem-reciclagem
-# Julia NÃO recicla vetores silenciosamente:
+# Julia NÃO recicla vetores silenciosamente.
+# try ... catch captura o erro e o mostra, em vez de interromper o livro:
 try
     [1, 2, 3] + [1, 2]
 catch e
@@ -137,7 +141,8 @@ padroniza.(alturas, mean(alturas), std(alturas))
 ## A regra do ponto
 
 Se você quer "aplicar isso a cada elemento", ponha um ponto. `f.(x)`, `x .+ y`,
-`x .== y`. Uma cadeia inteira pode ser pontuada de uma vez com `@.`:
+`x .== y`. Uma cadeia inteira pode ser pontuada de uma vez com `@.`, um **macro**
+(@sec-convencoes):
 
 ```{julia}
 #| label: macro-ponto
@@ -196,6 +201,9 @@ comunidade = [45, 12, 0, 8, 23, 0, 3]
 riqueza(comunidade), shannon(comunidade)
 ```
 
+`>(0)` é uma função que pergunta "é maior que 0?". `count(>(0), x)` conta quantos
+elementos de `x` respondem que sim, e `filter(>(0), x)` mantém só esses.
+
 ::: {.callout-note .exercise}
 ## Sua vez 4.3 — Índice de Simpson
 
@@ -249,6 +257,10 @@ diversidade(x::Vector{<:AbstractFloat}) = "índice para dados de cobertura"
 
 diversidade([45, 12, 8]), diversidade([0.45, 0.12, 0.08])
 ```
+
+`::` declara o tipo que o argumento deve ter, e `Vector{<:Integer}` quer dizer "um
+vetor de algum tipo de inteiro" (`<:` se lê "é um subtipo de"). Um vetor de números
+decimais não serve para o primeiro método, e Julia escolhe o segundo.
 
 Na prática, isso significa que quando alguém define um novo tipo de dado ecológico,
 `mean`, `plot` e `fit` passam a funcionar com ele desde que os métodos apropriados
@@ -398,12 +410,16 @@ end
 resultado
 ```
 
+`String[]` cria um vetor de textos vazio, que `push!` vai enchendo. `enumerate`
+entrega a posição `i` e o valor `a` de cada elemento. Dentro de um texto, `$i` insere
+o valor de `i` (é a **interpolação**, como `paste0("espécie ", i)` em R).
+
 ::: {.callout-tip}
 ## Loops são rápidos
 
 Ao contrário do R, você não precisa vetorizar por performance. Escreva o loop que
 expressa a ideia. Isso muda como se escrevem modelos nulos e simulações — assunto que
-volta nos capítulos de ecologia de comunidades de uma futura edição.
+volta no @sec-reamostragem (veja a @sec-modelo-nulo).
 :::
 
 ::: {.callout-note .exercise}
@@ -463,7 +479,7 @@ Checks.verify("4.6", shannon_laco)
 | `f.(x)` | aplica `f` elemento a elemento |
 | `@f x` | macro, não função — reescreve código antes de rodar |
 | `Tipo` | tipos em `CamelCase` |
-| `nome_funcao` | funções em minúsculas, geralmente sem separador |
+| `nome_funcao` | funções em minúsculas; sublinhados são bem-vindos quando ajudam a leitura (`resumo_faltantes`) |
 
 ## Desafios {.unnumbered}
 

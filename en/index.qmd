@@ -57,7 +57,8 @@ Throughout the text, boxes like this one translate from R's idiom into Julia's:
 
 `dplyr::filter(data, height > 10)` corresponds to `@filter(data, height > 10)` in
 `TidierData.jl`. The semantics are the same; the difference is that `@filter` is a
-macro rather than a function.
+macro rather than a function: code that rewrites your code before it runs
+(@sec-conventions).
 :::
 
 ## Relationship to *Análises Ecológicas no R* {.unnumbered}
@@ -127,5 +128,5 @@ In BibTeX:
 ## License {.unnumbered}
 
 Text under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/);
-code under the [MIT license](https://opensource.org/licenses/MIT). Contributions,
+code under the [MIT licence](https://opensource.org/licenses/MIT). Contributions,
 corrections and bug reports are welcome in the repository.

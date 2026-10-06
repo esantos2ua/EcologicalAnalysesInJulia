@@ -178,6 +178,9 @@ Categorical columns deserve a table of their levels before anything else:
 (age = countmap(birds.age), sex = countmap(birds.sex))
 ```
 
+Parentheses with names make a **named tuple**: a tuple (@sec-vectors) in which each
+value has a name. It returns in @sec-fn-calculation.
+
 There are **two kinds of missing** here. `missing` means the information was never
 recorded; `"Unknown"` means someone looked at the bird and could not tell. They are not
 the same thing: a study of sex ratios should count the unknowns, but not the unrecorded.

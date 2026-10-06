@@ -45,7 +45,10 @@ heights = [12.4, 8.1, 15.7, 9.3, 11.0]
 length(heights), first(heights), last(heights)
 ```
 
-Two immediate differences from R:
+Separating values with commas makes a **tuple**: a fixed group of values, shown in
+parentheses. This is how Julia returns several results at once.
+
+Two things work as in R, and one does not:
 
 ```{julia}
 #| label: indexing
@@ -55,7 +58,8 @@ heights[2:4]      # ranges are inclusive at both ends
 
 ```{julia}
 #| label: no-recycling
-# Julia does NOT silently recycle vectors:
+# Julia does NOT silently recycle vectors.
+# try ... catch captures the error and shows it, instead of stopping the book:
 try
     [1, 2, 3] + [1, 2]
 catch e
@@ -134,7 +138,7 @@ standardize.(heights, mean(heights), std(heights))
 ## The dot rule
 
 If you mean "apply this to each element", add a dot. `f.(x)`, `x .+ y`, `x .== y`.
-An entire chain can be dotted at once with `@.`:
+An entire chain can be dotted at once with `@.`, a **macro** (@sec-conventions):
 
 ```{julia}
 #| label: dot-macro
@@ -193,6 +197,9 @@ community = [45, 12, 0, 8, 23, 0, 3]
 richness(community), shannon(community)
 ```
 
+`>(0)` is a function that asks "is this greater than 0?". `count(>(0), x)` counts the
+elements of `x` for which the answer is yes, and `filter(>(0), x)` keeps only those.
+
 ::: {.callout-note .exercise}
 ## Your turn 4.3 — Simpson's index
 
@@ -246,6 +253,10 @@ diversity(x::Vector{<:AbstractFloat}) = "index for cover data"
 
 diversity([45, 12, 8]), diversity([0.45, 0.12, 0.08])
 ```
+
+`::` declares the type an argument must have, and `Vector{<:Integer}` means "a vector
+of some kind of integer" (`<:` reads "is a subtype of"). A vector of decimal numbers
+does not fit the first method, so Julia picks the second.
 
 In practice this means that when someone defines a new ecological data type, `mean`,
 `plot` and `fit` start working with it as soon as the appropriate methods are defined
@@ -393,12 +404,16 @@ end
 result
 ```
 
+`String[]` makes an empty vector of strings, which `push!` fills. `enumerate` gives
+the position `i` and the value `a` of each element. Inside a string, `$i` inserts the
+value of `i` (this is **interpolation**, like `paste0("species ", i)` in R).
+
 ::: {.callout-tip}
 ## Loops are fast
 
 Unlike R, you do not need to vectorize for performance. Write the loop that expresses
 the idea. This changes how null models and simulations are written — a topic that
-returns in the community-ecology chapters of a future edition.
+returns in @sec-resampling (see @sec-null-model).
 :::
 
 ::: {.callout-note .exercise}
@@ -457,7 +472,7 @@ Checks.verify("4.6", shannon_loop)
 | `f.(x)` | applies `f` elementwise |
 | `@f x` | a macro, not a function — rewrites code before running |
 | `Type` | types in `CamelCase` |
-| `function_name` | functions lowercase, usually without separators |
+| `function_name` | functions in lowercase; underscores are fine when they help readability (`missing_summary`) |
 
 ## Challenges {.unnumbered}
 

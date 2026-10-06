@@ -26,6 +26,10 @@ ponds = CSV.read(joinpath("..", "data", "ponds.csv"), DataFrame)
 first(ponds, 5)
 ```
 
+The book is rendered from inside the `en/` folder, hence the `".."` (the folder above)
+in this and the following chapters. In your own session, with the book folder open, use
+`joinpath("data", "ponds.csv")`, as in the exercise box below.
+
 ```{julia}
 #| label: structure
 describe(ponds, :eltype, :nmissing, :mean, :min, :max)
@@ -488,8 +492,12 @@ combine(
 )
 ```
 
-Same result as the `@group_by`/`@summarize` above. Use Tidier to write, and recognize
-the native form to read.
+In Tidier, this would be `@group_by(region)` followed by
+`@summarize(mean_rich = mean(richness), n = n())`: the same idea as the
+`@group_by`/`@summarize` above, but grouped by region only. `:region` is a
+**Symbol**, Julia's way of naming a column, and `:richness => mean => :mean_rich` reads
+"take `richness`, apply `mean` and call the result `mean_rich`". Use Tidier to write,
+and recognize the native form to read.
 
 ::: {.callout-note .exercise}
 ## Your turn 5.7 — The same, natively

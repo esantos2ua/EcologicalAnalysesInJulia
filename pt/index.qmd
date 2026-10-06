@@ -41,7 +41,7 @@ Ao longo do texto, caixas como esta traduzem o idioma do R para o de Julia:
 
 `dplyr::filter(dados, altura > 10)` corresponde a `@filter(dados, altura > 10)`
 em `TidierData.jl`. A semântica é a mesma; a diferença é que `@filter` é um macro,
-não uma função.
+não uma função: código que reescreve o seu código antes de rodar (@sec-convencoes).
 :::
 
 ## Relação com *Análises Ecológicas no R* {.unnumbered}

@@ -152,7 +152,9 @@ cv_pos(ponds.richness), cv_pos(ponds.richness, false)
 ```
 
 Um **argumento nomeado** (*keyword*) vem depois de um ponto e vírgula e é sempre
-definido pelo nome:
+definido pelo nome. O ponto e vírgula é obrigatório na definição da função; na
+chamada, uma vírgula também serve, como em `sort(df, :coluna, rev = true)` no
+@sec-tidier:
 
 ```{julia}
 #| label: keyword
@@ -179,8 +181,8 @@ cv_arredondado(ponds.richness), cv_arredondado(ponds.richness; percentual = fals
 **Em R**
 
 R tem um único tipo de argumento, que pode ser passado por posição ou por nome. Julia
-separa os dois: argumentos antes do `;` são posicionais, os depois dele são nomeados e
-precisam do nome. `kwargs...` cumpre o papel do `...` do R ao repassar opções para
+separa os dois: na definição, argumentos antes do `;` são posicionais, os depois dele são
+nomeados e precisam do nome. `kwargs...` cumpre o papel do `...` do R ao repassar opções para
 outra função.
 :::
 

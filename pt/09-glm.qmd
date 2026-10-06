@@ -1,4 +1,4 @@
-# Modelos Lineares Generalizados {#sec-glm}
+# Modelos lineares generalizados {#sec-glm}
 
 ```{julia}
 #| label: setup-08
@@ -278,7 +278,7 @@ g3 = glm(@formula(richness ~ canopy + temp_c), ponds, Poisson(), LogLink();
 coeftable(g3)
 ```
 
-Isso ajusta riqueza *por unidade de área*, fixando o coeficiente de `log(área)` em 1.
+Isso ajusta riqueza *por unidade de área*, fixando o coeficiente de `log(area_m2)` em 1.
 
 ## Regressão logística {#sec-logistica}
 

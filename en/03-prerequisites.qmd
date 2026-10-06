@@ -78,8 +78,21 @@ becomes available in new terminals. Then check the installation:
 julia --version
 ```
 
-It should print something like `julia version 1.12.6`. Any version from 1.10 upwards
-works with this book. Now type `julia` and press `Enter` to start Julia itself. The
+The book was built with Julia 1.12, but `juliaup` installs the latest stable
+release, which may be newer (1.13 as of October 2026). To use the same version as the
+book, run:
+
+```bash
+juliaup add 1.12
+juliaup default 1.12
+```
+
+and check again with `julia --version`, which should print something like
+`julia version 1.12.6`. A newer version also works, but then `Pkg.instantiate()` in
+Step 6 warns that `Manifest.toml` was resolved with a different Julia version, and some
+package versions may not be exactly the book's.
+
+Now type `julia` and press `Enter` to start Julia itself. The
 prompt changes to `julia>`; type `1 + 1`, press `Enter`, and Julia answers `2`. Leave
 with `exit()`.
 
@@ -264,6 +277,8 @@ cell and press `Alt+Enter` to run it, then keep going cell by cell
 - **`describe` is your first data check.** It shows that `canopy` has 7 missing
   values and that `area_m2` is strongly right-skewed (median around 149 m², maximum
   near 2000 m²) — which is why the plot uses a log scale.
+- **`xlabel = ...` and `xscale = log10` are keyword arguments**, given by name rather
+  than by position, as in R. @sec-fn-arguments explains the details.
 
 The shortcuts you will use constantly:
 
