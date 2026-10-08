@@ -16,6 +16,11 @@ execute:
 
 bibliography: ../_shared/references.bib
 
+# Highwire Press <meta name="citation_*"> tags on every page, which Google
+# Scholar reads to index the book. Title, author, publisher, DOI and PDF URL come
+# from `citation:` in each edition's _quarto.yml.
+google-scholar: true
+
 format:
   html:
     theme:

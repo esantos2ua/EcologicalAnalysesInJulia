@@ -7,6 +7,21 @@ metadata-files:
 
 lang: pt
 
+# Citation metadata for the Google Scholar tags (see _shared/common.yml).
+# Keep in sync with CITATION.cff; `doi` is the Zenodo concept DOI. The title is
+# the one registered on Zenodo (English), so both editions point to one record.
+citation:
+  type: book
+  author:   # repeated here so chapter pages get citation_author too
+    - family: Santos
+      given: Eduardo
+  title: "Ecological Analyses in Julia"
+  publisher: Zenodo
+  doi: 10.5281/zenodo.23126524
+  issued: 2026-10-03   # first release (v1.0.0); stays fixed across versions
+  url: https://esantos2ua.github.io/EcologicalAnalysesInJulia/pt/
+  pdf-url: https://esantos2ua.github.io/EcologicalAnalysesInJulia/pt/analises-ecologicas-em-julia-pt.pdf
+
 book:
   title: "Análises Ecológicas em Julia"
   subtitle: "Uma introdução à ciência de dados ecológicos com Julia"
